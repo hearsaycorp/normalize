@@ -1,10 +1,10 @@
 language: python
 python: "2.7"
 install:
-  - pip install pep8 pyflakes
+  - pip install pep8 pyflakes nose unittest2
   #- "pip install -r requirements.txt"
 script:
   - nosetests -s -v
   - 'find normalize -name "*.py" | xargs pyflakes'
   - pep8 normalize
-  #- pep8 --max-line-length=100 tests
+  - pep8 --max-line-length=100 tests
