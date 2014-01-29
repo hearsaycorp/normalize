@@ -24,6 +24,10 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(rwprop, RWProperty)
         self.assertIsInstance(type(prop), MetaProperty)
 
+        name = RWProperty()
+        self.assertIsNotNone(rwprop)
+        self.assertIsInstance(rwprop, RWProperty)
+
     def test_1_basic(self):
         """Test that basic Properties can be defined and used"""
         class BasicRecord(Record):
@@ -40,7 +44,7 @@ class TestProperties(unittest2.TestCase):
         """Test Attributes which allow being set"""
         class TrivialRecord(Record):
             id = Property()
-            name = Property(traits=['rw'])
+            name = RWProperty()
 
         tr = TrivialRecord(id=123)
         self.assertEqual(tr.id, 123)

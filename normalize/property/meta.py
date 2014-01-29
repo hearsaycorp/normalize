@@ -1,7 +1,7 @@
 PROPERTY_TYPES = dict()
 
 
-def has(self, args, kwargs):
+def has(selfie, self, args, kwargs):
     """This is called 'has' but is called indirectly.  Each Property sub-class
     is installed with this function which replaces their __new__.
 
@@ -36,7 +36,8 @@ def has(self, args, kwargs):
                 type(property_type).__name__, type(self).__name__,
             )
         )
-    return super(self, property_type).__new__(property_type, *args, **kwargs)
+
+    return super(selfie, self).__new__(property_type, *args, **kwargs)
 
 
 class MetaProperty(type):
@@ -47,8 +48,11 @@ class MetaProperty(type):
     def __new__(mcs, name, bases, attrs):
         """This __new__ method is called when new property trait combinations
         are created."""
+        selfie = []
+
         def _has(self, *args, **kwargs):
-            return has(self, args, kwargs)
+            return has(selfie[0], self, args, kwargs)
+
         attrs['__new__'] = _has
         traits = list()
         trait = attrs.get('__trait__', None)
@@ -67,4 +71,5 @@ class MetaProperty(type):
         attrs['traits'] = traits
         self = super(MetaProperty, mcs).__new__(mcs, name, bases, attrs)
         PROPERTY_TYPES[self.traits] = self
+        selfie.append(self)
         return self
