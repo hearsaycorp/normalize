@@ -6,13 +6,12 @@ import weakref
 from normalize.property.meta import MetaProperty
 
 
-class Property(property):
+class Property(object):
     __metaclass__ = MetaProperty
 
     def __init__(self, ro=False, default=None, required=False,
-                 fget=None, fset=None, fdel=None, doc=None,
                  traits=None):
-        super(Property, self).__init__(fget, fset, fdel, doc)
+        super(Property, self).__init__()
         self.ro = ro
         self.default = default
         self.required = required
@@ -27,6 +26,16 @@ class Property(property):
         self.name = name
         self.class_ = weakref.ref(class_)
 
+    @property
+    def fullname(self):
+        if not self.bound:
+            return "(unbound)"
+        elif not self.class_():
+            classname = "(GC'd class)"
+        else:
+            classname = self.class_().__name__
+        return "%s.%s" % (classname, self.name)
+
     def init_prop(self, obj, value):
         obj.__dict__[self.name] = value
 
@@ -36,6 +45,10 @@ class Property(property):
         if self.name not in obj.__dict__:
             raise AttributeError
         return obj.__dict__[self.name]
+
+    def __repr__(self):
+        metaclass = str(type(self).__name__)
+        return "<%s %s>" % (metaclass, self.fullname)
 
 
 class LazyProperty(Property):
@@ -47,21 +60,21 @@ class LazyProperty(Property):
 
     def __get__(self, obj, type_=None):
         if callable(self.default):
-            rv = self.default()
+            rv = self.default(obj)
         else:
             rv = self.default
         obj.__dict__[self.name] = rv
         return rv
 
 
-class RWProperty(Property):
-    __trait__ = "rw"
+class ROProperty(Property):
+    __trait__ = "ro"
 
     def __get__(self, obj, type_=None):
         return obj.__dict__[self.name]
 
     def __set__(self, obj, value):
-        obj.__dict__[self.name] = value
+        raise AttributeError("%s is read-only" % self.fullname)
 
     def __delete__(self, instance):
         """
@@ -69,7 +82,7 @@ class RWProperty(Property):
         """
         if self.required:
             raise ValueError("%s is required" % self.name)
-        super(RWProperty, self).__delete__(instance)
+        super(ROProperty, self).__delete__(instance)
 
 
 class CheckedProperty(Property):
@@ -82,10 +95,10 @@ class CheckedProperty(Property):
         super(CheckedProperty, self).__init__(**kwargs)
 
 
-class CheckedRWProperty(RWProperty, CheckedProperty):
+class CheckedROProperty(ROProperty, CheckedProperty):
     def __set__(self, obj, value):
         if not self.check(obj):
             raise ValueError(
                 "field %s may not have value %r" % (self.name, value)
             )
-        super(CheckedRWProperty, self).__set__(obj, value)
+        super(CheckedROProperty, self).__set__(obj, value)
