@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 
+import re
 import unittest2
 
 from normalize.record import Record
@@ -19,6 +20,7 @@ class TestProperties(unittest2.TestCase):
         self.assertIsNotNone(prop)
         self.assertIsInstance(prop, Property)
         self.assertIsInstance(type(prop), MetaProperty)
+        self.assertRegexpMatches(str(prop), r".*unbound.*", re.I)
 
         roprop = Property(traits=['ro'])
         self.assertIsNotNone(roprop)
@@ -33,6 +35,10 @@ class TestProperties(unittest2.TestCase):
         """Test that basic Properties can be defined and used"""
         class BasicRecord(Record):
             name = Property()
+        self.assertRegexpMatches(
+            str(BasicRecord.__dict__['name']),
+            r".*Property.*BasicRecord\.name.*", re.I
+        )
 
         br = BasicRecord()
         self.assertIsInstance(br, BasicRecord)
@@ -46,6 +52,10 @@ class TestProperties(unittest2.TestCase):
         class TrivialRecord(Record):
             id = ROProperty()
             name = Property()
+        self.assertRegexpMatches(
+            str(TrivialRecord.__dict__['id']),
+            r".*ROProperty.*TrivialRecord\.id.*", re.I
+        )
 
         tr = TrivialRecord(id=123)
         self.assertEqual(tr.id, 123)
