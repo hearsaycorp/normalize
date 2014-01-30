@@ -68,6 +68,15 @@ class TestProperties(unittest2.TestCase):
 
     def test_3_lazy(self):
         """Test Attributes which are build-once"""
+        _seq_num = [0]
+
+        def _seq():
+            _seq_num[0] += 1
+            return _seq_num[0]
+
+        def _func_with_default_args(plus=5):
+            return _seq() + plus
+
         class TrapDoorRecord(Record):
             def _shoot(self):
                 projectile = self.chamber
@@ -75,14 +84,20 @@ class TestProperties(unittest2.TestCase):
                 return projectile
             chamber = Property()
             fired = LazyProperty(default=_shoot)
+            ask = LazyProperty(default=_seq)
+            plus = LazyProperty(default=_func_with_default_args)
 
         tdr = TrapDoorRecord(chamber="bolt")
         self.assertNotIn(
             "fired", tdr.__dict__, "peek into lazy object's dict"
         )
+        self.assertNotIn("ask", tdr.__dict__)
         self.assertEqual(tdr.fired, "bolt")
         self.assertEqual(tdr.chamber, "empty")
         self.assertEqual(tdr.fired, "bolt")
+        self.assertEqual(tdr.ask, 1)
+        self.assertEqual(tdr.ask, 1)
+        self.assertEqual(tdr.plus, 7)
 
     def test_4_required_check(self):
         """Test Attributes which are marked as required"""

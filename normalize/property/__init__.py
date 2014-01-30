@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import
 
+import inspect
 import weakref
 
 from normalize.property.meta import MetaProperty
@@ -20,6 +21,19 @@ class Property(object):
     def __init__(self, default=None, required=False, check=None, traits=None):
         super(Property, self).__init__()
         self.default = default
+        if callable(default):
+            args = inspect.getargspec(default)
+            if not args.args:
+                required_args = 0
+            else:
+                required_args = len(args.args)
+                if args.defaults:
+                    required_args -= len(args.defaults)
+                if required_args > 1:
+                    raise Exception(
+                        "default functions may take 0 or 1 arguments"
+                    )
+            self.default_wants_arg = bool(required_args)
         self.required = required
         self.check = check
         self.name = None
@@ -51,9 +65,19 @@ class Property(object):
                 "%s value '%r' failed type check" % (self.fullname, value)
             )
 
+    def get_default(self, obj):
+        if callable(self.default):
+            if self.default_wants_arg:
+                rv = self.default(obj)
+            else:
+                rv = self.default()
+        else:
+            rv = self.default
+        return rv
+
     def init_prop(self, obj, value=_Default):
         if value is _Default:
-            value = self.default
+            value = self.get_default(obj)
         self.type_check(value)
         obj.__dict__[self.name] = value
 
@@ -81,13 +105,15 @@ class LazyProperty(Property):
         self.lazy = True
         super(LazyProperty, self).__init__(**kwargs)
 
+    def init_prop(self, obj, value=_Default):
+        if value is _Default:
+            return
+        super(LazyProperty, self).init_prop(obj)
+
     def __get__(self, obj, type_=None):
-        if callable(self.default):
-            rv = self.default(obj)
-        else:
-            rv = self.default
-        self.type_check(rv)
-        obj.__dict__[self.name] = rv
+        value = self.get_default(obj)
+        self.type_check(value)
+        obj.__dict__[self.name] = value
         return super(LazyProperty, self).__get__(obj, type_)
 
 
