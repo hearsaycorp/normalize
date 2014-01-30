@@ -6,15 +6,22 @@ import weakref
 from normalize.property.meta import MetaProperty
 
 
+class _Default():
+    pass
+
+
 class Property(object):
+    """This is the base class for all property types.  It is a data descriptor,
+    so care should be taken before adding any SPECIALMETHODS which might change
+    the way it behaves.
+    """
     __metaclass__ = MetaProperty
 
-    def __init__(self, ro=False, default=None, required=False,
-                 traits=None):
+    def __init__(self, default=None, required=False, check=None, traits=None):
         super(Property, self).__init__()
-        self.ro = ro
         self.default = default
         self.required = required
+        self.check = check
         self.name = None
         self.class_ = None
 
@@ -36,7 +43,18 @@ class Property(object):
             classname = self.class_().__name__
         return "%s.%s" % (classname, self.name)
 
-    def init_prop(self, obj, value):
+    def type_check(self, value):
+        if self.required and value is None:
+            raise ValueError("%s is required" % self.fullname)
+        if self.check and not self.check(value):
+            raise ValueError(
+                "%s value '%r' failed type check" % (self.fullname, value)
+            )
+
+    def init_prop(self, obj, value=_Default):
+        if value is _Default:
+            value = self.default
+        self.type_check(value)
         obj.__dict__[self.name] = value
 
     def __get__(self, obj, type_=None):
@@ -52,6 +70,11 @@ class Property(object):
 
 
 class LazyProperty(Property):
+    """This declares a property which has late evaluation using its 'default'
+    method.  This type uses the support built-in to python for lazy attribute
+    setting, which means subsequent attribute assignments will not be prevented
+    or checked.
+    """
     __trait__ = "lazy"
 
     def __init__(self, lazy=True, **kwargs):
@@ -63,15 +86,16 @@ class LazyProperty(Property):
             rv = self.default(obj)
         else:
             rv = self.default
+        self.type_check(rv)
         obj.__dict__[self.name] = rv
-        return rv
+        return super(LazyProperty, self).__get__(obj, type_)
 
 
 class ROProperty(Property):
     __trait__ = "ro"
 
     def __get__(self, obj, type_=None):
-        return obj.__dict__[self.name]
+        return super(ROProperty, self).__get__(obj, type_)
 
     def __set__(self, obj, value):
         raise AttributeError("%s is read-only" % self.fullname)
@@ -80,25 +104,46 @@ class ROProperty(Property):
         """
         Note: instance is normally an instance of a Record
         """
-        if self.required:
-            raise ValueError("%s is required" % self.name)
-        super(ROProperty, self).__delete__(instance)
+        raise AttributeError("%s is read-only" % self.fullname)
 
 
-class CheckedProperty(Property):
-    __trait__ = "check"
-
-    def __init__(self, check=None, **kwargs):
-        if not callable(check):
-            raise Exception("'check' is required and must be callable")
-        self.check = check
-        super(CheckedProperty, self).__init__(**kwargs)
+class ROLazyProperty(LazyProperty, ROProperty):
+    pass
 
 
-class CheckedROProperty(ROProperty, CheckedProperty):
+class SafeProperty(Property):
+    """A version of Property which always checks all assignments to
+    properties"""
+    __trait__ = "safe"
+
     def __set__(self, obj, value):
-        if not self.check(obj):
-            raise ValueError(
-                "field %s may not have value %r" % (self.name, value)
+        self.type_check(value)
+        obj.__dict__[self.name] = value
+
+    def __delete__(self, obj):
+        self.type_check(None)
+        super(SafeProperty, self).__delete__(obj)
+
+
+class CollectionProperty(Property):
+    __trait__ = "coll"
+
+    def __init__(self, of=None, coll=None, check_item=None, **kwargs):
+        if coll is None:
+            raise Exception(
+                "coll is required; specify coll type or use a sub-class "
+                "like ListProperty"
             )
-        super(CheckedROProperty, self).__set__(obj, value)
+        self.check_item = None
+        self.of = of
+        self.coll = coll
+
+
+class ROCollectionProperty(CollectionProperty, ROProperty):
+    def __set__(self, obj, value):
+        if not isinstance(value, self.coll):
+            if value is None:
+                value = self.coll()
+            else:
+                value = self.coll(value)
+        super(ROCollectionProperty, self).__set__(obj, value)

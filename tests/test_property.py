@@ -9,6 +9,7 @@ from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import Property
 from normalize.property import ROProperty
+from normalize.property import SafeProperty
 from normalize.property.meta import MetaProperty
 
 
@@ -82,3 +83,24 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(tdr.fired, "bolt")
         self.assertEqual(tdr.chamber, "empty")
         self.assertEqual(tdr.fired, "bolt")
+
+    def test_4_required_check(self):
+        """Test Attributes which are marked as required"""
+        class FussyRecord(Record):
+            id = Property(required=True)
+            natural = SafeProperty(check=lambda i: i > 0)
+            must = SafeProperty(required=True)
+
+        with self.assertRaises(ValueError):
+            fr = FussyRecord()
+
+        fr = FussyRecord(id=123, must="sugary")
+        with self.assertRaises(ValueError):
+            del fr.must
+        with self.assertRaises(ValueError):
+            fr.must = None
+        fr.must = "barmy"
+
+        fr.natural = 7
+        with self.assertRaises(ValueError):
+            fr.natural = 0

@@ -23,7 +23,6 @@ class RecordMeta(type):
 
         local_props = dict()
 
-        #import ipdb; ipdb.set_trace()
         for attrname, attrval in attrs.items():
             if isinstance(attrval, Property):
                 properties[attrname] = attrval
@@ -31,6 +30,9 @@ class RecordMeta(type):
                     local_props[attrname] = attrval
 
         attrs['properties'] = properties
+        attrs['required'] = frozenset(
+            k for k, v in properties.iteritems() if v.required
+        )
 
         self = super(RecordMeta, mcs).__new__(mcs, name, bases, attrs)
 
