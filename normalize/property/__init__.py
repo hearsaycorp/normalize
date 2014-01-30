@@ -102,7 +102,8 @@ class LazyProperty(Property):
     __trait__ = "lazy"
 
     def __init__(self, lazy=True, **kwargs):
-        self.lazy = True
+        if not lazy:
+            raise Exception("To make an eager property, do not pass lazy")
         super(LazyProperty, self).__init__(**kwargs)
 
     def init_prop(self, obj, value=_Default):

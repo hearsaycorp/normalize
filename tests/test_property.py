@@ -34,6 +34,10 @@ class TestProperties(unittest2.TestCase):
         self.assertIsNotNone(roprop)
         self.assertIsInstance(roprop, ROProperty)
 
+        lazyprop = Property(lazy=True)
+        self.assertIsInstance(lazyprop, LazyProperty)
+        self.assertRaises(Exception, Property, lazy=False)
+
     def test_1_basic(self):
         """Test that basic Properties can be defined and used"""
         class BasicRecord(Record):

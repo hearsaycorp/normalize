@@ -1,4 +1,12 @@
+from collections import defaultdict
+import inspect
+
+
 PROPERTY_TYPES = dict()
+
+# Duck typing kwargs... for picking the right Property sub-class to instantiate
+# based on the kwargs used in the Property() constructor
+DUCKWARGS = defaultdict(set)
 
 
 def has(selfie, self, args, kwargs):
@@ -18,16 +26,24 @@ def has(selfie, self, args, kwargs):
     object type, because unlike in Perl, python cannot re-bless objects from
     one class to another.
     """
-    extra_traits = kwargs.pop('traits', None)
+    extra_traits = kwargs.pop('traits', tuple())
+    # detect initializer arguments only supported by a subclass and add
+    # them to extra_traits
+    for argname in kwargs:
+        if argname not in self.all_duckwargs:
+            # initializer does not support this arg.  Do any subclasses?
+            for trait, proptype in DUCKWARGS[argname]:
+                if isinstance(proptype, type(self)):
+                    extra_traits += (trait,)
+
     all_traits = (
         self.traits if not extra_traits else
-        tuple(sorted(self.traits + tuple(extra_traits)))
+        tuple(sorted(set(self.traits + tuple(extra_traits))))
     )
     if all_traits not in PROPERTY_TYPES:
         raise Exception(
-            "Failed to find a Property type which provides traits %r" % (
-                all_traits
-            )
+            "Failed to find a Property type which provides traits %r" %
+            all_traits
         )
     property_type = PROPERTY_TYPES[all_traits]
     if not isinstance(property_type, type(self)):
@@ -54,13 +70,21 @@ class MetaProperty(type):
             return has(selfie[0], self, args, kwargs)
 
         attrs['__new__'] = _has
+        duckwargs = set()
+        if '__init__' in attrs:
+            new_kwargs = inspect.getargspec(attrs['__init__']).args
+            if new_kwargs:
+                duckwargs.update(new_kwargs)
         traits = list()
         trait = attrs.get('__trait__', None)
         if trait:
             traits.append(trait)
+        all_duckwargs = set(duckwargs)
         for base in bases:
             if hasattr(base, "traits"):
                 traits.extend(base.traits)
+            if hasattr(base, "all_duckwargs"):
+                all_duckwargs.update(base.all_duckwargs)
         traits = tuple(sorted(traits))
         if traits in PROPERTY_TYPES:
             raise Exception(
@@ -69,7 +93,12 @@ class MetaProperty(type):
                 )
             )
         attrs['traits'] = traits
+        attrs['duckwargs'] = duckwargs
+        attrs['all_duckwargs'] = all_duckwargs
         self = super(MetaProperty, mcs).__new__(mcs, name, bases, attrs)
         PROPERTY_TYPES[self.traits] = self
         selfie.append(self)
+        if trait:
+            for kwarg in duckwargs:
+                DUCKWARGS[kwarg].add((trait, self))
         return self
