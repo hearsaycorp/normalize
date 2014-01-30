@@ -97,7 +97,7 @@ class LazyProperty(Property):
     """This declares a property which has late evaluation using its 'default'
     method.  This type uses the support built-in to python for lazy attribute
     setting, which means subsequent attribute assignments will not be prevented
-    or checked.
+    or checked.  See SafeLazyProperty for the descriptor version
     """
     __trait__ = "lazy"
 
@@ -133,7 +133,16 @@ class ROProperty(Property):
         raise AttributeError("%s is read-only" % self.fullname)
 
 
-class ROLazyProperty(LazyProperty, ROProperty):
+class SlowLazyProperty(LazyProperty):
+    __trait__ = "slow"
+
+    def __get__(self, obj, type_=None):
+        if self.name in obj.__dict__:
+            return obj.__dict__[self.name]
+        return super(SlowLazyProperty, self).__get__(obj, type_)
+
+
+class ROLazyProperty(SlowLazyProperty, ROProperty):
     pass
 
 
@@ -149,6 +158,10 @@ class SafeProperty(Property):
     def __delete__(self, obj):
         self.type_check(None)
         super(SafeProperty, self).__delete__(obj)
+
+
+class LazySafeProperty(SafeProperty, SlowLazyProperty):
+    pass
 
 
 class CollectionProperty(Property):

@@ -7,7 +7,9 @@ import unittest2
 
 from normalize.record import Record
 from normalize.property import LazyProperty
+from normalize.property import LazySafeProperty
 from normalize.property import Property
+from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.meta import MetaProperty
@@ -36,14 +38,16 @@ class TestProperties(unittest2.TestCase):
         """Test that basic Properties can be defined and used"""
         class BasicRecord(Record):
             name = Property()
+        # test Property.__repr__ includes class & attribute name
         self.assertRegexpMatches(
             str(BasicRecord.__dict__['name']),
-            r".*Property.*BasicRecord\.name.*", re.I
+            r".*Property.*BasicRecord\.name.*", re.I,
         )
 
         br = BasicRecord()
         self.assertIsInstance(br, BasicRecord)
-        self.assertRaises(AttributeError, lambda x: x.name, br)
+        with self.assertRaises(AttributeError):
+            br.name
 
         br = BasicRecord(name="Bromine")
         self.assertEqual(br.name, "Bromine")
@@ -99,10 +103,19 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(tdr.ask, 1)
         self.assertEqual(tdr.plus, 7)
 
+        # lazy properties may be assigned
+        tdr.fired = None
+        self.assertEqual(tdr.fired, None)
+
+        # delete and start again!
+        tdr.chamber = "bullet"
+        del tdr.fired
+        self.assertEqual(tdr.fired, "bullet")
+
     def test_4_required_check(self):
         """Test Attributes which are marked as required"""
         class FussyRecord(Record):
-            id = Property(required=True)
+            id = Property(required=True, check=int)
             natural = SafeProperty(check=lambda i: i > 0)
             must = SafeProperty(required=True)
 
@@ -119,3 +132,48 @@ class TestProperties(unittest2.TestCase):
         fr.natural = 7
         with self.assertRaises(ValueError):
             fr.natural = 0
+
+    def test_5_raisins_of_etre(self):
+        """Check that property types which are mixed-in combinations of types
+        work as expected"""
+        num = [0]
+
+        def seq():
+            num[0] += 1
+            return num[0]
+
+        class VariedRecord(Record):
+            def _lazy(self):
+                return "%s.%d" % (self.must, self.id)
+            id = ROLazyProperty(
+                required=True, check=lambda i: i > 0, default=seq,
+            )
+            must = SafeProperty(required=True)
+            lazy = LazySafeProperty(
+                check=lambda i: re.match(r'\w+\.\d+$', i),
+                default=_lazy,
+            )
+
+        vr = VariedRecord(must="horn")
+        self.assertEqual(vr.lazy, "horn.1")
+        self.assertEqual(
+            vr.lazy, "horn.1", "lazy, safe attribute not re-computed"
+        )
+        vr.lazy = "belly.5"
+        with self.assertRaises(ValueError):
+            vr.lazy = "dog collar.3"
+
+        vr.must = "snout"
+        self.assertEqual(vr.lazy, "belly.5")
+
+        with self.assertRaises(AttributeError):
+            vr.id = 2
+        with self.assertRaises(ValueError):
+            vr.must = None
+
+        num[0] = -1
+        vr = VariedRecord(must="ears")
+        with self.assertRaises(ValueError):
+            # test RO lazy value is computed late, and the result is
+            # type checked
+            vr.id
