@@ -23,4 +23,22 @@ class Record(object):
 
     def __iter__(self):
         for name in type(self).properties.keys():
-            yield (name, getattr(self, name))
+            yield (name, getattr(self, name, None))
+
+
+class ListRecord(list):
+    """
+    Represents a list of Records. Normally used for paginated Records where
+    Collections can't be used.
+    """
+    # subclasses should overwrite this with a subclass of Record
+    record_cls = None
+
+    def _coerce(self, iterable):
+        record_cls = self.record_cls
+        for item in iterable:
+            yield (item if isinstance(item, record_cls) else
+                   record_cls(item))
+
+    def __init__(self, iterable):
+        super(ListRecord, self).__init__(self._coerce(iterable))

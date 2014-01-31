@@ -5,8 +5,9 @@ from __future__ import absolute_import
 import re
 import unittest2
 
-from normalize.record import Record
 from normalize.coll import ListCollection
+from normalize.record import ListRecord
+from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
 from normalize.property import ListProperty
@@ -199,3 +200,19 @@ class TestProperties(unittest2.TestCase):
         members = list(gr.members)
         self.assertEqual(members[0].name, "bob")
         self.assertEqual(members[1].name, "bill")
+
+    def test_list_records(self):
+        """Test that ListRecord/RecordList works"""
+        class SingleThing(Record):
+            name = Property()
+
+        class ManyThingsRecord(ListRecord):
+            record_cls = SingleThing
+
+        # note: must pass pre-coerced members to constructor.
+        mtr = ManyThingsRecord(
+            (SingleThing(name="bert"), SingleThing(name="phil"))
+        )
+
+        self.assertIsInstance(mtr, list)
+        self.assertIsInstance(mtr, ManyThingsRecord)
