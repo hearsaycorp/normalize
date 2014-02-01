@@ -19,7 +19,8 @@ class Property(object):
     """
     __metaclass__ = MetaProperty
 
-    def __init__(self, default=None, required=False, check=None, traits=None):
+    def __init__(self, default=None, traits=None,
+                 required=False, check=None, isa=None, coerce=None):
         super(Property, self).__init__()
         self.default = default
         if callable(default):
@@ -37,6 +38,8 @@ class Property(object):
             self.default_wants_arg = bool(required_args)
         self.required = required
         self.check = check
+        self.valuetype = isa
+        self.coerce = coerce or isa
         self.name = None
         self.class_ = None
 
@@ -58,13 +61,19 @@ class Property(object):
             classname = self.class_().__name__
         return "%s.%s" % (classname, self.name)
 
-    def type_check(self, value):
-        if self.required and value is None:
-            raise ValueError("%s is required" % self.fullname)
+    def type_safe_value(self, value):
+        if value is None:
+            if self.required:
+                raise ValueError("%s is required" % self.fullname)
+            else:
+                return None
+        if self.valuetype and not isinstance(value, self.valuetype):
+            value = self.coerce(value)
         if self.check and not self.check(value):
             raise ValueError(
                 "%s value '%r' failed type check" % (self.fullname, value)
             )
+        return value
 
     def get_default(self, obj):
         if callable(self.default):
@@ -79,8 +88,7 @@ class Property(object):
     def init_prop(self, obj, value=_Default):
         if value is _Default:
             value = self.get_default(obj)
-        self.type_check(value)
-        obj.__dict__[self.name] = value
+        obj.__dict__[self.name] = self.type_safe_value(value)
 
     def __get__(self, obj, type_=None):
         """Default getter; does NOT fall back to regular descriptor behavior
@@ -114,8 +122,8 @@ class LazyProperty(Property):
 
     def __get__(self, obj, type_=None):
         value = self.get_default(obj)
-        self.type_check(value)
-        obj.__dict__[self.name] = value
+
+        obj.__dict__[self.name] = self.type_safe_value(value)
         return super(LazyProperty, self).__get__(obj, type_)
 
 
@@ -154,11 +162,10 @@ class SafeProperty(Property):
     __trait__ = "safe"
 
     def __set__(self, obj, value):
-        self.type_check(value)
-        obj.__dict__[self.name] = value
+        obj.__dict__[self.name] = self.type_safe_value(value)
 
     def __delete__(self, obj):
-        self.type_check(None)
+        self.type_safe_value(None)
         super(SafeProperty, self).__delete__(obj)
 
 

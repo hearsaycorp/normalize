@@ -122,7 +122,7 @@ class TestProperties(unittest2.TestCase):
     def test_4_required_check(self):
         """Test Attributes which are marked as required"""
         class FussyRecord(Record):
-            id = Property(required=True, check=int)
+            id = Property(required=True, isa=int)
             natural = SafeProperty(check=lambda i: i > 0)
             must = SafeProperty(required=True)
 
