@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
+import json
 import pickle
 import unittest2
 
 from normalize.record import Record
+from normalize.record.json import from_json
 from normalize.property import ListProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
@@ -22,25 +24,34 @@ class CheeseCupboardRecord(Record):
 
 
 class TestRecordMarshaling(unittest2.TestCase):
-    def test_native_marshall(self):
-        # coerce from 'native' types (ie, dicts)
-        ccr = CheeseCupboardRecord(
-            {
-                "id": "123",
-                "name": "Fridge",
-                "best_cheese": dict(variety="Gouda", smelliness="12"),
-                "cheeses": [
-                    dict(variety="Manchego", smelliness="38"),
-                    dict(variety="Stilton", smelliness="82"),
-                    dict(variety="Polkobin", smelliness="31"),
-                ],
-            }
-        )
+    def setUp(self):
+        self.primitive = {
+            "id": "123",
+            "name": "Fridge",
+            "best_cheese": dict(variety="Gouda", smelliness="12"),
+            "cheeses": [
+                dict(variety="Manchego", smelliness="38"),
+                dict(variety="Stilton", smelliness="82"),
+                dict(variety="Polkobin", smelliness="31"),
+            ],
+        }
 
+    def assertDataOK(self, ccr):
+        self.assertEqual(ccr.id, 123)
+        self.assertEqual(len(ccr.cheeses), 3)
+        self.assertEqual(ccr.best_cheese.variety, "Gouda")
+        self.assertEqual(ccr.cheeses[1].smelliness, 82)
+
+    def test_native_marshall(self):
+        """Test coerce from python dicts & pickling"""
+        ccr = CheeseCupboardRecord(self.primitive)
         for protocol in range(0, pickle.HIGHEST_PROTOCOL + 1):
             pickled = pickle.dumps(ccr, protocol)
             ccr_copy = pickle.loads(pickled)
-            self.assertEqual(ccr_copy.id, 123)
-            self.assertEqual(len(ccr_copy.cheeses), 3)
-            self.assertEqual(ccr_copy.best_cheese.variety, "Gouda")
-            self.assertEqual(ccr_copy.cheeses[1].smelliness, 82)
+            self.assertDataOK(ccr_copy)
+
+    def test_json_marshall(self):
+        """Test coerce from JSON & marshall out"""
+        json_struct = json.dumps(self.primitive)
+        ccr = from_json(CheeseCupboardRecord, json.loads(json_struct))
+        self.assertDataOK(ccr)
