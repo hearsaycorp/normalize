@@ -86,9 +86,11 @@ class JsonRecord(Record):
         super(JsonRecord, self).__init__(**init_kwargs)
 
     @classmethod
-    def from_json(self, init):
+    def from_json(self, json_data):
         """Class method constructor"""
-        return from_json(self, init)
+        if isinstance(json_data, basestring):
+            json_data = json.loads(json_data)
+        return from_json(self, json_data)
 
 
 class JsonListRecord(ListRecord):

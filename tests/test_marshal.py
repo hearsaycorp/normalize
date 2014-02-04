@@ -6,6 +6,7 @@ import unittest2
 
 from normalize.record import Record
 from normalize.record.json import from_json
+from normalize.record.json import JsonRecord
 from normalize.property import ListProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
@@ -37,6 +38,7 @@ class TestRecordMarshaling(unittest2.TestCase):
         }
 
     def assertDataOK(self, ccr):
+        self.assertIsInstance(ccr, CheeseCupboardRecord)
         self.assertEqual(ccr.id, 123)
         self.assertEqual(len(ccr.cheeses), 3)
         self.assertEqual(ccr.best_cheese.variety, "Gouda")
@@ -54,4 +56,10 @@ class TestRecordMarshaling(unittest2.TestCase):
         """Test coerce from JSON & marshall out"""
         json_struct = json.dumps(self.primitive)
         ccr = from_json(CheeseCupboardRecord, json.loads(json_struct))
+        self.assertDataOK(ccr)
+
+        class RealWorldCCR(JsonRecord, CheeseCupboardRecord):
+            pass
+
+        ccr = RealWorldCCR.from_json(json_struct)
         self.assertDataOK(ccr)
