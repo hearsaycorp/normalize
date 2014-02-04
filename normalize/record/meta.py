@@ -12,7 +12,7 @@ class RecordMeta(type):
 
         for base in bases:
             if hasattr(base, "properties"):
-                for propname, prop in base.properties:
+                for propname, prop in base.properties.iteritems():
                     if propname in properties:
                         raise Exception(
                             "Property '%s' defined by multiple base "

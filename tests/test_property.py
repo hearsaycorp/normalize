@@ -216,3 +216,13 @@ class TestProperties(unittest2.TestCase):
 
         self.assertIsInstance(mtr, list)
         self.assertIsInstance(mtr, ManyThingsRecord)
+
+    def test_subclassing(self):
+        """Test that Record subclasses work"""
+        class Thing(Record):
+            id = Property()
+
+        class NamedThing(Thing):
+            name = Property()
+
+        nt = NamedThing(id=123, name="adam")

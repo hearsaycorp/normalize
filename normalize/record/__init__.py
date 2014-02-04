@@ -13,7 +13,7 @@ class Record(object):
         if not init_dict:
             init_dict = kwargs
         for prop, val in init_dict.iteritems():
-            meta_prop = type(self).__dict__.get(prop, None)
+            meta_prop = type(self).properties.get(prop, None)
             if meta_prop is None:
                 raise Exception(
                     "unknown property '%s' in %s" % (prop, type(self).__name__)
@@ -22,7 +22,7 @@ class Record(object):
         missing = type(self).required - set(init_dict.keys())
 
         for propname in missing:
-            meta_prop = type(self).__dict__[propname]
+            meta_prop = type(self).properties[propname]
             meta_prop.init_prop(self)
 
     def __iter__(self):
