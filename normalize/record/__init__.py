@@ -33,6 +33,31 @@ class Record(object):
         """Implement saving for pickle API"""
         return (dict(self),)
 
+    def __str__(self):
+        """Marshalling to string form"""
+        if type(self).primary_key:
+            pk_attrs = type(self).primary_key
+            return "<%s %s>" % (
+                type(self).__name__, repr(
+                    tuple(getattr(self, x.name, None) for x in pk_attrs) if
+                    len(pk_attrs) > 1 else
+                    getattr(self, pk_attrs[0].name, None)
+                )
+            )
+        else:
+            return super(Record, self).__str__()
+
+    def __repr__(self):
+        """Marshalling to Python source"""
+        typename = type(self).__name__
+        values = list()
+        for propname in sorted(type(self).properties):
+            if propname not in self.__dict__:
+                continue
+            else:
+                values.append("%s=%r" % (propname, self.__dict__[propname]))
+        return "%s(%s)" % (typename, ", ".join(values))
+
 
 class ListRecord(list):
     """
