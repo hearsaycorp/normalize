@@ -3,6 +3,10 @@ from __future__ import absolute_import
 from normalize.record.meta import RecordMeta
 
 
+class _Unset(object):
+    pass
+
+
 class Record(object):
     """Base class for normalize instances"""
     __metaclass__ = RecordMeta
@@ -57,6 +61,20 @@ class Record(object):
             else:
                 values.append("%s=%r" % (propname, self.__dict__[propname]))
         return "%s(%s)" % (typename, ", ".join(values))
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        for propname, prop in type(self).properties.iteritems():
+            if not prop.extraneous:
+                if getattr(self, propname, _Unset) != getattr(
+                    other, propname, _Unset
+                ):
+                    return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class ListRecord(list):

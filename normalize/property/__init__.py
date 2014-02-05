@@ -19,7 +19,7 @@ class Property(object):
     """
     __metaclass__ = MetaProperty
 
-    def __init__(self, default=None, traits=None,
+    def __init__(self, default=None, traits=None, extraneous=False,
                  required=False, check=None, isa=None, coerce=None):
         super(Property, self).__init__()
         self.default = default
@@ -42,6 +42,7 @@ class Property(object):
         self.coerce = coerce or isa
         self.name = None
         self.class_ = None
+        self.extraneous = extraneous
 
     @property
     def bound(self):
