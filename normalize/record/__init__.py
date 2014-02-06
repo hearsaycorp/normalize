@@ -76,6 +76,16 @@ class Record(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    @property
+    def __pk__(self):
+        """Returns an object which just returns the primary key value
+        for comparison to see if two objects are the same.  Returns the
+        whole object if no primary key is defined."""
+        if type(self).primary_key:
+            return tuple(x.__get__(self) for x in type(self).primary_key)
+        else:
+            return self
+
 
 class ListRecord(list):
     """

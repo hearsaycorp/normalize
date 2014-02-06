@@ -53,3 +53,8 @@ class TestRecordComparison(unittest.TestCase):
         self.assertNotEqual(self.bob1, self.bob2)
         self.assertEqual(self.bob1, self.bob1a)
         self.assertNotEqual(self.bob1, self.minimal)
+
+    def test_pk_eq(self):
+        """Test behavior of Record.__pk__"""
+        self.assertEqual(self.foo1.__pk__, self.foo1)
+        self.assertEqual(self.bob1.__pk__, (123,))
