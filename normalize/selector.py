@@ -224,7 +224,17 @@ class FieldSelector(object):
         # same. Fallback to length.
         return len(self.selectors) < len(other.selectors)
 
+    def __str__(self):
+        selector_parts = []
+        for selector in self.selectors:
+            if isinstance(selector, (int, long)):
+                selector_parts.append("[%d]" % selector)
+            elif selector is None:
+                selector_parts.append("[*]")
+            else:
+                selector_parts.append(".%s" % selector)
+
+        return "<%s: %s>" % (self.__class__.__name__, "".join(selector_parts))
+
     def __repr__(self):
-        return "<%s: %s (for_raw_data=%s)>" % (self.__class__.__name__,
-                                               self.selectors,
-                                               self.for_raw_data)
+        return "FieldSelector(%r)" % self.selectors

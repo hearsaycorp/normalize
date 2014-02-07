@@ -16,11 +16,18 @@ class TestStructableFieldSelector(unittest.TestCase):
         # create valid FieldSelectors
         FieldSelector()
         FieldSelector([None])
-        FieldSelector(["foo", "bar"])
+        fs = FieldSelector(["foo", "bar"])
+        self.assertEqual(str(fs), "<FieldSelector: .foo.bar>")
+        self.assertEqual(repr(fs), "FieldSelector(['foo', 'bar'])")
         FieldSelector(("foo", "bar"))
-        FieldSelector("foobar")
-        FieldSelector({"foo": "bar"})
+        fs = FieldSelector("foobar")
+        self.assertEqual(str(fs), "<FieldSelector: .f.o.o.b.a.r>")
+        fs = FieldSelector({"foo": "bar"})
+        self.assertEqual(str(fs), "<FieldSelector: .foo>")
         FieldSelector(FieldSelector(["foo", "bar"]))
+        fs = FieldSelector(["foo", 7, "bar"])
+        self.assertEqual(str(fs), "<FieldSelector: .foo[7].bar>")
+        self.assertEqual(repr(fs), "FieldSelector(['foo', 7, 'bar'])")
 
         # Test invalid FieldSelectors
         with self.assertRaisesRegexp(
@@ -68,6 +75,7 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         fs.add_full_collection()
         self.assertEqual(fs.selectors, ["foo", "bar", None])
+        self.assertEqual(str(fs), "<FieldSelector: .foo.bar[*]>")
 
     def test_extend(self):
         fs1 = FieldSelector(["foo", "bar"])
