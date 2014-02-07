@@ -179,6 +179,18 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs.post(record, "Johnny")
         self.assertEqual(record.children[0].name, "Johnny")
 
+        # Test addition to collection
+        fs = FieldSelector(["children", 1, "name"])
+        fs.post(record, "Susan")
+        self.assertEqual(record.children[1].name, "Susan")
+
+        # Test invalid addition to collection
+        fs = FieldSelector(["children", 9999, "name"])
+        with self.assertRaisesRegexp(
+            ValueError, "FieldSelector set out of order"
+        ):
+            fs.post(record, "Joker")
+
         # Test create of sub-Record
         fs = FieldSelector(["nested", "name"])
         fs.put(record, "Nested")

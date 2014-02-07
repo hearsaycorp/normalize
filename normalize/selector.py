@@ -170,9 +170,9 @@ class FieldSelector(object):
                     record = record[selector]
                 except LookupError:
                     if len(record) != selector:
-                        raise FieldSelectorException(
-                            "Refusing to extend collection to "
-                            "%d" % selector
+                        raise ValueError(
+                            "FieldSelector set out of order: "
+                            "[%d]" % selector
                         )
                     record.append(type(record).itemtype())
                     record = record[selector]
