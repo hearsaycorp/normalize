@@ -72,13 +72,33 @@ class ListCollection(KeyedCollection):
         self.values.append(item)
 
 
-class Generic(object):
+GENERIC_TYPES = dict()
+
+
+class _GenericPickler(object):
+    """'pickle' doesn't like pickling classes which are dynamically created.
+    This object is used instead, to keep pickle happy.
+    """
+    def __init__(self, typename):
+        self.typename = typename
+
+    def __call__(self, values):
+        return GENERIC_TYPES[self.typename](values)
+
+
+class Generic(Collection):
     """A mix-in to mark collection types which are (for example) collections of
     things."""
-    pass
+    def __reduce__(self):
+        """helper method for pickling"""
+        return (_GenericPickler(type(self).__name__), (self.values,))
 
 
 def make_generic(of, coll):
     assert(issubclass(coll, Collection))
     generic_name = "%s[%s]" % (coll.__name__, of.__name__)
-    return type(generic_name, (coll, Generic), dict(itemtype=of))
+    if generic_name not in GENERIC_TYPES:
+        GENERIC_TYPES[generic_name] = type(
+            generic_name, (coll, Generic), dict(itemtype=of)
+        )
+    return GENERIC_TYPES[generic_name]
