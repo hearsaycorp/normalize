@@ -26,7 +26,7 @@ class RecordMeta(type):
         for attrname, attrval in attrs.items():
             # don't allow clobbering of these meta-properties in class
             # definitions
-            if attrname in frozenset(('properties', 'required')):
+            if attrname in frozenset(('properties', 'eager_properties')):
                 raise Exception("Attribute '%s' is reserved")
             if isinstance(attrval, Property):
                 properties[attrname] = attrval
@@ -56,8 +56,8 @@ class RecordMeta(type):
 
         attrs['primary_key'] = coerce_prop_list('primary_key')
         attrs['properties'] = properties
-        attrs['required'] = frozenset(
-            k for k, v in properties.iteritems() if v.required
+        attrs['eager_properties'] = frozenset(
+            k for k, v in properties.iteritems() if v.eager_init()
         )
 
         self = super(RecordMeta, mcs).__new__(mcs, name, bases, attrs)

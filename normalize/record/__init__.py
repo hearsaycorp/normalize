@@ -23,7 +23,7 @@ class Record(object):
                     "unknown property '%s' in %s" % (prop, type(self).__name__)
                 )
             meta_prop.init_prop(self, val)
-        missing = type(self).required - set(init_dict.keys())
+        missing = type(self).eager_properties - set(init_dict.keys())
 
         for propname in missing:
             meta_prop = type(self).properties[propname]

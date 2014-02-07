@@ -91,6 +91,9 @@ class Property(object):
             value = self.get_default(obj)
         obj.__dict__[self.name] = self.type_safe_value(value)
 
+    def eager_init(self):
+        return self.required or self.default is not None
+
     def __get__(self, obj, type_=None):
         """Default getter; does NOT fall back to regular descriptor behavior
         """
@@ -120,6 +123,9 @@ class LazyProperty(Property):
         if value is _Default:
             return
         super(LazyProperty, self).init_prop(obj)
+
+    def eager_init(self):
+        return False
 
     def __get__(self, obj, type_=None):
         value = self.get_default(obj)

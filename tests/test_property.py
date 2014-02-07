@@ -45,6 +45,8 @@ class TestProperties(unittest2.TestCase):
         """Test that basic Properties can be defined and used"""
         class BasicRecord(Record):
             name = Property()
+            defaulted = Property(default=lambda: [])
+
         # test Property.__repr__ includes class & attribute name
         self.assertRegexpMatches(
             str(BasicRecord.__dict__['name']),
@@ -53,11 +55,15 @@ class TestProperties(unittest2.TestCase):
 
         br = BasicRecord()
         self.assertIsInstance(br, BasicRecord)
+        self.assertIsInstance(br.defaulted, list)
+        br.defaulted.append("foo")
+        self.assertEqual(br.defaulted[0], "foo")
         with self.assertRaises(AttributeError):
             br.name
 
         br = BasicRecord(name="Bromine")
         self.assertEqual(br.name, "Bromine")
+        self.assertFalse(br.defaulted)
 
     def test_2_ro(self):
         """Test Attributes which don't allow being set"""
