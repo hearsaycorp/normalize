@@ -8,14 +8,23 @@ conform to this package's metaclass API"""
 
 
 class Collection(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def itemtype(self):
+        pass
+
+    @property
+    def record_cls(self):
+        return self.itemtype
+
     """This is the base class for Record property values which contain
     iterable sets of values with a particular common type."""
-    def __init__(self, of, values):
+    def __init__(self, values=None):
         """
         @param of The Record type of members in this collection
         @param values The values of this collection.
         """
-        self.itemtype = of  # XXX - type objects inside instances
         self.init_values(values)
 
     def __iter__(self):
@@ -44,15 +53,32 @@ class KeyedCollection(Collection):
 class DictCollection(KeyedCollection):
     def init_values(self, values):
         self.values = dict()
-        for k, v in values.iteritems():
-            # XXX - is a coerce here sensible?
-            self.values[k] = (v if isinstance(v, self.itemtype) else
-                              self.itemtype(v))
+        if values:
+            for k, v in values.iteritems():
+                # XXX - is a coerce here sensible?
+                self.values[k] = (v if isinstance(v, self.itemtype) else
+                                  self.itemtype(v))
 
 
 class ListCollection(KeyedCollection):
     def init_values(self, values):
         self.values = list()
-        for k in values:
-            self.values.append(k if isinstance(k, self.itemtype) else
-                               self.itemtype(k))
+        if values:
+            for k in values:
+                self.values.append(k if isinstance(k, self.itemtype) else
+                                   self.itemtype(k))
+
+    def append(self, item):
+        self.values.append(item)
+
+
+class Generic(object):
+    """A mix-in to mark collection types which are (for example) collections of
+    things."""
+    pass
+
+
+def make_generic(of, coll):
+    assert(issubclass(coll, Collection))
+    generic_name = "%s[%s]" % (coll.__name__, of.__name__)
+    return type(generic_name, (coll, Generic), dict(itemtype=of))

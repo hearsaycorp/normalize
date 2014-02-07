@@ -6,6 +6,10 @@ from normalize import FieldSelector, FieldSelectorException
 from testclasses import MockChildRecord, MockJsonRecord
 
 
+class MockComplexJsonRecord(MockJsonRecord):
+    nested = MockJsonRecord()
+
+
 class TestStructableFieldSelector(unittest.TestCase):
 
     def test_init(self):
@@ -145,15 +149,27 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs.put(record, "pass")
         #self.assertEqual(record.raw_data, {"children": [], 'name': 'pass'})
 
-        class MockComplexJsonRecord(MockJsonRecord):
-            nested = MockJsonRecord()
-
         record = MockComplexJsonRecord()
 
         # Test creation of attribute
         fs = FieldSelector(["name"])
         fs.put(record, "Bobby")
         self.assertEqual(record.name, "Bobby")
+
+        # Test creation of collection and sub-Record
+        fs = FieldSelector(["children", 0, "name"])
+        with self.assertRaises(FieldSelectorException):
+            fs.put(record, "Johnny")
+
+    def test_post(self):
+        record = MockComplexJsonRecord()
+        fs = FieldSelector(["name"])
+        fs.post(record, "Bobby")
+        self.assertEqual(record.name, "Bobby")
+
+        fs = FieldSelector(["children", 0, "name"])
+        fs.post(record, "Johnny")
+        self.assertEqual(record.children[0].name, "Johnny")
 
         # Test create of sub-Record
         fs = FieldSelector(["nested", "name"])

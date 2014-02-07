@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 
-from ..property import Property
-from ..property import ListProperty
-from ..coll import ListCollection
+from normalize.property import Property
+from normalize.property import ListProperty
+from normalize.coll import ListCollection
 
 
 class JsonProperty(Property):

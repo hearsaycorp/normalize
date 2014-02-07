@@ -4,8 +4,9 @@ from __future__ import absolute_import
 import inspect
 import weakref
 
-from normalize.property.meta import MetaProperty
 from normalize.coll import ListCollection
+from normalize.coll import make_generic
+from normalize.property.meta import MetaProperty
 
 
 class _Default():
@@ -192,18 +193,14 @@ class CollectionProperty(Property):
         self.check_item = None
         self.of = of
         self.coll = coll
-        super(CollectionProperty, self).__init__(**kwargs)
+        super(CollectionProperty, self).__init__(
+            isa=make_generic(of, coll),
+            **kwargs)
 
-    def _coerce(self, value):
-        if not isinstance(value, self.coll) or value.itemtype != self.of:
-            value = self.coll(self.of, (value if value else tuple()))
-        return value
 
+class SafeCollectionProperty(CollectionProperty, SafeProperty):
     def __set__(self, obj, value):
-        super(CollectionProperty, self).__set__(obj, self._coerce(value))
-
-    def init_prop(self, obj, value=_Default):
-        super(CollectionProperty, self).init_prop(obj, self._coerce(value))
+        super(SafeCollectionProperty, self).__set__(obj, self._coerce(value))
 
 
 class ListProperty(CollectionProperty):

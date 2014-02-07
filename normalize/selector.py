@@ -153,6 +153,43 @@ class FieldSelector(object):
                         )
                 sub_selector.put(sub_record, value)
 
+    def post(self, record, value):
+        """auto-vivifying version of 'put'; if properties are not found along
+        the path, attempts are made to set them to empty values.
+
+        Returns the number of values set; may be 0 if there is 'None' in the
+        selector and there were no existing items in that collection.
+        """
+        i = 0
+        for selector in self.selectors[:-1]:
+            if selector is None:
+                sub_field_selector = FieldSelector(self.selectors[i + 1:])
+                return sum(sub_field_selector.post(r) for r in record)
+            elif isinstance(selector, (int, long)):
+                try:
+                    record = record[selector]
+                except LookupError:
+                    if len(record) != selector:
+                        raise FieldSelectorException(
+                            "Refusing to extend collection to "
+                            "%d" % selector
+                        )
+                    record.append(type(record).itemtype())
+                    record = record[selector]
+            else:
+                if not hasattr(record, selector):
+                    prop = type(record).properties[selector]
+                    if not prop.valuetype:
+                        raise FieldSelectorException(
+                            "Must specify default= or isa= to auto-vivify "
+                            "%s" % prop
+                        )
+                    setattr(record, selector, prop.valuetype())
+                record = getattr(record, selector)
+            i = i + 1
+        FieldSelector([self.selectors[-1]]).put(record, value)
+        return 1
+
     def __eq__(self, other):
         return self.selectors == other.selectors
 
