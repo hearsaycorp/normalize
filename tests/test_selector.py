@@ -80,6 +80,13 @@ class TestStructableFieldSelector(unittest.TestCase):
     def test_extend(self):
         fs1 = FieldSelector(["foo", "bar"])
         fs2 = FieldSelector(["hello", "world"])
+        # functional extension
+        self.assertEqual(
+            (fs1 + fs2).selectors, ["foo", "bar", "hello", "world"],
+        )
+        self.assertEqual(str(fs1 + "baz"), "<FieldSelector: .foo.bar.baz>")
+        self.assertEqual(str(fs1 + ["baz"]), "<FieldSelector: .foo.bar.baz>")
+        self.assertEqual(str(fs1 + 7), "<FieldSelector: .foo.bar[7]>")
         fs3 = fs1.extend(fs2)
 
         # Verify that extend works

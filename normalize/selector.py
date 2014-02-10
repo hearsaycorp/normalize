@@ -1,3 +1,4 @@
+import collections
 import functools
 
 
@@ -238,3 +239,15 @@ class FieldSelector(object):
 
     def __repr__(self):
         return "FieldSelector(%r)" % self.selectors
+
+    def __add__(self, other):
+        if isinstance(other, (basestring, int, long)):
+            return FieldSelector(self.selectors + [other])
+        elif isinstance(other, collections.Iterable):
+            return FieldSelector(self.selectors + list(other))
+        elif isinstance(other, FieldSelector):
+            return FieldSelector(self).extend(other)
+        else:
+            raise TypeError(
+                "Cannot add a %s to a FieldSelector" % type(other).__name__
+            )
