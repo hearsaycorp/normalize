@@ -1,5 +1,6 @@
 import collections
 import functools
+import re
 
 
 class FieldSelectorException(Exception):
@@ -192,6 +193,10 @@ class FieldSelector(object):
         return 1
 
     def __eq__(self, other):
+        if not isinstance(other, FieldSelector):
+            raise TypeError(
+                "Cannot compare FieldSelector with %s" % type(other).__name__
+            )
         return self.selectors == other.selectors
 
     def __ne__(self, other):
@@ -226,16 +231,7 @@ class FieldSelector(object):
         return len(self.selectors) < len(other.selectors)
 
     def __str__(self):
-        selector_parts = []
-        for selector in self.selectors:
-            if isinstance(selector, (int, long)):
-                selector_parts.append("[%d]" % selector)
-            elif selector is None:
-                selector_parts.append("[*]")
-            else:
-                selector_parts.append(".%s" % selector)
-
-        return "<%s: %s>" % (self.__class__.__name__, "".join(selector_parts))
+        return "<%s: %s>" % (self.__class__.__name__, self.path)
 
     def __repr__(self):
         return "FieldSelector(%r)" % self.selectors
@@ -251,3 +247,18 @@ class FieldSelector(object):
             raise TypeError(
                 "Cannot add a %s to a FieldSelector" % type(other).__name__
             )
+
+    @property
+    def path(self):
+        selector_parts = []
+        for selector in self.selectors:
+            if isinstance(selector, (int, long)):
+                selector_parts.append("[%d]" % selector)
+            elif selector is None:
+                selector_parts.append("[*]")
+            elif re.search(r'[^a-z_]', selector):
+                selector_parts.append("['%s']" % selector.replace("'", "\\'"))
+            else:
+                selector_parts.append(".%s" % selector)
+
+        return "".join(selector_parts)

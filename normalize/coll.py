@@ -44,6 +44,12 @@ class Collection(object):
     def init_values(self, values):
         raise Exception("init_values must be overridden by a subclass")
 
+    @abc.abstractmethod
+    def itertuples(self):
+        """Iterate over the items in the collection; return (k, v) where k is
+        the index into the collection (or None)"""
+        pass
+
 
 class KeyedCollection(Collection):
     def __getitem__(self, item):
@@ -59,6 +65,9 @@ class DictCollection(KeyedCollection):
                 self.values[k] = (v if isinstance(v, self.itemtype) else
                                   self.itemtype(v))
 
+    def itertuples(self):
+        return self.values.iteritems()
+
 
 class ListCollection(KeyedCollection):
     def init_values(self, values):
@@ -70,6 +79,22 @@ class ListCollection(KeyedCollection):
 
     def append(self, item):
         self.values.append(item)
+
+    def itertuples(self):
+        for i in range(0, len(self.values)):
+            yield (i, self.values[i])
+
+    def __str__(self):
+        return "<%s: %d item(s)>" % (
+            type(self).__name__, len(self.values)
+        )
+
+    def __repr__(self):
+        return "coll.GENERIC_TYPES['%s'](%s)" % (
+            type(self).__name__, ", ".join(
+                repr(x) for x in self.values
+            )
+        )
 
 
 GENERIC_TYPES = dict()
