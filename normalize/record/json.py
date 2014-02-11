@@ -1,8 +1,11 @@
 
 from __future__ import absolute_import
 
+import inspect
 import json
+import types
 
+from normalize.coll import Collection
 from normalize.property.json import JsonProperty
 from normalize.record import ListRecord
 from normalize.record import Record
@@ -72,6 +75,74 @@ def from_json(record_type, json_struct, _init=None):
         raise Exception("Can't coerce to %r" % record_type)
 
 
+# caches for _to_json
+has_to_json = dict()
+to_json_takes_extraneous = dict()
+
+
+def _to_json(x, extraneous):
+    """This function calls a to_json method, if the type has one, otherwise
+    calls back into to_json().  It also check whether the method takes an
+    'extraneous' argument and passes that through if possible."""
+    if type(x) in has_to_json and has_to_json[type(x)]:
+        if to_json_takes_extraneous[type(x)]:
+            return x.to_json(extraneous=extraneous)
+        else:
+            return x.to_json()
+    else:
+        htj = hasattr(x, "to_json") and callable(x.to_json)
+        has_to_json[type(x)] = htj
+        if htj:
+            argspec = inspect.getargspec(x.to_json)
+            tjte = 'extraneous' in argspec.args or argspec.keywords
+            to_json_takes_extraneous[type(x)] = tjte
+            if tjte:
+                return x.to_json(extraneous=extraneous)
+            else:
+                return x.to_json()
+        else:
+            return to_json(x, extraneous)
+
+
+def to_json(record, extraneous=True):
+    """JSON marshall out function: a 'visitor' function which implements
+    marshall out, honoring JSON property types/hints but does not require
+    them."""
+    if isinstance(record, Collection):
+        return list(_to_json(x, extraneous) for x in record)
+
+    elif isinstance(record, Record):
+        rv_dict = {}
+        for propname, prop in type(record).properties.iteritems():
+            if not extraneous and prop.extraneous:
+                pass
+            else:
+                json_name = getattr(prop, "json_name", prop.name)
+                rv_dict[json_name] = to_json(prop.__get__(record))
+
+        return rv_dict
+
+    elif isinstance(record, long):
+        return str(record) if abs(record) > 2**50 else record
+
+    elif isinstance(record, dict):
+        return dict(
+            (k, _to_json(v, extraneous)) for k, v in record.iteritems()
+        )
+
+    elif isinstance(record, (list, tuple)):
+        return list(_to_json(x, extraneous) for x in record)
+
+    elif isinstance(record, (basestring, int, float, types.NoneType)):
+        return record
+
+    else:
+        raise TypeError(
+            "I don't know how to marshall a %s to JSON" %
+            type(record).__name__
+        )
+
+
 class JsonRecord(Record):
     """Version of a Record which deals primarily in JSON"""
     def __init__(self, json_data=None, **kwargs):
@@ -94,6 +165,9 @@ class JsonRecord(Record):
             json_data = json.loads(json_data)
         return from_json(self, json_data)
 
+    def json_data(self):
+        return to_json(self)
+
 
 class JsonListRecord(ListRecord):
     """Version of a ListRecord which deals primarily in JSON"""
@@ -114,3 +188,6 @@ class JsonListRecord(ListRecord):
     def from_json(self, init):
         """Class method constructor"""
         return from_json(self, init)
+
+    def json_data(self):
+        return to_json(self)
