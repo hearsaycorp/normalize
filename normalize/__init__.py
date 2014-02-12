@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from normalize.property import Property
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonCollection
 from normalize.property.json import JsonCollectionProperty

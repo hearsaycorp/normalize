@@ -1,6 +1,12 @@
+from __future__ import absolute_import
+
 import collections
+import copy
 import functools
 import re
+import types
+
+from normalize.coll import ListCollection
 
 
 class FieldSelectorException(Exception):
@@ -262,3 +268,114 @@ class FieldSelector(object):
                 selector_parts.append(".%s" % selector)
 
         return "".join(selector_parts)
+
+
+class MultiFieldSelector(object):
+    """Version of a FieldSelector which stores 'selectors' as a tree"""
+    def __init__(self, *others):
+        selectors = list()
+        heads = collections.defaultdict(set)
+        for other in others:
+            if isinstance(other, MultiFieldSelector):
+                for head, tail in other.heads.iteritems():
+                    heads[head].add(tail)
+            elif isinstance(other, FieldSelector):
+                selectors.append(other)
+            else:
+                selectors.append(FieldSelector(other))
+
+        for selector in selectors:
+            chain = selector.selectors
+            if chain:
+                head = chain[0]
+                tail = FieldSelector(chain[1:]) if len(chain) > 1 else all
+                heads[head].add(tail)
+            else:
+                heads[None].add(all)
+
+        self.heads = dict(
+            (head, all if all in tail else MultiFieldSelector(*tail))
+            for head, tail in heads.iteritems()
+        ) if None not in heads or heads[None] is not all else {None: all}
+
+        # sanity assertions follow
+        head_types = set(type(x) for x in self.heads)
+        self.has_int = int in head_types or long in head_types
+        self.has_string = any(issubclass(x, basestring) for x in head_types)
+        self.has_none = types.NoneType in head_types
+        if self.has_none and (self.has_int or self.has_string):
+            # this should be possible, but I'm punting on it for now
+            raise ValueError(
+                "MultiFieldSelector cannot yet specify a list and a hash/"
+                "object at the same level: %r" % self.heads.keys()
+            )
+
+    def __str__(self):
+        return "<MultiFieldSelector: %s>" % (
+            ",".join(head if self.heads[tail] is all else "%s/..." % head for
+                     head, tail in self.heads.iteritems)
+        )
+
+    def __iter__(self):
+        """Generates FieldSelectors from this MultiFieldSelector"""
+        for head, tail in self.heads.iteritems():
+            head_selector = FieldSelector((head,))
+            if tail is all:
+                if head is None:
+                    yield FieldSelector(())
+                yield head_selector
+            else:
+                for x in tail:
+                    yield head_selector + x
+
+    def __repr__(self):
+        return "MultiFieldSelector%r" % tuple(x.selectors for x in self)
+
+    def _get(self, obj, tail):
+        if tail is all:
+            return copy.deepcopy(obj)
+        else:
+            return tail.get(obj)
+
+    def get(self, obj):
+        ctor = type(obj)
+        if isinstance(obj, (list, ListCollection)):
+            if self.has_string:
+                raise TypeError(
+                    "MultiFieldSelector has string in list collection context"
+                )
+            if self.has_none:
+                tail = self.heads[None]
+                return ctor(self._get(x, tail) for x in obj)
+            else:
+                return ctor(
+                    self._get(obj[head], tail) for head, tail in
+                    self.heads.iteritems()
+                )
+        elif isinstance(obj, dict):
+            if self.has_none:
+                tail = self.heads[None]
+                return ctor(
+                    (k, self._get(v, tail)) for k, v in obj.iteritems()
+                )
+            else:
+                return ctor(
+                    (head, self._get(obj[head], tail)) for head, tail in
+                    self.heads.iteritems() if head in obj
+                )
+        else:
+            if self.has_int or (self.has_none and self.heads[None] is not all):
+                raise TypeError(
+                    "MultiFieldSelector has %s in %s context" % (
+                        "int" if self.has_int else "none", ctor.__name__
+                    )
+                )
+            if self.has_none:
+                return self._get(obj, all)
+            else:
+                kwargs = dict()
+                for head, tail in self.heads.iteritems():
+                    val = getattr(obj, head, None)
+                    if val is not None:
+                        kwargs[head] = self._get(val, tail)
+                return ctor(**kwargs)

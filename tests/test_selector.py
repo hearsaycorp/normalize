@@ -2,7 +2,12 @@ from __future__ import absolute_import
 
 import unittest
 
-from normalize import FieldSelector, FieldSelectorException
+from normalize import FieldSelector
+from normalize import FieldSelectorException
+from normalize import Property
+from normalize import Record
+from normalize.property import ListProperty
+from normalize.selector import MultiFieldSelector
 from testclasses import MockChildRecord, MockJsonRecord
 
 
@@ -250,3 +255,73 @@ class TestStructableFieldSelector(unittest.TestCase):
         field_selectors_sorted = sorted(field_selectors)
         self.assertEqual(field_selectors_sorted,
                          [fs1, fs2, fs3, fs4, fs5, fs6, fs7])
+
+    def test_multi_selector(self):
+        selectors = set(
+            (
+                ("bar", ),
+                ("foo", "bar", 0, "boo"),
+                ("foo", "bar", 0, "hiss"),
+                ("foo", "bar", 1),
+            )
+        )
+
+        mfs = MultiFieldSelector(*selectors)
+        emitted = set(tuple(x.selectors) for x in mfs)
+        self.assertEqual(emitted, selectors)
+
+        # if you add a higher level selector, then more specific paths
+        # disappear from the MFS
+        mfs2 = MultiFieldSelector(mfs, ["foo", "bar"])
+        emitted = set(tuple(x.selectors) for x in mfs2)
+        self.assertEqual(emitted, set((("bar",), ("foo", "bar"))))
+
+        data = {
+            "bar": [1, 2, 3],
+            "foo": {
+                "bar": [
+                    {"boo": "waa", "frop": "quux"},
+                    {"waldo": "grault"},
+                    {"fubar": "corge"},
+                ],
+            },
+        }
+        selected = mfs.get(data)
+        self.assertEqual(
+            selected, {
+                "bar": [1, 2, 3],
+                "foo": {
+                    "bar": [
+                        {"boo": "waa"},
+                        {"waldo": "grault"},
+                    ],
+                },
+            }
+        )
+
+        class Octothorpe(Record):
+            name = Property()
+            boo = Property()
+            hiss = Property()
+
+        class Caret(Record):
+            bar = ListProperty(Octothorpe)
+
+        class Pilcrow(Record):
+            bar = ListProperty(Octothorpe)
+            foo = Property(isa=Caret)
+            baz = Property()
+
+        full = Pilcrow(
+            bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],
+            foo=dict(bar=[dict(name="Owl", hiss="Hunny Bee"),
+                          dict(name="Piglet")]),
+            baz="Wizzle",
+        )
+        filtered = mfs.get(full)
+        expected = Pilcrow(
+            bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],
+            foo=dict(bar=[dict(hiss="Hunny Bee"),
+                          dict(name="Piglet")]),
+        )
+        self.assertEqual(filtered, expected)
