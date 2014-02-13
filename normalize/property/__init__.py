@@ -5,6 +5,7 @@ import inspect
 import weakref
 
 from normalize.property.meta import MetaProperty
+from normalize.coll import ListCollection
 
 
 class _Default():
@@ -177,13 +178,36 @@ class CollectionProperty(Property):
         self.check_item = None
         self.of = of
         self.coll = coll
+        super(CollectionProperty, self).__init__(**kwargs)
 
+    def _coerce(self, value):
+        if not isinstance(value, self.coll) or value.itemtype != self.of:
+            value = self.coll(self.of, (value if value else tuple()))
+        return value
 
-class ROCollectionProperty(CollectionProperty, ROProperty):
     def __set__(self, obj, value):
-        if not isinstance(value, self.coll):
-            if value is None:
-                value = self.coll()
-            else:
-                value = self.coll(value)
-        super(ROCollectionProperty, self).__set__(obj, value)
+        super(CollectionProperty, self).__set__(obj, self._coerce(value))
+
+    def init_prop(self, obj, value=_Default):
+        super(CollectionProperty, self).init_prop(obj, self._coerce(value))
+
+
+class ListProperty(CollectionProperty):
+    __trait__ = "list"
+
+    def __init__(self, list_of=None, **kwargs):
+        if list_of is None:
+            list_of = kwargs.pop("of", None)
+        if not list_of:
+            raise Exception(
+                "List Properties must have a defined item type; pass of= "
+                "or list_of= to the declaration"
+            )
+        colltype = kwargs.pop('coll', ListCollection)
+        if not issubclass(colltype, ListCollection):
+            raise Exception(
+                "List Property collections must derive ListCollection"
+            )
+        super(ListProperty, self).__init__(
+            of=list_of, coll=ListCollection, **kwargs
+        )

@@ -6,8 +6,10 @@ import re
 import unittest2
 
 from normalize.record import Record
+from normalize.coll import ListCollection
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
+from normalize.property import ListProperty
 from normalize.property import Property
 from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
@@ -181,3 +183,19 @@ class TestProperties(unittest2.TestCase):
             # test RO lazy value is computed late, and the result is
             # type checked
             vr.id
+
+    def test_list_properties(self):
+        """Test that List Properties can be created which are iterable"""
+        class Item(Record):
+            name = Property()
+
+        class GroupingRecord(Record):
+            members = ListProperty(of=Item)
+
+        gr = GroupingRecord(members=[Item(name="bob"), Item(name="bill")])
+
+        self.assertIsInstance(gr.members, ListCollection)
+        self.assertIsInstance(gr.members[0], Item)
+        members = list(gr.members)
+        self.assertEqual(members[0].name, "bob")
+        self.assertEqual(members[1].name, "bill")
