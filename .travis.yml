@@ -5,6 +5,6 @@ install:
   #- "pip install -r requirements.txt"
 script:
   - nosetests -s -v
-  - 'find normalize -name "*.py" | xargs pyflakes'
+  - pyflakes normalize
   - pep8 normalize
   - pep8 --max-line-length=100 tests
