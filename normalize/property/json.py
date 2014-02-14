@@ -1,4 +1,7 @@
+
 from ..property import Property
+from ..property import ListProperty
+from ..coll import ListCollection
 
 
 class JsonProperty(Property):
@@ -21,4 +24,12 @@ class JsonProperty(Property):
         return self.json_out(propval) if self.json_out else propval
 
     def from_json(self, json_data):
-        return self.json_in(json_data) if self.json_data else json_data
+        return self.json_in(json_data) if self.json_in else json_data
+
+
+class JsonCollectionProperty(ListProperty, JsonProperty):
+    pass
+
+
+class JsonCollection(ListCollection):
+    pass

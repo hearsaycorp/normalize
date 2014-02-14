@@ -63,6 +63,8 @@ class Record(object):
         return "%s(%s)" % (typename, ", ".join(values))
 
     def __eq__(self, other):
+        """Compare two Record classes; recursively compares all attributes
+        for equality (except those marked 'extraneous')"""
         if type(self) != type(other):
             return False
         for propname, prop in type(self).properties.iteritems():

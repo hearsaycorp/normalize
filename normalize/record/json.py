@@ -32,7 +32,7 @@ def from_json(record_type, json_struct, _init=None):
             for x in json_struct:
                 init_arg.append(from_json(member_type, x))
 
-        if _init:
+        if _init is not None:
             return init_arg
         else:
             return record_type(init_arg)
@@ -51,7 +51,9 @@ def from_json(record_type, json_struct, _init=None):
                 json_name = prop.json_name
                 if json_name is not None:
                     if json_name in json_struct:
-                        kwargs[propname] = prop.from_json(json_struct[prop])
+                        kwargs[propname] = prop.from_json(
+                            json_struct[json_name]
+                        )
             elif prop.name in json_struct:
                 json_val = json_struct[prop.name]
                 proptype = prop.valuetype
@@ -62,7 +64,7 @@ def from_json(record_type, json_struct, _init=None):
                 else:
                     # let the property's 'check' etc figure it out.
                     kwargs[propname] = json_val
-        if _init:
+        if _init is not None:
             return kwargs
         else:
             return record_type(**kwargs)
