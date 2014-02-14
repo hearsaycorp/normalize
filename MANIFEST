@@ -1,0 +1,10 @@
+{
+    "name": "normalize",
+    "provision": [],
+    "tasks": [
+        {"name": "Nosetests", "command": "nosetests -s -v"},
+        {"name": "PEP8 code", "command": "pep8 normalize"},
+        {"name": "PyFlakes tests", "command": "find normalize -name \\*.py | xargs pyflakes"}
+    ]
+}
+
