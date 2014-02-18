@@ -3,22 +3,29 @@ from __future__ import absolute_import
 
 import collections
 
+from richenum import OrderedRichEnum
+from richenum import OrderedRichEnumValue
+
 from normalize.property import SafeProperty
 from normalize.coll import Collection
 from normalize.record import Record
 from normalize.selector import FieldSelector
 
 
-class DiffTypes(object):
+class DiffTypes(OrderedRichEnum):
     """
     An "enum" to represent types of diffs
     """
-    NO_CHANGE = 1
-    ADDED = 2
-    REMOVED = 3
-    MODIFIED = 4
+    NO_CHANGE = OrderedRichEnumValue(1, "none", "UNCHANGED")
+    ADDED = OrderedRichEnumValue(2, "added", "ADDED")
+    REMOVED = OrderedRichEnumValue(3, "removed", "REMOVED")
+    MODIFIED = OrderedRichEnumValue(4, "modified", "MODIFIED")
 
-    reverse = ["ENULL", "UNCHANGED", "ADDED", "REMOVED", "MODIFIED"]
+
+def coerce_diff(dt):
+    if not isinstance(dt, OrderedRichEnumValue):
+        dt = DiffTypes.from_canonical(dt)
+    return dt.index
 
 
 class DiffInfo(Record):
@@ -26,7 +33,9 @@ class DiffInfo(Record):
     Container for storing diff information that can be used to reconstruct the
     values diffed.
     """
-    diff_type = SafeProperty(isa=int)
+    diff_type = SafeProperty(
+        check=DiffTypes.from_index, coerce=coerce_diff, isa=int,
+    )
     base = SafeProperty(isa=FieldSelector)
     other = SafeProperty(isa=FieldSelector)
 
@@ -43,7 +52,7 @@ class DiffInfo(Record):
                 pathinfo = self.base.path
         else:
             pathinfo = self.other.path
-        difftype = DiffTypes.reverse[self.diff_type]
+        difftype = DiffTypes.from_index(self.diff_type).display_name
         return "<DiffInfo: %s %s>" % (difftype, pathinfo)
 
 

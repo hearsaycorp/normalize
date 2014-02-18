@@ -1,8 +1,6 @@
 TODO
 ====
 
-* Make ``DiffInfo`` use ``richenum``
-
 * switch sense of 'safe' properties; safe should be the default,
   unsafe only by request.  Detect non-sensible combinations.
 
