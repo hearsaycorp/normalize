@@ -22,8 +22,9 @@ try:
     import nose
 except ImportError:
     recommend = (
-        "pip install nose" if "VIRTUAL_ENV" in os.environ else
-        "sudo easy_install nose"
+        "pip install nose unittest2 -r requirements.txt" if
+        "VIRTUAL_ENV" in os.environ else
+        "sudo easy_install nose unittest2 richenum"
     )
     sys.stderr.write(
         "Running the tests requires Nose. Try:\n\n{cmd}\n\nAborting.\n"
@@ -32,4 +33,6 @@ except ImportError:
     sys.exit(1)
 
 
-nose.main()
+args = [] if "distutils" in sys.modules else sys.argv[1:]
+
+nose.main(argv=['nosetests'] + args)
