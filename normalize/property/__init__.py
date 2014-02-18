@@ -222,3 +222,7 @@ class ListProperty(CollectionProperty):
         super(ListProperty, self).__init__(
             of=list_of, coll=ListCollection, **kwargs
         )
+
+
+class SafeListCollectionProperty(ListProperty, SafeCollectionProperty):
+    pass

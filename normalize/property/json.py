@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
-from normalize.property import Property
 from normalize.property import ListProperty
+from normalize.property import Property
+from normalize.property import SafeProperty
 from normalize.coll import ListCollection
 
 
@@ -28,9 +29,17 @@ class JsonProperty(Property):
         return self.json_in(json_data) if self.json_in else json_data
 
 
+class SafeJsonProperty(JsonProperty, SafeProperty):
+    pass
+
+
 class JsonCollectionProperty(ListProperty, JsonProperty):
     pass
 
 
 class JsonCollection(ListCollection):
+    pass
+
+
+class SafeJsonCollectionProperty(JsonCollectionProperty, SafeProperty):
     pass

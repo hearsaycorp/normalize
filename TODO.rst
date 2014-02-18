@@ -1,9 +1,6 @@
 TODO
 ====
 
-* switch sense of 'safe' properties; safe should be the default,
-  unsafe only by request.  Detect non-sensible combinations.
-
 * copy constructor (teaching ``__init__()`` to take an object might
   work), to be used by ``MultiFieldSelector([]).get()``
 

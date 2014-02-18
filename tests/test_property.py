@@ -27,6 +27,7 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(prop, Property)
         self.assertIsInstance(type(prop), MetaProperty)
         self.assertRegexpMatches(str(prop), r".*unbound.*", re.I)
+        self.assertIsInstance(prop, SafeProperty)
 
         roprop = Property(traits=['ro'])
         self.assertIsNotNone(roprop)
@@ -39,6 +40,7 @@ class TestProperties(unittest2.TestCase):
 
         lazyprop = Property(lazy=True)
         self.assertIsInstance(lazyprop, LazyProperty)
+        self.assertFalse(isinstance(lazyprop, SafeProperty))
         self.assertRaises(Exception, Property, lazy=False)
 
     def test_1_basic(self):

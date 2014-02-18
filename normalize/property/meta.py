@@ -26,7 +26,7 @@ def has(selfie, self, args, kwargs):
     object type, because unlike in Perl, python cannot re-bless objects from
     one class to another.
     """
-    extra_traits = kwargs.pop('traits', tuple())
+    extra_traits = set(kwargs.pop('traits', tuple()))
     # detect initializer arguments only supported by a subclass and add
     # them to extra_traits
     for argname in kwargs:
@@ -34,18 +34,24 @@ def has(selfie, self, args, kwargs):
             # initializer does not support this arg.  Do any subclasses?
             for trait, proptype in DUCKWARGS[argname]:
                 if isinstance(proptype, type(self)):
-                    extra_traits += (trait,)
+                    extra_traits.add(trait)
 
-    all_traits = (
-        self.traits if not extra_traits else
-        tuple(sorted(set(self.traits + tuple(extra_traits))))
-    )
-    if all_traits not in PROPERTY_TYPES:
+    all_traits = set(self.traits) | extra_traits
+
+    if "unsafe" in all_traits:
+        all_traits.remove("unsafe")
+    else:
+        if "ro" not in all_traits and "lazy" not in all_traits:
+            all_traits.add("safe")
+
+    trait_set_key = tuple(sorted(all_traits))
+
+    if trait_set_key not in PROPERTY_TYPES:
         raise Exception(
             "Failed to find a Property type which provides traits %r" %
-            all_traits
+            list(trait_set_key)
         )
-    property_type = PROPERTY_TYPES[all_traits]
+    property_type = PROPERTY_TYPES[trait_set_key]
     if not isinstance(property_type, type(self)):
         raise Exception(
             "Can't create %s property using %s constructor" % (
@@ -75,14 +81,14 @@ class MetaProperty(type):
             new_kwargs = inspect.getargspec(attrs['__init__']).args
             if new_kwargs:
                 duckwargs.update(new_kwargs)
-        traits = list()
+        traits = set()
         trait = attrs.get('__trait__', None)
         if trait:
-            traits.append(trait)
+            traits.add(trait)
         all_duckwargs = set(duckwargs)
         for base in bases:
             if hasattr(base, "traits"):
-                traits.extend(base.traits)
+                traits.update(base.traits)
             if hasattr(base, "all_duckwargs"):
                 all_duckwargs.update(base.all_duckwargs)
         traits = tuple(sorted(traits))
