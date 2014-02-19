@@ -142,6 +142,14 @@ class TestRecordComparison(unittest.TestCase):
             {"REMOVED .age", "MODIFIED .name", "ADDED .interests"},
         )
 
+    def test_diff_unicode(self):
+        """Test behavior of unicode string comparisons"""
+        ubert = Person(id=123, name=u"Bert")
+        bert = Person(id=123, name="Bert")
+        self.assertDifferences(
+            compare_record_iter(bert, ubert), ()
+        )
+
     def test_diff_collection(self):
         """Test diff'ing of collections"""
         circle_a = Circle(
