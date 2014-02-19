@@ -7,13 +7,13 @@ writing "plain old data structures" to wrap data from network sources
 in python objects.
 
 It is called "normalize", because it is focused on the first normal
-form of relational database modeling.
+form of relational database modelling.
 This is the simplest and most straightforward level which defines what
-are normally called "records".
-A record is a defined collection of properties/attributes ("columns"),
+are normally called "records" (or *rows*).
+A record is a defined collection of properties/attributes (*columns*),
 where you know roughly what to expect in each property/attribute, and
-can access them by some kind of descriptor (ie, the attribute name).
-You can also use it as a general purpose declarative metaprogramming
+can access them by some kind of descriptor (i.e., the attribute name).
+You can also use it as a general purpose declarative meta-programming
 framework, as it ships with an official meta-object-protocol (MOP) API
 to describe this information, built on top of python's notion of
 classes/types and descriptors and extended where necessary.
@@ -27,23 +27,26 @@ You can then perform basic operations with the objects, such as make
 changes to them and convert them back, or compare them to another
 version using the rich comparison API.
 You can also construct the objects 'natively' using regular python
-keyword/value constructors or by passing a dict as the first argument.
+keyword/value constructors or by passing a ``dict`` as the first
+argument.
 
-It is very similar in scope to the 'remoteobjects' and 'schematics'
-packages on PyPI, and may in time evolve to include all the features
-of those packages.
+It is very similar in scope to the ``remoteobjects`` and
+``schematics`` packages on PyPI, and may in time evolve to include all
+the features of those packages.
 
 While there is some notion of primary keys in the module, mainly for
 the purposes of recognizing objects in collections for comparison,
 higher levels of normalization are an exercise left to the
-implementor.
+implementer.
 
 
 Features
 --------
 
-* declarative API, which may optionally contain direct marshalling
+* declarative API, which may optionally contain direct marshaling
   hints:
+
+  ::
 
       class Star(Record):
           id = Property(isa=int, required=True)
@@ -62,7 +65,7 @@ Features
   features via optional Property sub-classes, selected automatically,
   enabling:
 
-  * lazy attributes which shortcut at the python core level once
+  * lazy attributes which short-cut at the python core level once
     calculated (a somewhat underused python feature)
 
   * read-only attributes
@@ -71,18 +74,20 @@ Features
 
   * collection attributes (see below)
 
-* coercion from regular python dictionaries or key=value (kwargs)
-  constructor arguments
+* coercion from regular python dictionaries or ``key=value``
+  (*kwargs*) constructor arguments
 
 * conversion to and from JSON for all classes, regardless of whether
   they derive ``normalize.record.json.JsonRecord``, using the visitor
-  pattern.  Support for custom functions for JSON marshall in and out.
+  pattern.  Support for custom functions for JSON marshal in and out.
 
 * conversion to primitive python types via the pickle API
   (``__getnewargs__``)
 
 * typed collections API with item coercion (currently, only lists are
   implemented):
+
+  ::
 
       class StarSystem(Record):
           components = ListProperty(Star)
@@ -95,6 +100,8 @@ Features
 
 * "field selector" API which allows for specification of properties
   deep into nested data structures;
+
+  ::
 
       name_selector = FieldSelector("components", 0, "name")
       print name_selector.get(alpha_centauri)  # "Proxima Centauri"

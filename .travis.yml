@@ -1,8 +1,22 @@
 language: python
 python: "2.7"
-install: []  #"pip install -r requirements.txt"
+install:
+  - sudo apt-get install python-docutils lynx-cur
+  - pip install pep8 pyflakes nose unittest2
+  - "pip install -r requirements.txt"
 script:
   - nosetests -s -v
-  - 'find normalize -name "*.py" | xargs pyflakes'
+  - pyflakes normalize
   - pep8 normalize
-  #- pep8 --max-line-length=100 tests
+  - pep8 --max-line-length=100 tests
+  - |
+    fails=0
+    for rstfile in $(find . -name "*.rst")
+    do
+       err_count=$(rst2html $rstfile |
+                   lynx -dump -stdin 2>&1 |
+                   egrep -C2 '(ERROR|WARNING)/' | tee /dev/fd/2 |
+                   wc -l)
+       fails=$(($fails + $err_count))
+    done
+    test $fails -eq 0
