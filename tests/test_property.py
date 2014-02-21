@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 import re
+import types
 import unittest2
 
 from normalize.coll import ListCollection
@@ -202,6 +203,40 @@ class TestProperties(unittest2.TestCase):
             members = ListProperty(of=Item)
 
         gr = GroupingRecord(members=[Item(name="bob"), Item(name="bill")])
+
+        self.assertIsInstance(gr.members, ListCollection)
+        self.assertIsInstance(gr.members[0], Item)
+        members = list(gr.members)
+        self.assertEqual(members[0].name, "bob")
+        self.assertEqual(members[1].name, "bill")
+
+    def test_customized_list_properties(self):
+        """Test that list properties with custom collection behavior invoke
+        such correctly"""
+        class Item(Record):
+            name = Property()
+
+        class CustomColl(ListCollection):
+            def init_values(self, values):
+                if isinstance(values, types.StringType):
+                    values = values.split(',')
+                    values = [{'name': v} for v in values]
+                super(CustomColl, self).init_values(values)
+
+        class GroupingRecord(Record):
+            members = ListProperty(coll=CustomColl, of=Item)
+
+        # Instantiating with Python objects should still work...
+        gr = GroupingRecord(members=[Item(name="bob"), Item(name="bill")])
+
+        self.assertIsInstance(gr.members, ListCollection)
+        self.assertIsInstance(gr.members[0], Item)
+        members = list(gr.members)
+        self.assertEqual(members[0].name, "bob")
+        self.assertEqual(members[1].name, "bill")
+
+        # Instantiating from the dict should work as well, with custom behavior
+        gr = GroupingRecord({'members': 'bob,bill'})
 
         self.assertIsInstance(gr.members, ListCollection)
         self.assertIsInstance(gr.members[0], Item)
