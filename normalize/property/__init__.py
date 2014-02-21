@@ -226,3 +226,38 @@ class ListProperty(CollectionProperty):
 
 class SafeListCollectionProperty(ListProperty, SafeCollectionProperty):
     pass
+
+
+trait_num = 0
+
+
+def make_property_type(name, base_type=Property,
+                       attrs=None, trait_name=None,
+                       *default_args, **default_kwargs):
+    """Makes a new Property type, which supplies the given arguments as
+    defaults to the Property() constructor.  Note: defaults which affect the
+    property type returned cannot be supplied by this mechanism."""
+
+    if not attrs:
+        attrs = {}
+    bases = base_type if isinstance(base_type, tuple) else (base_type,)
+    self_type = []
+    if not trait_name:
+        global trait_num
+        trait_num += 1
+        trait_name = "trait%d" % trait_num
+
+    def __init__(self, *args, **kwargs):
+        if not len(args) and len(default_args):
+            args = default_args
+        for arg, val in default_kwargs.iteritems():
+            if arg not in kwargs:
+                kwargs[arg] = val
+        return super(self_type[0], self).__init__(*args, **kwargs)
+
+    attrs['__init__'] = __init__
+    attrs['__trait__'] = trait_name
+
+    new_property_type = type(name, bases, attrs)
+    self_type.append(new_property_type)
+    return new_property_type
