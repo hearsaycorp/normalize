@@ -111,13 +111,44 @@ class TestRecordComparison(unittest.TestCase):
     def test_diff_dict(self):
         """Test diff'ing of dictionaries"""
         self.assertDifferences(
-            compare_dict_iter({"FL": "Orance Blossom",
+            compare_dict_iter({"FL": "Orange Blossom",
                                "LA": "Magnolia",
                                "MN": "Pink and white lady's-slipper"},
-                              {"Kentucky": "Goldenron",
+                              {"Kentucky": "Goldenrod",
                                "Louisiana": "Magnolia",
                                "Minnesota": "Pink and white lady's-slipper"}),
             ("REMOVED ['FL']", "ADDED ['Kentucky']"),
+        )
+
+        a = {
+            "2001": u"Am\xE9lie",
+            "1983": u"\xC0 nos amour",
+            "1955": "Les Diaboliques",
+        }
+        b = {
+            "2001": u"Ame\u0301lie",
+            "1983": u"\xC0 nos\u2003amour",
+            "1955": "les Diaboliques",
+        }
+
+        self.assertDifferences(
+            compare_dict_iter(a, b, options=DiffOptions(ignore_case=True)),
+            (),
+        )
+        self.assertDifferences(
+            compare_dict_iter(a, b),
+            {"REMOVED ['1955']", "ADDED ['1955']"},  # :-/
+        )
+        self.assertDifferences(
+            compare_dict_iter(a, b, options=DiffOptions(ignore_ws=False,
+                                                        ignore_case=True)),
+            {"REMOVED ['1983']", "ADDED ['1983']"},
+        )
+        self.assertDifferences(
+            compare_dict_iter(a, b, options=DiffOptions(unicode_normal=False,
+                                                        ignore_case=True,
+                                                        ignore_ws=True)),
+            {"REMOVED ['2001']", "ADDED ['2001']"},
         )
 
     def test_diff_record(self):
@@ -148,6 +179,32 @@ class TestRecordComparison(unittest.TestCase):
         bert = Person(id=123, name="Bert")
         self.assertDifferences(
             compare_record_iter(bert, ubert), ()
+        )
+        bert.name = "Bert "
+        self.assertDifferences(compare_record_iter(bert, ubert), ())
+        self.assertDifferences(
+            compare_record_iter(bert, ubert,
+                                options=DiffOptions(ignore_ws=False)),
+            {"MODIFIED .name"},
+        )
+
+        ubert.name = u"Ba\u0304te"  # closer to "bart", but whatever
+        bert.name = u"B\u0101te "
+        self.assertDifferences(compare_record_iter(bert, ubert), ())
+        self.assertDifferences(
+            compare_record_iter(bert, ubert,
+                                options=DiffOptions(unicode_normal=False)),
+            {"MODIFIED .name"},
+        )
+
+        bert.name = bert.name.upper()
+        self.assertDifferences(
+            compare_record_iter(bert, ubert), {"MODIFIED .name"},
+        )
+        self.assertDifferences(
+            compare_record_iter(bert, ubert,
+                                options=DiffOptions(ignore_case=True)),
+            (),
         )
 
     def test_diff_collection(self):
