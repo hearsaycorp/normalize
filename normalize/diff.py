@@ -2,6 +2,8 @@
 from __future__ import absolute_import
 
 import collections
+import re
+import unicodedata
 
 from richenum import OrderedRichEnum
 from richenum import OrderedRichEnumValue
@@ -56,7 +58,53 @@ class DiffInfo(Record):
         return "<DiffInfo: %s %s>" % (difftype, pathinfo)
 
 
-def compare_record_iter(a, b, fs_a=None, fs_b=None):
+class DiffOptions(object):
+    """Optional data structure to pass diff options down"""
+    def __init__(self, ignore_ws=True, ignore_case=False,
+                 unicode_normal=True):
+        self.ignore_ws = ignore_ws
+        self.ignore_case = ignore_case
+        self.unicode_normal = unicode_normal
+
+    def items_equal(self, a, b):
+        return self.normalize_val(a) == self.normalize_val(b)
+
+    def normalize_whitespace(self, value):
+        if isinstance(value, unicode):
+            return u" ".join(
+                x for x in re.split(r'\s+', value, flags=re.UNICODE) if
+                len(x)
+            )
+        else:
+            return " ".join(value.split())
+
+    def normalize_unf(self, value):
+        if isinstance(value, unicode):
+            return unicodedata.normalize('NFC', value)
+        else:
+            return value
+
+    def normalize_case(self, value):
+        # FIXME: this will do the wrong thing for letters in some languages, eg
+        # Greek, Turkish.  Correct, locale-dependent unicode case folding is
+        # left as an exercise for a subclass.
+        return value.upper()
+
+    def normalize_val(self, value):
+        if isinstance(value, basestring):
+            if self.ignore_ws:
+                value = self.normalize_whitespace(value)
+            if self.ignore_case:
+                value = self.normalize_case(value)
+            if self.unicode_normal:
+                value = self.normalize_unf(value)
+        return value
+
+    def record_id(self, record):
+        return record.__pk__
+
+
+def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
     if type(a) != type(b):
         # TODO: no clear, obvious behavior here; but could define it later
         raise TypeError(
@@ -66,6 +114,8 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None):
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
+    if not options:
+        options = DiffOptions()
 
     properties = type(a).properties
     for propname in sorted(properties):
@@ -95,10 +145,11 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None):
                 if isinstance(propval_a, types):
                     break
             for diff in func(
-                propval_a, propval_b, fs_a + [propname], fs_b + [propname]
+                propval_a, propval_b, fs_a + [propname], fs_b + [propname],
+                options,
             ):
                 yield diff
-        elif propval_a != propval_b:
+        elif not options.items_equal(propval_a, propval_b):
             yield DiffInfo(
                 diff_type=DiffTypes.MODIFIED,
                 base=fs_a + [propname],
@@ -111,10 +162,13 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None):
 # it would probably also be more than 3 times as difficult to debug.
 
 
-def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None):
+def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
+                            options=None):
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
+    if options is None:
+        options = DiffOptions()
 
     propvals = dict(a=propval_a, b=propval_b)
     values = dict()
@@ -129,7 +183,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None):
         seen = collections.Counter()
 
         for k, v in propval_x.itertuples():
-            pk = v.__pk__
+            pk = options.record_id(v)
             if compare_values is None:
                 compare_values = isinstance(pk, tuple)
             vals.add((pk, seen[pk]))
@@ -163,15 +217,18 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None):
             selector_b = fs_b + b_key
             for diff in compare_record_iter(
                 propval_a[a_key], propval_b[b_key],
-                selector_a, selector_b,
+                selector_a, selector_b, options,
             ):
                 yield diff
 
 
-def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None):
+def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
+                      options=None):
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
+    if not options:
+        options = DiffOptions()
     propvals = dict(a=propval_a, b=propval_b)
     values = dict()
     indices = dict()
@@ -182,6 +239,7 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None):
         seen = collections.Counter()
         i = 0
         for v in propval_x:
+            v = options.normalize_val(v)
             vals.add((v, seen[v]))
             rev_key[(v, seen[v])] = i
             seen[v] += 1
@@ -207,10 +265,13 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None):
         )
 
 
-def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None):
+def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
+                      options=None):
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
+    if not options:
+        options = DiffOptions()
     propvals = dict(a=propval_a, b=propval_b)
     values = dict()
     rev_keys = dict()
@@ -220,6 +281,7 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None):
         rev_key = rev_keys[x] = dict()
         seen = collections.Counter()
         for k, v in propval_x.iteritems():
+            v = options.normalize_val(v)
             vals.add((v, seen[v]))
             rev_key[(v, seen[v])] = k
             seen[v] += 1
