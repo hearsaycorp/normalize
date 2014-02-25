@@ -220,7 +220,7 @@ class ListProperty(CollectionProperty):
                 "List Property collections must derive ListCollection"
             )
         super(ListProperty, self).__init__(
-            of=list_of, coll=ListCollection, **kwargs
+            of=list_of, coll=colltype, **kwargs
         )
 
 
