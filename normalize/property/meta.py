@@ -59,7 +59,7 @@ def has(selfie, self, args, kwargs):
             )
         )
 
-    return super(selfie, self).__new__(property_type, *args, **kwargs)
+    return super(selfie, self).__new__(property_type)
 
 
 class MetaProperty(type):
