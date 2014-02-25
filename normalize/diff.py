@@ -61,10 +61,11 @@ class DiffInfo(Record):
 class DiffOptions(object):
     """Optional data structure to pass diff options down"""
     def __init__(self, ignore_ws=True, ignore_case=False,
-                 unicode_normal=True):
+                 unicode_normal=True, unchanged=False):
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
         self.unicode_normal = unicode_normal
+        self.unchanged = unchanged
 
     def items_equal(self, a, b):
         return self.normalize_val(a) == self.normalize_val(b)
@@ -155,6 +156,12 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
                 base=fs_a + [propname],
                 other=fs_b + [propname],
             )
+        elif options.unchanged:
+            yield DiffInfo(
+                diff_type=DiffTypes.NO_CHANGE,
+                base=fs_a + [propname],
+                other=fs_b + [propname],
+            )
 
 
 # There's a lot of repetition in the following code.  It could be served by one
@@ -192,6 +199,17 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
+
+    if options.unchanged:
+        unchanged = values['a'] & values['b']
+        for pk, seq in unchanged:
+            a_key = rev_keys['a'][pk, seq]
+            b_key = rev_keys['b'][pk, seq]
+            yield DiffInfo(
+                diff_type=DiffTypes.NO_CHANGE,
+                base=fs_a + [a_key],
+                other=fs_b + [b_key],
+            )
 
     for pk, seq in removed:
         a_key = rev_keys['a'][pk, seq]
@@ -248,6 +266,17 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
 
+    if options.unchanged:
+        unchanged = values['a'] & values['b']
+        for v, seq in unchanged:
+            a_idx = indices['a'][v, seq]
+            b_idx = indices['b'][v, seq]
+            yield DiffInfo(
+                diff_type=DiffTypes.NO_CHANGE,
+                base=fs_a + [a_idx],
+                other=fs_b + [b_idx],
+            )
+
     for v, seq in removed:
         a_key = indices['a'][v, seq]
         selector = fs_a + [a_key]
@@ -288,6 +317,17 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
+
+    if options.unchanged:
+        unchanged = values['a'] & values['b']
+        for v, seq in unchanged:
+            a_key = rev_keys['a'][v, seq]
+            b_key = rev_keys['b'][v, seq]
+            yield DiffInfo(
+                diff_type=DiffTypes.NO_CHANGE,
+                base=fs_a + [a_key],
+                other=fs_b + [b_key],
+            )
 
     for v, seq in removed:
         a_key = rev_keys['a'][v, seq]

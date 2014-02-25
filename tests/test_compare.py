@@ -291,8 +291,7 @@ class TestRecordComparison(unittest.TestCase):
                 }
             ]
         )
-        self.assertDifferences(
-            compare_record_iter(wall_one, wall_two),
+        expected_differences = (
             {
                 'REMOVED .posts[0].comments[0]',
                 'ADDED .posts[0].comments[2]',
@@ -301,5 +300,89 @@ class TestRecordComparison(unittest.TestCase):
                 'REMOVED .owner.interests[1]',
                 'REMOVED .posts[0].comments[1].poster.interests[1]',
                 "ADDED .posts[0].comments[1].poster.info['birth name']",
+            }
+        )
+
+        self.assertDifferences(
+            compare_record_iter(wall_one, wall_two), expected_differences,
+        )
+
+        self.assertDifferences(
+            compare_record_iter(wall_one, wall_two,
+                                options=DiffOptions(unchanged=True)),
+            expected_differences |
+            {
+                'UNCHANGED ('
+                '.owner.interests[2]/'
+                '.owner.interests[1])',
+                'UNCHANGED ('
+                '.posts[0].comments[1].content/'
+                '.posts[0].comments[0].content)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].edited/'
+                '.posts[0].comments[0].edited)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].id/'
+                '.posts[0].comments[0].id)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.id/'
+                '.posts[0].comments[0].poster.id)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.info.manner/'
+                '.posts[0].comments[0].poster.info.manner)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.info.title/'
+                '.posts[0].comments[0].poster.info.title)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.interests[0]/'
+                '.posts[0].comments[0].poster.interests[0])',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.interests[2]/'
+                '.posts[0].comments[0].poster.interests[1])',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.name/'
+                '.posts[0].comments[0].poster.name)',
+                'UNCHANGED ('
+                '.posts[0].comments[1]/'
+                '.posts[0].comments[0])',
+                'UNCHANGED ('
+                '.posts[0].comments[2].content/'
+                '.posts[0].comments[1].content)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].edited/'
+                '.posts[0].comments[1].edited)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].id/'
+                '.posts[0].comments[1].id)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.id/'
+                '.posts[0].comments[1].poster.id)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.info.hair/'
+                '.posts[0].comments[1].poster.info.hair)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.info.title/'
+                '.posts[0].comments[1].poster.info.title)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.interests[0]/'
+                '.posts[0].comments[1].poster.interests[0])',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.interests[1]/'
+                '.posts[0].comments[1].poster.interests[1])',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.name/'
+                '.posts[0].comments[1].poster.name)',
+                'UNCHANGED ('
+                '.posts[0].comments[2]/'
+                '.posts[0].comments[1])',
+                'UNCHANGED .id',
+                'UNCHANGED .owner.id',
+                'UNCHANGED .owner.info.manner',
+                'UNCHANGED .owner.info.title',
+                'UNCHANGED .owner.interests[0]',
+                'UNCHANGED .owner.name',
+                'UNCHANGED .posts[0]',
+                'UNCHANGED .posts[0].post_id',
+                'UNCHANGED .posts[0].wall_id',
             },
         )
