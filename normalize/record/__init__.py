@@ -64,17 +64,10 @@ class Record(object):
 
     def __str__(self):
         """Marshalling to string form"""
-        if type(self).primary_key:
-            pk_attrs = type(self).primary_key
-            return "<%s %s>" % (
-                type(self).__name__, repr(
-                    tuple(getattr(self, x.name, None) for x in pk_attrs) if
-                    len(pk_attrs) > 1 else
-                    getattr(self, pk_attrs[0].name, None)
-                )
-            )
-        else:
-            return super(Record, self).__str__()
+        pk = self.__pk__
+        return "<%s %s>" % (
+            type(self).__name__, repr(pk[0] if len(pk) == 1 else pk)
+        )
 
     def __repr__(self):
         """Marshalling to Python source"""
