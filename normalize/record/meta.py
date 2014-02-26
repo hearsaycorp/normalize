@@ -51,11 +51,15 @@ class RecordMeta(type):
                                 prop_list_field
                             )
                         )
-                good_props.append(prop)
+                    good_props.append(prop)
             return tuple(good_props)
 
         attrs['primary_key'] = coerce_prop_list('primary_key')
         attrs['properties'] = properties
+        attrs['_sorted_properties'] = sorted(
+            list(x for x in properties.values() if not x.extraneous),
+            key=lambda x: x.name,
+        )
         attrs['eager_properties'] = frozenset(
             k for k, v in properties.iteritems() if v.eager_init()
         )

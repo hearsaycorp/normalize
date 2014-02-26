@@ -104,7 +104,7 @@ class TestRecordComparison(unittest.TestCase):
 
     def test_pk_eq(self):
         """Test behavior of Record.__pk__"""
-        self.assertEqual(self.foo1.__pk__, self.foo1)
+        self.assertEqual(self.foo1.__pk__, (2, "foo"))
         self.assertEqual(self.bob1.__pk__, (123,))
 
     def test_diff_list(self):

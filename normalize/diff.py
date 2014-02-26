@@ -11,6 +11,7 @@ from richenum import OrderedRichEnumValue
 from normalize.property import SafeProperty
 from normalize.coll import Collection
 from normalize.record import Record
+from normalize.record import record_id
 from normalize.selector import FieldSelector
 
 
@@ -113,14 +114,7 @@ class DiffOptions(object):
         """Retrieve an object identifier from the given record; if it is an
         alien class, and the type is provided, then use duck typing to get the
         corresponding fields of the alien class."""
-        if type_ is None:
-            type_ = type(record)
-        if hasattr(record, "__pk__"):
-            return record.__pk__
-        elif hasattr(type_, "primary_key"):
-            return tuple(getattr(record, x.name) for x in type_.primary_key)
-        else:
-            return record
+        return getattr(record, "__pk__", record_id(record, type_))
 
 
 def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
