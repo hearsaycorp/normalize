@@ -52,6 +52,13 @@ class Wall(Record):
     posts = ListProperty(Post)
 
 
+# for testing comparison with "alien" classes
+class Spartan(object):
+    def __init__(self, data):
+        for k, v in data.iteritems():
+            setattr(self, k, v)
+
+
 class TestRecordComparison(unittest.TestCase):
     def setUp(self):
         self.minimal = LegalPerson(id=7)
@@ -167,6 +174,19 @@ class TestRecordComparison(unittest.TestCase):
 
         self.assertDifferences(
             compare_record_iter(
+                self.foo1, self.bob1, options=DiffOptions(duck_type=True),
+            ),
+            {"MODIFIED .id", "MODIFIED .name"}
+        )
+        self.assertDifferences(
+            compare_record_iter(
+                self.bob1, self.foo1, options=DiffOptions(duck_type=True),
+            ),
+            {"MODIFIED .id", "MODIFIED .name", "REMOVED .age"}
+        )
+
+        self.assertDifferences(
+            compare_record_iter(
                 self.bob1, Person(id=123, name="Bob Dobalina",
                                   interests=["fraudulent behavior"]),
             ),
@@ -217,13 +237,31 @@ class TestRecordComparison(unittest.TestCase):
         )
         self.assertIsInstance(circle_a.members, Collection)
 
+        expected_a_to_b = {
+            "REMOVED [0]",
+            "REMOVED [2]",
+            "MODIFIED ([1].name/[0].name)",
+            "MODIFIED ([1].age/[0].age)",
+            "ADDED [1]",
+        }
         self.assertDifferences(
             compare_collection_iter(circle_a.members, circle_b.members),
-            {"REMOVED [0]",
-             "REMOVED [2]",
-             "MODIFIED ([1].name/[0].name)",
-             "MODIFIED ([1].age/[0].age)",
-             "ADDED [1]"},
+            expected_a_to_b
+        )
+
+        sparta = list()
+        for member in circle_b.members:
+            sparta.append(Spartan(member.__getnewargs__()[0]))
+
+        self.assertDifferences(
+            compare_collection_iter(circle_b.members, sparta,
+                                    options=DiffOptions(duck_type=True)),
+            {}
+        )
+        self.assertDifferences(
+            compare_collection_iter(circle_a.members, sparta,
+                                    options=DiffOptions(duck_type=True)),
+            expected_a_to_b
         )
 
     def test_complex_objects(self):
