@@ -18,16 +18,22 @@ class DiffTypes(OrderedRichEnum):
     """
     An "enum" to represent types of diffs
     """
-    NO_CHANGE = OrderedRichEnumValue(1, "none", "UNCHANGED")
-    ADDED = OrderedRichEnumValue(2, "added", "ADDED")
-    REMOVED = OrderedRichEnumValue(3, "removed", "REMOVED")
-    MODIFIED = OrderedRichEnumValue(4, "modified", "MODIFIED")
+    class EnumValue(OrderedRichEnumValue):
+        pass
+
+    NO_CHANGE = EnumValue(1, "none", "UNCHANGED")
+    ADDED = EnumValue(2, "added", "ADDED")
+    REMOVED = EnumValue(3, "removed", "REMOVED")
+    MODIFIED = EnumValue(4, "modified", "MODIFIED")
 
 
 def coerce_diff(dt):
     if not isinstance(dt, OrderedRichEnumValue):
-        dt = DiffTypes.from_canonical(dt)
-    return dt.index
+        if isinstance(dt, (int, long)):
+            dt = DiffTypes.from_index(dt)
+        else:
+            dt = DiffTypes.from_canonical(dt)
+    return dt
 
 
 class DiffInfo(Record):
@@ -36,7 +42,7 @@ class DiffInfo(Record):
     values diffed.
     """
     diff_type = SafeProperty(
-        check=DiffTypes.from_index, coerce=coerce_diff, isa=int,
+        coerce=coerce_diff, isa=DiffTypes.EnumValue,
     )
     base = SafeProperty(isa=FieldSelector)
     other = SafeProperty(isa=FieldSelector)
@@ -54,7 +60,7 @@ class DiffInfo(Record):
                 pathinfo = self.base.path
         else:
             pathinfo = self.other.path
-        difftype = DiffTypes.from_index(self.diff_type).display_name
+        difftype = self.diff_type.display_name
         return "<DiffInfo: %s %s>" % (difftype, pathinfo)
 
 
