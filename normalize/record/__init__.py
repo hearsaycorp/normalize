@@ -1,10 +1,35 @@
 from __future__ import absolute_import
 
+from normalize.coll import Collection
 from normalize.record.meta import RecordMeta
 
 
 class _Unset(object):
     pass
+
+
+def record_id(object_, type_=None):
+    """Implementation of id() which is overridable and knows about record's
+    primary_key property.  Returns if the two objects may be the "same";
+    returns None for other types, meaning all bets about identity are off.
+
+    Curiously, this function resembles conversion between a "record" and a
+    "tuple": stripping the logical names from the atomic values.
+    """
+    if type_ is None:
+        type_ = type(object_)
+    key_vals = list()
+
+    for prop in type_.primary_key or type_._sorted_properties:
+        val = getattr(object_, prop.name, None)
+        value_type = prop.valuetype
+        if val is not None and value_type:
+            if issubclass(value_type, Record):
+                val = getattr(val, "__pk__", record_id(val, value_type))
+            elif issubclass(value_type, Collection):
+                val = tuple(record_id(x, prop.itemtype) for x in val)
+        key_vals.append(val)
+    return tuple(key_vals)
 
 
 class Record(object):
@@ -39,17 +64,10 @@ class Record(object):
 
     def __str__(self):
         """Marshalling to string form"""
-        if type(self).primary_key:
-            pk_attrs = type(self).primary_key
-            return "<%s %s>" % (
-                type(self).__name__, repr(
-                    tuple(getattr(self, x.name, None) for x in pk_attrs) if
-                    len(pk_attrs) > 1 else
-                    getattr(self, pk_attrs[0].name, None)
-                )
-            )
-        else:
-            return super(Record, self).__str__()
+        pk = self.__pk__
+        return "<%s %s>" % (
+            type(self).__name__, repr(pk[0] if len(pk) == 1 else pk)
+        )
 
     def __repr__(self):
         """Marshalling to Python source"""
@@ -80,13 +98,10 @@ class Record(object):
 
     @property
     def __pk__(self):
-        """Returns an object which just returns the primary key value
-        for comparison to see if two objects are the same.  Returns the
-        whole object if no primary key is defined."""
-        if type(self).primary_key:
-            return tuple(x.__get__(self) for x in type(self).primary_key)
-        else:
-            return self
+        return record_id(self, type(self))
+
+    def __hash__(self):
+        return self.__pk__.__hash__()
 
 
 class ListRecord(list):

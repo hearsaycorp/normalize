@@ -52,6 +52,13 @@ class Wall(Record):
     posts = ListProperty(Post)
 
 
+# for testing comparison with "alien" classes
+class Spartan(object):
+    def __init__(self, data):
+        for k, v in data.iteritems():
+            setattr(self, k, v)
+
+
 class TestRecordComparison(unittest.TestCase):
     def setUp(self):
         self.minimal = LegalPerson(id=7)
@@ -97,7 +104,7 @@ class TestRecordComparison(unittest.TestCase):
 
     def test_pk_eq(self):
         """Test behavior of Record.__pk__"""
-        self.assertEqual(self.foo1.__pk__, self.foo1)
+        self.assertEqual(self.foo1.__pk__, (2, "foo"))
         self.assertEqual(self.bob1.__pk__, (123,))
 
     def test_diff_list(self):
@@ -167,6 +174,19 @@ class TestRecordComparison(unittest.TestCase):
 
         self.assertDifferences(
             compare_record_iter(
+                self.foo1, self.bob1, options=DiffOptions(duck_type=True),
+            ),
+            {"MODIFIED .id", "MODIFIED .name"}
+        )
+        self.assertDifferences(
+            compare_record_iter(
+                self.bob1, self.foo1, options=DiffOptions(duck_type=True),
+            ),
+            {"MODIFIED .id", "MODIFIED .name", "REMOVED .age"}
+        )
+
+        self.assertDifferences(
+            compare_record_iter(
                 self.bob1, Person(id=123, name="Bob Dobalina",
                                   interests=["fraudulent behavior"]),
             ),
@@ -217,13 +237,31 @@ class TestRecordComparison(unittest.TestCase):
         )
         self.assertIsInstance(circle_a.members, Collection)
 
+        expected_a_to_b = {
+            "REMOVED [0]",
+            "REMOVED [2]",
+            "MODIFIED ([1].name/[0].name)",
+            "MODIFIED ([1].age/[0].age)",
+            "ADDED [1]",
+        }
         self.assertDifferences(
             compare_collection_iter(circle_a.members, circle_b.members),
-            {"REMOVED [0]",
-             "REMOVED [2]",
-             "MODIFIED ([1].name/[0].name)",
-             "MODIFIED ([1].age/[0].age)",
-             "ADDED [1]"},
+            expected_a_to_b
+        )
+
+        sparta = list()
+        for member in circle_b.members:
+            sparta.append(Spartan(member.__getnewargs__()[0]))
+
+        self.assertDifferences(
+            compare_collection_iter(circle_b.members, sparta,
+                                    options=DiffOptions(duck_type=True)),
+            {}
+        )
+        self.assertDifferences(
+            compare_collection_iter(circle_a.members, sparta,
+                                    options=DiffOptions(duck_type=True)),
+            expected_a_to_b
         )
 
     def test_complex_objects(self):
@@ -291,8 +329,7 @@ class TestRecordComparison(unittest.TestCase):
                 }
             ]
         )
-        self.assertDifferences(
-            compare_record_iter(wall_one, wall_two),
+        expected_differences = (
             {
                 'REMOVED .posts[0].comments[0]',
                 'ADDED .posts[0].comments[2]',
@@ -301,5 +338,89 @@ class TestRecordComparison(unittest.TestCase):
                 'REMOVED .owner.interests[1]',
                 'REMOVED .posts[0].comments[1].poster.interests[1]',
                 "ADDED .posts[0].comments[1].poster.info['birth name']",
+            }
+        )
+
+        self.assertDifferences(
+            compare_record_iter(wall_one, wall_two), expected_differences,
+        )
+
+        self.assertDifferences(
+            compare_record_iter(wall_one, wall_two,
+                                options=DiffOptions(unchanged=True)),
+            expected_differences |
+            {
+                'UNCHANGED ('
+                '.owner.interests[2]/'
+                '.owner.interests[1])',
+                'UNCHANGED ('
+                '.posts[0].comments[1].content/'
+                '.posts[0].comments[0].content)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].edited/'
+                '.posts[0].comments[0].edited)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].id/'
+                '.posts[0].comments[0].id)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.id/'
+                '.posts[0].comments[0].poster.id)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.info.manner/'
+                '.posts[0].comments[0].poster.info.manner)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.info.title/'
+                '.posts[0].comments[0].poster.info.title)',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.interests[0]/'
+                '.posts[0].comments[0].poster.interests[0])',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.interests[2]/'
+                '.posts[0].comments[0].poster.interests[1])',
+                'UNCHANGED ('
+                '.posts[0].comments[1].poster.name/'
+                '.posts[0].comments[0].poster.name)',
+                'UNCHANGED ('
+                '.posts[0].comments[1]/'
+                '.posts[0].comments[0])',
+                'UNCHANGED ('
+                '.posts[0].comments[2].content/'
+                '.posts[0].comments[1].content)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].edited/'
+                '.posts[0].comments[1].edited)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].id/'
+                '.posts[0].comments[1].id)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.id/'
+                '.posts[0].comments[1].poster.id)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.info.hair/'
+                '.posts[0].comments[1].poster.info.hair)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.info.title/'
+                '.posts[0].comments[1].poster.info.title)',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.interests[0]/'
+                '.posts[0].comments[1].poster.interests[0])',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.interests[1]/'
+                '.posts[0].comments[1].poster.interests[1])',
+                'UNCHANGED ('
+                '.posts[0].comments[2].poster.name/'
+                '.posts[0].comments[1].poster.name)',
+                'UNCHANGED ('
+                '.posts[0].comments[2]/'
+                '.posts[0].comments[1])',
+                'UNCHANGED .id',
+                'UNCHANGED .owner.id',
+                'UNCHANGED .owner.info.manner',
+                'UNCHANGED .owner.info.title',
+                'UNCHANGED .owner.interests[0]',
+                'UNCHANGED .owner.name',
+                'UNCHANGED .posts[0]',
+                'UNCHANGED .posts[0].post_id',
+                'UNCHANGED .posts[0].wall_id',
             },
         )
