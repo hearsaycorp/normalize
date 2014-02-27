@@ -57,6 +57,8 @@ class KeyedCollection(Collection):
 
 
 class DictCollection(KeyedCollection):
+    suffix = "Map"
+
     def init_values(self, values):
         self.values = dict()
         if values:
@@ -70,6 +72,8 @@ class DictCollection(KeyedCollection):
 
 
 class ListCollection(KeyedCollection):
+    suffix = "List"
+
     def init_values(self, values):
         self.values = list()
         if values:
@@ -90,7 +94,7 @@ class ListCollection(KeyedCollection):
         )
 
     def __repr__(self):
-        return "coll.GENERIC_TYPES['%s'](%s)" % (
+        return "%s([%s])" % (
             type(self).__name__, ", ".join(
                 repr(x) for x in self.values
             )
@@ -121,7 +125,7 @@ class Generic(Collection):
 
 def make_generic(of, coll):
     assert(issubclass(coll, Collection))
-    generic_name = "%s[%s]" % (coll.__name__, of.__name__)
+    generic_name = "%s%s" % (of.__name__, coll.suffix)
     if generic_name not in GENERIC_TYPES:
         GENERIC_TYPES[generic_name] = type(
             generic_name, (coll, Generic), dict(itemtype=of)

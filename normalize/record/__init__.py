@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from normalize.coll import Collection
+from normalize.coll import ListCollection
 from normalize.record.meta import RecordMeta
 
 
@@ -104,19 +105,5 @@ class Record(object):
         return self.__pk__.__hash__()
 
 
-class ListRecord(list):
-    """
-    Represents a list of Records. Normally used for paginated Records where
-    Collections can't be used.
-    """
-    # subclasses should overwrite this with a subclass of Record
-    record_cls = None
-
-    def _coerce(self, iterable):
-        record_cls = self.record_cls
-        for item in iterable:
-            yield (item if isinstance(item, record_cls) else
-                   record_cls(item))
-
-    def __init__(self, iterable):
-        super(ListRecord, self).__init__(self._coerce(iterable))
+RecordList = ListCollection
+ListRecord = RecordList  # deprecated; will be removed before public release
