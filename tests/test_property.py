@@ -210,6 +210,19 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(members[0].name, "bob")
         self.assertEqual(members[1].name, "bill")
 
+        class Item(Record):
+            age = Property()
+
+        try:
+            class GR2(Record):
+                members = ListProperty(of=Item)
+        except Exception, e:
+            # callers: don't really test using exception string matching
+            # like this.  wait or submit a PR for proper exception classes
+            self.assertRegexpMatches(str(e), r'sorry Dave')
+        else:
+            self.fail("should have thrown exception")
+
     def test_customized_list_properties(self):
         """Test that list properties with custom collection behavior invoke
         such correctly"""

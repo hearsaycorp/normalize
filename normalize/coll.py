@@ -108,11 +108,11 @@ class _GenericPickler(object):
     """'pickle' doesn't like pickling classes which are dynamically created.
     This object is used instead, to keep pickle happy.
     """
-    def __init__(self, typename):
-        self.typename = typename
+    def __init__(self, typekey):
+        self.typekey = typekey
 
     def __call__(self, values):
-        return GENERIC_TYPES[self.typename](values)
+        return GENERIC_TYPES[self.typekey](values)
 
 
 class Generic(Collection):
@@ -120,14 +120,23 @@ class Generic(Collection):
     things."""
     def __reduce__(self):
         """helper method for pickling"""
-        return (_GenericPickler(type(self).__name__), (self.values,))
+        return (_GenericPickler(type(self).generic_key), (self.values,))
 
 
 def make_generic(of, coll):
     assert(issubclass(coll, Collection))
-    generic_name = "%s%s" % (of.__name__, coll.suffix)
-    if generic_name not in GENERIC_TYPES:
-        GENERIC_TYPES[generic_name] = type(
-            generic_name, (coll, Generic), dict(itemtype=of)
+    key = (coll.__name__, "%s.%s" % (of.__module__, of.__name__))
+    if key in GENERIC_TYPES:
+        if GENERIC_TYPES[key].itemtype != of:
+            raise Exception(
+                "Duplicate ListProperties of the same class name defined "
+                "in the same module.  I'm sorry Dave, I'm afraid I can't "
+                "let you do that."
+            )
+    else:
+        # oh, we get to name it?  Goodie!
+        generic_name = "%s%s" % (of.__name__, coll.suffix)
+        GENERIC_TYPES[key] = type(
+            generic_name, (coll, Generic), dict(itemtype=of, generic_key=key)
         )
-    return GENERIC_TYPES[generic_name]
+    return GENERIC_TYPES[key]
