@@ -13,6 +13,9 @@ class _Default():
     pass
 
 
+_none = _Default()
+
+
 class Property(object):
     """This is the base class for all property types.  It is a data descriptor,
     so care should be taken before adding any SPECIALMETHODS which might change
@@ -20,7 +23,7 @@ class Property(object):
     """
     __metaclass__ = MetaProperty
 
-    def __init__(self, default=None, traits=None, extraneous=False,
+    def __init__(self, default=_none, traits=None, extraneous=False,
                  required=False, check=None, isa=None, coerce=None):
         super(Property, self).__init__()
         self.default = default
@@ -64,11 +67,8 @@ class Property(object):
         return "%s.%s" % (classname, self.name)
 
     def type_safe_value(self, value):
-        if value is None:
-            if self.required:
-                raise ValueError("%s is required" % self.fullname)
-            else:
-                return None
+        if value is None and self.required and not self.valuetype:
+            raise ValueError("%s is required" % self.fullname)
         if self.valuetype and not isinstance(value, self.valuetype):
             value = self.coerce(value)
         if self.check and not self.check(value):
@@ -90,10 +90,15 @@ class Property(object):
     def init_prop(self, obj, value=_Default):
         if value is _Default:
             value = self.get_default(obj)
-        obj.__dict__[self.name] = self.type_safe_value(value)
+
+        if value is _none:
+            if self.required:
+                raise ValueError("%s is required" % self.fullname)
+        else:
+            obj.__dict__[self.name] = self.type_safe_value(value)
 
     def eager_init(self):
-        return self.required or self.default is not None
+        return self.required or self.default is not _none
 
     def __get__(self, obj, type_=None):
         """Default getter; does NOT fall back to regular descriptor behavior
@@ -173,7 +178,8 @@ class SafeProperty(Property):
         obj.__dict__[self.name] = self.type_safe_value(value)
 
     def __delete__(self, obj):
-        self.type_safe_value(None)
+        if self.required:
+            raise ValueError("%s is required" % self.fullname)
         super(SafeProperty, self).__delete__(obj)
 
 

@@ -49,6 +49,7 @@ class TestProperties(unittest2.TestCase):
         class BasicRecord(Record):
             name = Property()
             defaulted = Property(default=lambda: [])
+            default_none = Property(default=None)
 
         # test Property.__repr__ includes class & attribute name
         self.assertRegexpMatches(
@@ -63,6 +64,7 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(br.defaulted[0], "foo")
         with self.assertRaises(AttributeError):
             br.name
+        self.assertEqual(br.default_none, None)
 
         br = BasicRecord(name="Bromine")
         self.assertEqual(br.name, "Bromine")
@@ -134,16 +136,20 @@ class TestProperties(unittest2.TestCase):
             id = Property(required=True, isa=int)
             natural = SafeProperty(check=lambda i: i > 0)
             must = SafeProperty(required=True)
+            rbn = SafeProperty(required=True, isa=(str, types.NoneType))
 
         with self.assertRaises(ValueError):
             fr = FussyRecord()
 
-        fr = FussyRecord(id=123, must="sugary")
+        fr = FussyRecord(id=123, must="sugary", rbn="Hello")
         with self.assertRaises(ValueError):
             del fr.must
         with self.assertRaises(ValueError):
             fr.must = None
         fr.must = "barmy"
+        with self.assertRaises(ValueError):
+            del fr.rbn
+        fr.rbn = None
 
         fr.natural = 7
         with self.assertRaises(ValueError):
