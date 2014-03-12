@@ -184,18 +184,25 @@ class LazySafeProperty(SafeProperty, SlowLazyProperty):
 class CollectionProperty(Property):
     __trait__ = "coll"
 
-    def __init__(self, of=None, coll=None, check_item=None, **kwargs):
-        if coll is None:
+    def __init__(self, of=None, coll=None, check_item=None, isa=None,
+                 **kwargs):
+        if isa is None and coll is None:
             raise Exception(
                 "coll is required; specify coll type or use a sub-class "
                 "like ListProperty"
             )
-        self.check_item = None
-        self.of = of
-        self.coll = coll
-        super(CollectionProperty, self).__init__(
-            isa=make_generic(of, coll),
-            **kwargs)
+        if isa:
+            if (coll and not issubclass(isa, coll)) or \
+                    (of and not issubclass(of, isa.itemtype)):
+                raise Exception(
+                    "collection property 'isa' must match collection type"
+                )
+            self.of = isa.itemtype
+            self.coll = isa
+        else:
+            isa = make_generic(of, coll)
+
+        super(CollectionProperty, self).__init__(isa=isa, **kwargs)
 
 
 class SafeCollectionProperty(CollectionProperty, SafeProperty):

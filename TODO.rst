@@ -28,8 +28,7 @@ TODO
 
   * complete ``KeyedCollection``: __delitem__, __contains__
 
-  * complete ``ListCollection``: extend, __getslice__, etc; get rid of
-    ``ListRecord`` completely.
+  * complete ``ListCollection``: extend, __getslice__, etc
 
   * implement ``DictCollection``
 

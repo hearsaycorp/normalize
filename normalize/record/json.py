@@ -7,8 +7,8 @@ import types
 
 from normalize.coll import Collection
 from normalize.property.json import JsonProperty
-from normalize.record import ListRecord
 from normalize.record import Record
+from normalize.record import RecordList
 
 
 def from_json(record_type, json_struct, _init=None):
@@ -21,7 +21,7 @@ def from_json(record_type, json_struct, _init=None):
                  constructing a Record into here and return it
     """
 
-    if issubclass(record_type, ListRecord):
+    if issubclass(record_type, RecordList):
         member_type = record_type.record_cls
         init_arg = _init or []
         if not json_struct:
@@ -169,8 +169,8 @@ class JsonRecord(Record):
         return to_json(self)
 
 
-class JsonListRecord(ListRecord):
-    """Version of a ListRecord which deals primarily in JSON"""
+class JsonRecordList(RecordList):
+    """Version of a RecordList which deals primarily in JSON"""
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
 
@@ -182,7 +182,7 @@ class JsonListRecord(ListRecord):
             json_data = json.loads(json_data)
         json_data = json_data or []
         init_list = from_json(type(self), json_data, kwargs)
-        super(JsonListRecord, self).__init__(init_list)
+        super(JsonRecordList, self).__init__(init_list)
 
     @classmethod
     def from_json(self, init):
