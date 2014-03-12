@@ -21,8 +21,7 @@ class JsonProperty(Property):
         """Retrieve field name as present in JSON dictionary"""
         return self._json_name or self.name
 
-    def to_json(self, obj):
-        propval = self.__get__(obj)
+    def to_json(self, propval):
         return self.json_out(propval) if self.json_out else propval
 
     def from_json(self, json_data):

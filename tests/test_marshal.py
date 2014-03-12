@@ -9,7 +9,9 @@ import unittest2
 from normalize.record import Record
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
+from normalize.record.json import to_json
 from normalize.property import ListProperty
+from normalize.property import Property
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 
@@ -175,3 +177,61 @@ class TestRecordMarshaling(unittest2.TestCase):
         json_text = json.dumps(json_data)
 
         self.assertJsonDataEqual(json_data, self.primitive)
+
+    def test_custom_json_marshall(self):
+        """Test customizing JSON marshalling using functions"""
+
+        def date_in(struct):
+            return "%.4d-%.2d-%.2d" % (
+                struct.get("year", 0), struct.get("month", 0),
+                struct.get("day", 0),
+            )
+
+        def date_out(val):
+            return dict(
+                (k, int(v)) for k, v in zip(
+                    ("year", "month", "day"), val.split("-")
+                ) if int(v) > 0
+            )
+
+        class PackedDate(Record):
+            created_date = Property(
+                check=lambda x: re.match(r'\d{4}-\d{2}-\d{2}', x),
+                isa=str,
+                json_in=date_in,
+                json_name="created",
+                json_out=date_out,
+            )
+
+        class JsonPackedDate(PackedDate, JsonRecord):
+            pass
+
+        json_in = {"created": {"year": 2012, "month": 7, "day": 12}}
+        pd = from_json(PackedDate, json_in)
+        self.assertEqual(pd.created_date, "2012-07-12")
+        self.assertJsonDataEqual(to_json(pd), json_in)
+        jpd = JsonPackedDate.from_json(json_in)
+        self.assertJsonDataEqual(jpd.json_data(), json_in)
+
+        json_in_2 = {"created": {"year": 2012, "month": 7}}
+        jpd = JsonPackedDate.from_json(json_in_2)
+        self.assertEqual(jpd.created_date, "2012-07-00")
+        self.assertJsonDataEqual(jpd.json_data(), json_in_2)
+
+        # to_json should not emit keys for undefined values
+        self.assertEqual(to_json(PackedDate()), {})
+        self.assertEqual(to_json(CheeseRecord()), {})
+
+        # unless they define defaults
+        class DefaultNone(Record):
+            none = Property(default=None)
+            emptystring = Property(default="")
+            false = Property(default=False)
+
+        self.assertJsonDataEqual(
+            to_json(DefaultNone()), {
+                "none": None,
+                "emptystring": "",
+                "false": False,
+            }
+        )

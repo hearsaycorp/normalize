@@ -118,7 +118,14 @@ def to_json(record, extraneous=True):
                 pass
             else:
                 json_name = getattr(prop, "json_name", prop.name)
-                rv_dict[json_name] = to_json(prop.__get__(record))
+                try:
+                    val = prop.__get__(record)
+                    rv_dict[json_name] = (
+                        prop.to_json(val) if hasattr(prop, "to_json") else
+                        to_json(prop.__get__(record))
+                    )
+                except AttributeError:
+                    pass
 
         return rv_dict
 
