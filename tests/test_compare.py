@@ -9,7 +9,7 @@ from normalize.diff import *
 from normalize.record import Record
 from normalize.property import Property
 from normalize.property import SafeProperty
-from normalize.property import ListProperty
+from normalize.property.coll import ListProperty
 
 
 class LegalPerson(Record):

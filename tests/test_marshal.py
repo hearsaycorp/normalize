@@ -10,10 +10,10 @@ from normalize.record import Record
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
 from normalize.record.json import to_json
-from normalize.property import ListProperty
 from normalize.property import Property
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
+from normalize.property.coll import ListProperty
 
 
 class CheeseRecord(Record):

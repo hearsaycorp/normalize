@@ -1,76 +1,78 @@
 
 from __future__ import absolute_import
 
+from copy import deepcopy
 import inspect
 import json
 import types
 
 from normalize.coll import Collection
+from normalize.coll import ListCollection as RecordList
 from normalize.property.json import JsonProperty
 from normalize.record import Record
-from normalize.record import RecordList
 
 
-def from_json(record_type, json_struct, _init=None):
+def json_to_initkwargs(record_type, json_struct, kwargs=None):
+    """This function converts a JSON dict (json_struct) to a set of init
+    keyword arguments for the passed Record (or JsonRecord).
+
+    It is called by the JsonRecord constructor.
+    """
+    if kwargs is None:
+        kwargs = {}
+    if json_struct is None:
+        json_struct = {}
+    if not isinstance(json_struct, dict):
+        raise TypeError(
+            "dict expected, found %s" % type(json_struct).__name__
+        )
+    unknown_keys = set(json_struct.keys())
+    for propname, prop in record_type.properties.iteritems():
+        # think "does" here rather than "is"; the slot does JSON
+        if isinstance(prop, JsonProperty):
+            json_name = prop.json_name
+            if json_name is not None:
+                if json_name in json_struct:
+                    if propname not in kwargs:
+                        kwargs[propname] = prop.from_json(
+                            json_struct[json_name]
+                        )
+                    unknown_keys.remove(json_name)
+        elif prop.name in json_struct:
+            json_val = json_struct[prop.name]
+            unknown_keys.remove(prop.name)
+            if prop.name not in kwargs:
+                proptype = prop.valuetype
+                if proptype:
+                    if hasattr(proptype, "from_json"):
+                        kwargs[propname] = proptype.from_json(json_val)
+                    elif isinstance(proptype, Record):
+                        kwargs[propname] = from_json(proptype, json_val)
+                    else:
+                        # let the property's 'check' etc figure it out.
+                        kwargs[propname] = json_val
+    if unknown_keys:
+        kwargs["unknown_json_keys"] = dict(
+            (k, deepcopy(json_struct[k])) for k in unknown_keys
+        )
+    return kwargs
+
+
+def from_json(record_type, json_struct):
     """JSON marshall in function: a 'visitor' function which looks for JSON
     types/hints but does not require them.
 
     @param json_struct a loaded (via ``json.loads``) data structure
     @param record_type a Record object to load items into
-    @param _init instead of returning a new object, set kwargs for
-                 constructing a Record into here and return it
     """
-
-    if issubclass(record_type, RecordList):
-        member_type = record_type.record_cls
-        init_arg = _init or []
-        if not json_struct:
-            json_struct = tuple()
-
-        if hasattr(member_type, "from_json"):
-            for x in json_struct:
-                init_arg.append(member_type.from_json(x))
-
-        elif isinstance(member_type, Record):
-            for x in json_struct:
-                init_arg.append(from_json(member_type, x))
-
-        if _init is not None:
-            return init_arg
-        else:
-            return record_type(init_arg)
+    if issubclass(record_type, JsonRecord):
+        return record_type(json_struct)
 
     elif issubclass(record_type, Record):
-        kwargs = _init or {}
-        if json_struct is None:
-            json_struct = {}
-        if not isinstance(json_struct, dict):
-            raise TypeError(
-                "dict expected, found %s" % type(json_struct).__name__
-            )
-        for propname, prop in record_type.properties.iteritems():
-            # think "does" here rather than "is"
-            if isinstance(prop, JsonProperty):
-                json_name = prop.json_name
-                if json_name is not None:
-                    if json_name in json_struct:
-                        kwargs[propname] = prop.from_json(
-                            json_struct[json_name]
-                        )
-            elif prop.name in json_struct:
-                json_val = json_struct[prop.name]
-                proptype = prop.valuetype
-                if proptype and hasattr(proptype, "from_json"):
-                    kwargs[propname] = proptype.from_json(json_val)
-                elif proptype and isinstance(proptype, Record):
-                    kwargs[propname] = from_json(proptype, json_val)
-                else:
-                    # let the property's 'check' etc figure it out.
-                    kwargs[propname] = json_val
-        if _init is not None:
-            return kwargs
-        else:
-            return record_type(**kwargs)
+        # do what the default JsonRecord __init__ does
+        init_kwargs = json_to_initkwargs(record_type, json_struct)
+        instance = record_type(**init_kwargs)
+        return instance
     else:
         raise Exception("Can't coerce to %r" % record_type)
 
@@ -116,16 +118,17 @@ def to_json(record, extraneous=True):
         for propname, prop in type(record).properties.iteritems():
             if not extraneous and prop.extraneous:
                 pass
-            else:
+            elif not hasattr(prop, "json_name") or prop.json_name is not None:
                 json_name = getattr(prop, "json_name", prop.name)
                 try:
                     val = prop.__get__(record)
-                    rv_dict[json_name] = (
-                        prop.to_json(val) if hasattr(prop, "to_json") else
-                        to_json(prop.__get__(record))
-                    )
                 except AttributeError:
                     pass
+                else:
+                    rv_dict[json_name] = (
+                        prop.to_json(val) if hasattr(prop, "to_json") else
+                        to_json(val)
+                    )
 
         return rv_dict
 
@@ -151,7 +154,20 @@ def to_json(record, extraneous=True):
 
 
 class JsonRecord(Record):
-    """Version of a Record which deals primarily in JSON"""
+    """Version of a Record which deals primarily in JSON form.
+
+    This means:
+
+    1. The first argument to the constructor is assumed to be a JSON data
+       dictionary, and passed through the class' ``json_to_initkwargs``
+       method before being used to set actual properties
+
+    2. Unknown keys are permitted, and saved in the "unknown_json_keys"
+       property, which is merged back on output (ie, calling ``.json_data()``
+       or ``to_json()``) #TODO
+    """
+    unknown_json_keys = JsonProperty(json_name=None, extraneous=True)
+
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
 
@@ -161,16 +177,24 @@ class JsonRecord(Record):
         """
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
-        json_data = json_data or {}
-        init_kwargs = from_json(type(self), json_data, kwargs)
-        super(JsonRecord, self).__init__(**init_kwargs)
+        if json_data is not None:
+            kwargs = type(self).json_to_initkwargs(json_data, kwargs)
+        super(JsonRecord, self).__init__(**kwargs)
+
+    @classmethod
+    def json_to_initkwargs(self, json_data, kwargs=None):
+        """Subclassing hook to specialize how JSON data is converted
+        to keyword arguments"""
+        if isinstance(json_data, basestring):
+            json_data = json.loads(json_data)
+        return json_to_initkwargs(self, json_data, kwargs)
 
     @classmethod
     def from_json(self, json_data):
-        """Class method constructor"""
-        if isinstance(json_data, basestring):
-            json_data = json.loads(json_data)
-        return from_json(self, json_data)
+        """This method can be overridden to specialize how the class is loaded
+        when marshalling in; however beware that it is not invoked when the
+        caller uses the ``from_json()`` function directly."""
+        return self(json_data)
 
     def json_data(self):
         return to_json(self)
@@ -192,9 +216,23 @@ class JsonRecordList(RecordList):
         super(JsonRecordList, self).__init__(init_list)
 
     @classmethod
-    def from_json(self, init):
-        """Class method constructor"""
-        return from_json(self, init)
+    def json_to_initkwargs(self, json_struct, kwargs=None):
+        member_type = self.itemtype
+        if kwargs is None:
+            kwargs = {}
+        if kwargs.get('values', None) is not None:
+            kwargs['values'] = values = []
+            if not json_struct:
+                json_struct = tuple()
+
+            if hasattr(member_type, "from_json"):
+                for x in json_struct:
+                    values.append(member_type.from_json(x))
+
+            elif isinstance(member_type, Record):
+                for x in json_struct:
+                    values.append(from_json(member_type, x))
+        return kwargs
 
     def json_data(self):
         return to_json(self)

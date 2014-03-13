@@ -1,18 +1,20 @@
 
 from __future__ import absolute_import
 
-import abc
+from normalize.record import Record
 
 """This class contains container classes which can act like collections but
 conform to this package's metaclass API"""
 
 
-class Collection(object):
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractproperty
+class Collection(Record):
+    """All collections are modeled as a mapping from some index to a value.
+    Bags are not currently supported, ie the keys must be unique for the diff
+    machinery as currently written to function.
+    """
+    @property
     def itemtype(self):
-        pass
+        raise Exception("itemtype must be defined in a subclass")
 
     @property
     def record_cls(self):
@@ -20,12 +22,13 @@ class Collection(object):
 
     """This is the base class for Record property values which contain
     iterable sets of values with a particular common type."""
-    def __init__(self, values=None):
+    def __init__(self, values=None, **kwargs):
         """
         @param of The Record type of members in this collection
-        @param values The values of this collection.
+        @param values The iterable collection to fill this Collection with
         """
         self.init_values(values)
+        super(Collection, self).__init__(**kwargs)
 
     def __iter__(self):
         for x in self.values:
@@ -40,14 +43,13 @@ class Collection(object):
     def __len__(self):
         return len(self.values)
 
-    @abc.abstractmethod
     def init_values(self, values):
         raise Exception("init_values must be overridden by a subclass")
 
-    @abc.abstractmethod
     def itertuples(self):
         """Iterate over the items in the collection; return (k, v) where k is
-        the index into the collection (or None)"""
+        the key, index etc into the collection (or potentially the value
+        itself, for sets)"""
         pass
 
 

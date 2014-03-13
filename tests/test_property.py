@@ -6,16 +6,16 @@ import re
 import types
 import unittest2
 
+from normalize import RecordList
 from normalize.coll import ListCollection
-from normalize.record import ListRecord
 from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
-from normalize.property import ListProperty
 from normalize.property import Property
 from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
+from normalize.property.coll import ListProperty
 from normalize.property.meta import MetaProperty
 
 
@@ -264,11 +264,11 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(members[1].name, "bill")
 
     def test_list_records(self):
-        """Test that ListRecord/RecordList works"""
+        """Test that RecordList works"""
         class SingleThing(Record):
             name = Property()
 
-        class ManyThingsRecord(ListRecord):
+        class ManyThingsRecord(RecordList):
             itemtype = SingleThing
 
         # note: must pass pre-coerced members to constructor.
