@@ -9,6 +9,7 @@ import unittest2
 from normalize.record import Record
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
+from normalize.record.json import JsonRecordList
 from normalize.record.json import to_json
 from normalize.property import Property
 from normalize.property import ROProperty
@@ -178,7 +179,7 @@ class TestRecordMarshaling(unittest2.TestCase):
 
         self.assertJsonDataEqual(json_data, self.primitive)
 
-    def test_custom_json_marshall(self):
+    def test_custom_json_prop_marshall(self):
         """Test customizing JSON marshalling using functions"""
 
         def date_in(struct):
@@ -235,3 +236,41 @@ class TestRecordMarshaling(unittest2.TestCase):
                 "false": False,
             }
         )
+
+    def test_custom_json_class_marshall(self):
+        class StreamChunk(JsonRecordList):
+            itemtype = CheeseRecord
+            next_url = Property()
+            previous_url = Property()
+
+            @classmethod
+            def json_to_initkwargs(cls, json_data, kwargs):
+                paging = json_data.get('paging', {})
+                kwargs['next_url'] = paging.get('next', None)
+                kwargs['previous_url'] = paging.get('previous', None)
+                kwargs = super(StreamChunk, cls).json_to_initkwargs(
+                    json_data.get('data', []), kwargs,
+                )
+                return kwargs
+
+            def json_data(self):
+                return dict(
+                    data=super(StreamChunk, self).json_data(),
+                    paging=dict(
+                        next=self.next_url,
+                        previous=self.previous_url,
+                    ),
+                )
+
+        chunk = {"data": self.primitive['cheeses'][0:2],
+                 "paging": {"next": "stream_token_3", "previous": None}}
+
+        sc = StreamChunk.from_json(chunk)
+        self.assertEqual(sc.next_url, "stream_token_3")
+        self.assertEqual(sc[0].smelliness, 38)
+        self.assertJsonDataEqual(sc.json_data(), chunk)
+
+        sc2 = StreamChunk(chunk)
+        self.assertEqual(sc2.next_url, "stream_token_3")
+        self.assertEqual(sc2[1].smelliness, 82)
+        self.assertJsonDataEqual(sc2.json_data(), chunk)

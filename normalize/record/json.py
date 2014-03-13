@@ -182,7 +182,7 @@ class JsonRecord(Record):
         super(JsonRecord, self).__init__(**kwargs)
 
     @classmethod
-    def json_to_initkwargs(self, json_data, kwargs=None):
+    def json_to_initkwargs(self, json_data, kwargs):
         """Subclassing hook to specialize how JSON data is converted
         to keyword arguments"""
         if isinstance(json_data, basestring):
@@ -200,7 +200,7 @@ class JsonRecord(Record):
         return to_json(self)
 
 
-class JsonRecordList(RecordList):
+class JsonRecordList(RecordList, JsonRecord):
     """Version of a RecordList which deals primarily in JSON"""
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
@@ -212,15 +212,14 @@ class JsonRecordList(RecordList):
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
         json_data = json_data or []
-        init_list = from_json(type(self), json_data, kwargs)
-        super(JsonRecordList, self).__init__(init_list)
+        if json_data is not None:
+            kwargs = type(self).json_to_initkwargs(json_data, kwargs)
+        super(JsonRecordList, self).__init__(**kwargs)
 
     @classmethod
-    def json_to_initkwargs(self, json_struct, kwargs=None):
-        member_type = self.itemtype
-        if kwargs is None:
-            kwargs = {}
-        if kwargs.get('values', None) is not None:
+    def json_to_initkwargs(cls, json_struct, kwargs):
+        member_type = cls.itemtype
+        if kwargs.get('values', None) is None:
             kwargs['values'] = values = []
             if not json_struct:
                 json_struct = tuple()
@@ -228,10 +227,11 @@ class JsonRecordList(RecordList):
             if hasattr(member_type, "from_json"):
                 for x in json_struct:
                     values.append(member_type.from_json(x))
-
-            elif isinstance(member_type, Record):
+            elif issubclass(member_type, Record):
                 for x in json_struct:
                     values.append(from_json(member_type, x))
+            else:
+                raise Exception("Collection type %s has no itemtype" % cls)
         return kwargs
 
     def json_data(self):
