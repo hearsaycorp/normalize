@@ -274,3 +274,7 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertEqual(sc2.next_url, "stream_token_3")
         self.assertEqual(sc2[1].smelliness, 82)
         self.assertJsonDataEqual(sc2.json_data(), chunk)
+
+        self.assertEqual(sc, sc2)
+        sc3 = eval(repr(sc))
+        self.assertEqual(sc, sc3)

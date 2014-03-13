@@ -211,7 +211,6 @@ class JsonRecordList(RecordList, JsonRecord):
         """
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
-        json_data = json_data or []
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
         super(JsonRecordList, self).__init__(**kwargs)
@@ -235,4 +234,10 @@ class JsonRecordList(RecordList, JsonRecord):
         return kwargs
 
     def json_data(self):
+        # this method intentionally does not call the superclass json_data,
+        # because this function returns a collection.
         return to_json(self)
+
+    def __repr__(self):
+        super_repr = super(JsonRecordList, self).__repr__()
+        return super_repr.replace("[", "values=[", 1)

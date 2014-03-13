@@ -96,11 +96,10 @@ class ListCollection(KeyedCollection):
         )
 
     def __repr__(self):
-        return "%s([%s])" % (
-            type(self).__name__, ", ".join(
-                repr(x) for x in self.values
-            )
-        )
+        property_info = super(ListCollection, self).__repr__()
+        list_info = "[%s]" % ", ".join(repr(x) for x in self.values)
+        optional_comma = "" if property_info.endswith("()") else ", "
+        return property_info.replace("(", "(" + list_info + optional_comma, 1)
 
 
 GENERIC_TYPES = dict()
