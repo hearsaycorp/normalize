@@ -6,6 +6,8 @@ import pickle
 import re
 import unittest2
 
+from normalize.diff import compare_record_iter
+from normalize.diff import DiffOptions
 from normalize.record import Record
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
@@ -278,3 +280,29 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertEqual(sc, sc2)
         sc3 = eval(repr(sc))
         self.assertEqual(sc, sc3)
+
+    def test_json_unknown_keys(self):
+
+        class JsonCheeseRecord(JsonRecord, CheeseRecord):
+            unknown_json_keys = Property(json_name=None)
+
+        input_json = dict(
+            variety="Manchego",
+            smelliness="38",
+            origin="Spain",
+        )
+
+        jcr = JsonCheeseRecord(input_json)
+        self.assertJsonDataEqual(jcr.json_data(), input_json)
+
+        class RegularJsonCheeseRecord(JsonRecord, CheeseRecord):
+            pass
+
+        rjcr = RegularJsonCheeseRecord(input_json)
+        for diff in compare_record_iter(
+            jcr, rjcr, options=DiffOptions(duck_type=True)
+        ):
+            self.fail("Found a difference: %s" % diff)
+
+        sanitized = rjcr.json_data()
+        self.assertNotIn("origin", sanitized)

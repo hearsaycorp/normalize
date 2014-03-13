@@ -197,7 +197,13 @@ class JsonRecord(Record):
         return self(json_data)
 
     def json_data(self):
-        return to_json(self)
+        jd = to_json(self)
+        if hasattr(self, "unknown_json_keys") and not \
+                type(self).properties['unknown_json_keys'].extraneous:
+            for k, v in self.unknown_json_keys.iteritems():
+                if k not in jd:
+                    jd[k] = v
+        return jd
 
 
 class JsonRecordList(RecordList, JsonRecord):

@@ -18,8 +18,7 @@ TODO
 
   * ``from_json`` variant/option which scrubs data which fails in any
     way, returning objects which could be parsed and left-over JSON
-    which couldn't be parsed.  ("unknown_json_keys" is another
-    approach)
+    which couldn't be parsed.
 
   * support for polymorphic JSON, either through a flag field (special
     field is mapped to type) or via subclass duck-typing (subclass is
