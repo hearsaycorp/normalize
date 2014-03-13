@@ -77,31 +77,31 @@ def from_json(record_type, json_struct):
         raise Exception("Can't coerce to %r" % record_type)
 
 
-# caches for _to_json
-has_to_json = dict()
-to_json_takes_extraneous = dict()
+# caches for _json_data
+has_json_data = dict()
+json_data_takes_extraneous = dict()
 
 
-def _to_json(x, extraneous):
+def _json_data(x, extraneous):
     """This function calls a to_json method, if the type has one, otherwise
     calls back into to_json().  It also check whether the method takes an
     'extraneous' argument and passes that through if possible."""
-    if type(x) in has_to_json and has_to_json[type(x)]:
-        if to_json_takes_extraneous[type(x)]:
-            return x.to_json(extraneous=extraneous)
+    if type(x) in has_json_data and has_json_data[type(x)]:
+        if json_data_takes_extraneous[type(x)]:
+            return x.json_data(extraneous=extraneous)
         else:
-            return x.to_json()
+            return x.json_data()
     else:
-        htj = hasattr(x, "to_json") and callable(x.to_json)
-        has_to_json[type(x)] = htj
+        htj = hasattr(x, "json_data") and callable(x.json_data)
+        has_json_data[type(x)] = htj
         if htj:
-            argspec = inspect.getargspec(x.to_json)
+            argspec = inspect.getargspec(x.json_data)
             tjte = 'extraneous' in argspec.args or argspec.keywords
-            to_json_takes_extraneous[type(x)] = tjte
+            json_data_takes_extraneous[type(x)] = tjte
             if tjte:
-                return x.to_json(extraneous=extraneous)
+                return x.json_data(extraneous=extraneous)
             else:
-                return x.to_json()
+                return x.json_data()
         else:
             return to_json(x, extraneous)
 
@@ -111,7 +111,7 @@ def to_json(record, extraneous=True):
     marshall out, honoring JSON property types/hints but does not require
     them."""
     if isinstance(record, Collection):
-        return list(_to_json(x, extraneous) for x in record)
+        return list(_json_data(x, extraneous) for x in record)
 
     elif isinstance(record, Record):
         rv_dict = {}
@@ -137,11 +137,11 @@ def to_json(record, extraneous=True):
 
     elif isinstance(record, dict):
         return dict(
-            (k, _to_json(v, extraneous)) for k, v in record.iteritems()
+            (k, _json_data(v, extraneous)) for k, v in record.iteritems()
         )
 
     elif isinstance(record, (list, tuple)):
-        return list(_to_json(x, extraneous) for x in record)
+        return list(_json_data(x, extraneous) for x in record)
 
     elif isinstance(record, (basestring, int, float, types.NoneType)):
         return record
