@@ -125,10 +125,9 @@ def to_json(record, extraneous=True):
                 except AttributeError:
                     pass
                 else:
-                    rv_dict[json_name] = (
-                        prop.to_json(val) if hasattr(prop, "to_json") else
-                        to_json(val)
-                    )
+                    if hasattr(prop, "to_json"):
+                        val = prop.to_json(val)
+                    rv_dict[json_name] = to_json(val, extraneous)
 
         return rv_dict
 
@@ -196,13 +195,14 @@ class JsonRecord(Record):
         caller uses the ``from_json()`` function directly."""
         return self(json_data)
 
-    def json_data(self):
-        jd = to_json(self)
-        if hasattr(self, "unknown_json_keys") and not \
-                type(self).properties['unknown_json_keys'].extraneous:
-            for k, v in self.unknown_json_keys.iteritems():
-                if k not in jd:
-                    jd[k] = v
+    def json_data(self, extraneous=False):
+        jd = to_json(self, extraneous)
+        if hasattr(self, "unknown_json_keys"):
+            prop = type(self).properties['unknown_json_keys']
+            if extraneous or not prop.extraneous:
+                for k, v in self.unknown_json_keys.iteritems():
+                    if k not in jd:
+                        jd[k] = v
         return jd
 
 
@@ -239,10 +239,10 @@ class JsonRecordList(RecordList, JsonRecord):
                 raise Exception("Collection type %s has no itemtype" % cls)
         return kwargs
 
-    def json_data(self):
+    def json_data(self, extraneous=False):
         # this method intentionally does not call the superclass json_data,
         # because this function returns a collection.
-        return to_json(self)
+        return to_json(self, extraneous)
 
     def __repr__(self):
         super_repr = super(JsonRecordList, self).__repr__()
