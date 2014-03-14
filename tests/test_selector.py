@@ -6,7 +6,7 @@ from normalize import FieldSelector
 from normalize import FieldSelectorException
 from normalize import Property
 from normalize import Record
-from normalize.property import ListProperty
+from normalize.property.coll import ListProperty
 from normalize.selector import MultiFieldSelector
 from testclasses import MockChildRecord, MockJsonRecord
 

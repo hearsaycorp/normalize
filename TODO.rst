@@ -60,17 +60,20 @@ Untested cases
 
 The following cases are known to be missing tests:
 
-* ``from_json`` with ``ListRecord``
+* JSON marshaling tests;
 
-* Test marshaling out classes which define ``to_json()``, with and
-  without the ``extraneous`` parameter.
-
-* ``JsonRecord`` and ``JsonProperty`` are largely untested;
-
-  * test cases for ``json_in`` and ``json_out`` transform functions
+  * ``Record`` types with attributes which are ``Record`` types that
+    implement ``json_data`` without deriving ``JsonRecord``, with and
+    without the ``extraneous`` parameter.
+  * ``RecordList`` types with a member type which implements
+    ``json_data``
+  * marshaling out native dicts/lists with ``Record`` members
+    (marshall in will not be supported without custom
+    ``json_to_initkwargs`` methods)
+  * marshaling in & out ``long`` values
   * check ``json_name=None`` suppresses marshal out via JSON
   * using ``from_json`` with json strings (not JSON data)
-  * double-check setting ``extraneous`` makes
+  * double-check setting ``extraneous`` suppresses marshal out
 
 * test case for sub-classing property types to provide ``isa=`` in a way
   that might be more natural for some folk; this should work (after all,

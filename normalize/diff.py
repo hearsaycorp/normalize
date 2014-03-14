@@ -156,12 +156,11 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
                 and isinstance(propval_a, COMPARABLE):
             for types, func in COMPARE_FUNCTIONS.iteritems():
                 if isinstance(propval_a, types):
-                    break
-            for diff in func(
-                propval_a, propval_b, fs_a + [propname], fs_b + [propname],
-                options,
-            ):
-                yield diff
+                    for diff in func(
+                        propval_a, propval_b, fs_a + [propname],
+                        fs_b + [propname], options,
+                    ):
+                        yield diff
         elif not options.items_equal(propval_a, propval_b):
             yield DiffInfo(
                 diff_type=DiffTypes.MODIFIED,
