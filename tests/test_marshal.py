@@ -306,3 +306,5 @@ class TestRecordMarshaling(unittest2.TestCase):
 
         sanitized = rjcr.json_data()
         self.assertNotIn("origin", sanitized)
+
+        self.assertJsonDataEqual(rjcr.json_data(extraneous=True), input_json)
