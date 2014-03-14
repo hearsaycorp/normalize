@@ -49,6 +49,7 @@ class TestProperties(unittest2.TestCase):
         class BasicRecord(Record):
             name = Property()
             defaulted = Property(default=lambda: [])
+            default_none = Property(default=None)
 
         # test Property.__repr__ includes class & attribute name
         self.assertRegexpMatches(
@@ -63,6 +64,7 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(br.defaulted[0], "foo")
         with self.assertRaises(AttributeError):
             br.name
+        self.assertEqual(br.default_none, None)
 
         br = BasicRecord(name="Bromine")
         self.assertEqual(br.name, "Bromine")
@@ -134,16 +136,20 @@ class TestProperties(unittest2.TestCase):
             id = Property(required=True, isa=int)
             natural = SafeProperty(check=lambda i: i > 0)
             must = SafeProperty(required=True)
+            rbn = SafeProperty(required=True, isa=(str, types.NoneType))
 
         with self.assertRaises(ValueError):
             fr = FussyRecord()
 
-        fr = FussyRecord(id=123, must="sugary")
+        fr = FussyRecord(id=123, must="sugary", rbn="Hello")
         with self.assertRaises(ValueError):
             del fr.must
         with self.assertRaises(ValueError):
             fr.must = None
         fr.must = "barmy"
+        with self.assertRaises(ValueError):
+            del fr.rbn
+        fr.rbn = None
 
         fr.natural = 7
         with self.assertRaises(ValueError):
@@ -210,10 +216,23 @@ class TestProperties(unittest2.TestCase):
         self.assertEqual(members[0].name, "bob")
         self.assertEqual(members[1].name, "bill")
 
+        class Item(Record):
+            age = Property()
+
+        try:
+            class GR2(Record):
+                members = ListProperty(of=Item)
+        except Exception, e:
+            # callers: don't really test using exception string matching
+            # like this.  wait or submit a PR for proper exception classes
+            self.assertRegexpMatches(str(e), r'sorry Dave')
+        else:
+            self.fail("should have thrown exception")
+
     def test_customized_list_properties(self):
         """Test that list properties with custom collection behavior invoke
         such correctly"""
-        class Item(Record):
+        class Eyetem(Record):
             name = Property()
 
         class CustomColl(ListCollection):
@@ -224,13 +243,13 @@ class TestProperties(unittest2.TestCase):
                 super(CustomColl, self).init_values(values)
 
         class GroupingRecord(Record):
-            members = ListProperty(coll=CustomColl, of=Item)
+            members = ListProperty(coll=CustomColl, of=Eyetem)
 
         # Instantiating with Python objects should still work...
-        gr = GroupingRecord(members=[Item(name="bob"), Item(name="bill")])
+        gr = GroupingRecord(members=[Eyetem(name="bob"), Eyetem(name="bill")])
 
         self.assertIsInstance(gr.members, ListCollection)
-        self.assertIsInstance(gr.members[0], Item)
+        self.assertIsInstance(gr.members[0], Eyetem)
         members = list(gr.members)
         self.assertEqual(members[0].name, "bob")
         self.assertEqual(members[1].name, "bill")
@@ -239,7 +258,7 @@ class TestProperties(unittest2.TestCase):
         gr = GroupingRecord({'members': 'bob,bill'})
 
         self.assertIsInstance(gr.members, ListCollection)
-        self.assertIsInstance(gr.members[0], Item)
+        self.assertIsInstance(gr.members[0], Eyetem)
         members = list(gr.members)
         self.assertEqual(members[0].name, "bob")
         self.assertEqual(members[1].name, "bill")
@@ -250,14 +269,14 @@ class TestProperties(unittest2.TestCase):
             name = Property()
 
         class ManyThingsRecord(ListRecord):
-            record_cls = SingleThing
+            itemtype = SingleThing
 
         # note: must pass pre-coerced members to constructor.
         mtr = ManyThingsRecord(
             (SingleThing(name="bert"), SingleThing(name="phil"))
         )
 
-        self.assertIsInstance(mtr, list)
+        self.assertTrue(mtr.__getitem__)
         self.assertIsInstance(mtr, ManyThingsRecord)
 
     def test_subclassing(self):
