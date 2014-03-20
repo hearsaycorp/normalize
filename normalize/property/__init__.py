@@ -23,6 +23,8 @@ class Property(object):
 
     def __init__(self, default=_none, traits=None, extraneous=False,
                  required=False, check=None, isa=None, coerce=None):
+        self.name = None
+        self.class_ = None
         super(Property, self).__init__()
         self.default = default
         if callable(default):
@@ -42,8 +44,6 @@ class Property(object):
         self.check = check
         self.valuetype = isa
         self.coerce = coerce or isa
-        self.name = None
-        self.class_ = None
         self.extraneous = extraneous
 
     @property

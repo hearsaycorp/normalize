@@ -69,12 +69,13 @@ class DiffOptions(object):
     """Optional data structure to pass diff options down"""
     def __init__(self, ignore_ws=True, ignore_case=False,
                  unicode_normal=True, unchanged=False,
-                 duck_type=False):
+                 duck_type=False, extraneous=False):
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
         self.unicode_normal = unicode_normal
         self.unchanged = unchanged
         self.duck_type = duck_type
+        self.extraneous = extraneous
 
     def items_equal(self, a, b):
         return self.normalize_val(a) == self.normalize_val(b)
@@ -134,7 +135,7 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
     for propname in sorted(properties):
 
         prop = properties[propname]
-        if prop.extraneous:
+        if prop.extraneous and not options.extraneous:
             continue
 
         propval_a = getattr(a, propname, None)
