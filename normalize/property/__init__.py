@@ -114,7 +114,7 @@ class LazyProperty(Property):
     """This declares a property which has late evaluation using its 'default'
     method.  This type uses the support built-in to python for lazy attribute
     setting, which means subsequent attribute assignments will not be prevented
-    or checked.  See SafeLazyProperty for the descriptor version
+    or checked.  See LazySafeProperty for the descriptor version
     """
     __trait__ = "lazy"
 

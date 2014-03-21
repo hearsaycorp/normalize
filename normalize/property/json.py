@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from normalize.property import LazyProperty
+from normalize.property import LazySafeProperty
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
@@ -34,6 +36,14 @@ class JsonProperty(Property):
 
 
 class SafeJsonProperty(JsonProperty, SafeProperty):
+    pass
+
+
+class LazyJsonProperty(JsonProperty, LazyProperty):
+    pass
+
+
+class LazySafeJsonProperty(JsonProperty, LazySafeProperty):
     pass
 
 
