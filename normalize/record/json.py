@@ -8,6 +8,8 @@ import types
 
 from normalize.coll import Collection
 from normalize.coll import ListCollection as RecordList
+from normalize.diff import Diff
+from normalize.diff import DiffInfo
 from normalize.property.json import JsonProperty
 from normalize.record import Record
 
@@ -205,6 +207,19 @@ class JsonRecord(Record):
                         jd[k] = v
         return jd
 
+    def diff_iter(self, other, **kwargs):
+        for diff in super(JsonRecord, self).diff_iter(other, **kwargs):
+            # TODO: object copy/upgrade constructor
+            newargs = diff.__getnewargs__()
+            yield JsonDiffInfo(**(newargs[0]))
+
+    def diff(self, other, **kwargs):
+        return JsonDiff(
+            base_type_name=type(self).__name__,
+            other_type_name=type(other).__name__,
+            values=self.diff_iter(other, **kwargs),
+        )
+
 
 class JsonRecordList(RecordList, JsonRecord):
     """Version of a RecordList which deals primarily in JSON"""
@@ -247,3 +262,18 @@ class JsonRecordList(RecordList, JsonRecord):
     def __repr__(self):
         super_repr = super(JsonRecordList, self).__repr__()
         return super_repr.replace("[", "values=[", 1)
+
+
+class JsonDiffInfo(DiffInfo, JsonRecord):
+    """Version of 'DiffInfo' that supports ``.json_data()``"""
+    def json_data(self):
+        return dict(
+            diff_type=self.diff_type.canonical_name,
+            base=self.base.selectors,
+            other=self.other.selectors,
+        )
+
+
+class JsonDiff(Diff, JsonRecordList):
+    """Version of 'Diff' that supports ``.json_data()``"""
+    itemtype = JsonDiffInfo

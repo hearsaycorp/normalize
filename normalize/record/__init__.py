@@ -78,3 +78,11 @@ class Record(object):
 
     def __hash__(self):
         return self.__pk__.__hash__()
+
+    def diff_iter(self, other, **kwargs):
+        from normalize.diff import diff_iter
+        return diff_iter(self, other, **kwargs)
+
+    def diff(self, other, **kwargs):
+        from normalize.diff import diff
+        return diff(self, other, **kwargs)

@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import collections
+from itertools import chain
 import re
 import unicodedata
 
@@ -10,6 +11,7 @@ from richenum import OrderedRichEnumValue
 
 from normalize.property import SafeProperty
 from normalize.coll import Collection
+from normalize.coll import ListCollection
 from normalize.record import Record
 from normalize.record import record_id
 from normalize.selector import FieldSelector
@@ -395,3 +397,48 @@ COMPARE_FUNCTIONS = {
 
 
 COMPARABLE = tuple(COMPARE_FUNCTIONS)
+
+
+def diff_iter(base, other, options=None, **kwargs):
+    """Simplified interface to 'compare_*_iter'"""
+    if options is None:
+        options = DiffOptions(**kwargs)
+    elif len(kwargs):
+        raise Exception(
+            "pass options= or DiffOptions constructor arguments; not both"
+        )
+    generators = []
+
+    for types, func in COMPARE_FUNCTIONS.iteritems():
+        if isinstance(base, types):
+            generators.append(func(base, other, options=options))
+
+    if len(generators) == 1:
+        return generators[0]
+    else:
+        return chain(*generators)
+
+
+class Diff(ListCollection):
+    """Container for a list of differences"""
+    base_type_name = SafeProperty(isa=str, extraneous=True)
+    other_type_name = SafeProperty(isa=str, extraneous=True)
+    itemtype = DiffInfo
+
+    def __str__(self):
+        what = (
+            "%s vs %s" % (self.base_type_name, self.other_type_name) if
+            self.base_type_name != self.other_type_name else
+            self.base_type_name
+        )
+        return "<Diff [{what}]; {n} item(s)>".format(
+            n=len(self),
+            what=what,
+        )
+
+
+def diff(base, other, **kwargs):
+    """Eager version of diff_iter"""
+    return Diff(diff_iter(base, other, **kwargs),
+                base_type_name=type(base).__name__,
+                other_type_name=type(other).__name__)
