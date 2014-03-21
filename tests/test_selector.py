@@ -305,10 +305,10 @@ class TestStructableFieldSelector(unittest.TestCase):
             hiss = Property()
 
         class Caret(Record):
-            bar = ListProperty(Octothorpe)
+            bar = ListProperty(of=Octothorpe)
 
         class Pilcrow(Record):
-            bar = ListProperty(Octothorpe)
+            bar = ListProperty(of=Octothorpe)
             foo = Property(isa=Caret)
             baz = Property()
 

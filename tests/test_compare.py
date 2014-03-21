@@ -26,7 +26,7 @@ class Person(LegalPerson):
 
 
 class Circle(Record):
-    members = ListProperty(Person)
+    members = ListProperty(of=Person)
 
 
 class Comment(Record):
@@ -38,7 +38,7 @@ class Comment(Record):
 
 
 class Post(Record):
-    comments = ListProperty(Comment)
+    comments = ListProperty(of=Comment)
     content = Property()
     edited = SafeProperty(required=True, isa=datetime)
     post_id = Property(required=True, isa=int)
@@ -49,7 +49,7 @@ class Post(Record):
 class Wall(Record):
     id = Property(required=True, isa=int)
     owner = Property(isa=Person)
-    posts = ListProperty(Post)
+    posts = ListProperty(of=Post)
 
 
 # for testing comparison with "alien" classes
