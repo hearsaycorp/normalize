@@ -30,13 +30,13 @@ class Record(object):
             meta_prop = type(self).properties[propname]
             meta_prop.init_prop(self)
 
-    def __iter__(self):
-        for name in type(self).properties.keys():
-            yield (name, getattr(self, name, None))
-
     def __getnewargs__(self):
         """Implement saving for pickle API"""
-        return (dict(self),)
+        newdict = dict()
+        for name in type(self).properties.keys():
+            if hasattr(self, name):
+                newdict[name] = getattr(self, name, None)
+        return (newdict,)
 
     def __str__(self):
         """Marshalling to string form"""
@@ -86,3 +86,16 @@ class Record(object):
     def diff(self, other, **kwargs):
         from normalize.diff import diff
         return diff(self, other, **kwargs)
+
+    def walk(self, fs=None):
+        if fs is None:
+            from normalize.selector import FieldSelector
+            fs = FieldSelector([])
+        for name, prop in type(self).properties.iteritems():
+            if hasattr(self, name):
+                val = getattr(self, name)
+                prop_fs = fs + [name]
+                yield (prop_fs, prop, self, val)
+                if isinstance(val, Record):
+                    for x in val.walk(prop_fs):
+                        yield x
