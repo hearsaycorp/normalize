@@ -1,6 +1,8 @@
 TODO
 ====
 
+* identity.record_id() should never return unhashable types!
+
 * copy constructor (teaching ``__init__()`` to take an object might
   work), to be used by ``MultiFieldSelector([]).get()``
 

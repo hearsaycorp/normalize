@@ -26,6 +26,11 @@ def has(selfie, self, args, kwargs):
     object type, because unlike in Perl, python cannot re-bless objects from
     one class to another.
     """
+    if args:
+        raise Exception(
+            "Positional arguments to Property constructors will only end "
+            "in tears.  Convert to keyword argument form."
+        )
     extra_traits = set(kwargs.pop('traits', tuple()))
     # detect initializer arguments only supported by a subclass and add
     # them to extra_traits
