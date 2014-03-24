@@ -52,6 +52,19 @@ class Collection(Record):
         itself, for sets)"""
         pass
 
+    def walk(self, fs=None):
+        if fs is None:
+            from normalize.selector import FieldSelector
+            fs = FieldSelector([])
+        for x in super(Collection, self).walk(fs):
+            yield x
+        for key, item in self.itertuples():
+            key_fs = fs + [key]
+            yield (key_fs, None, self, item)
+            if isinstance(item, Record):
+                for x in item.walk(key_fs):
+                    yield x
+
 
 class KeyedCollection(Collection):
     def __getitem__(self, item):

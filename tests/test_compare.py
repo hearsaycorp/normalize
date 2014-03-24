@@ -77,6 +77,11 @@ class TestRecordComparison(unittest.TestCase):
             set("<DiffInfo: %s>" % x for x in expected)
         )
 
+    def test_diff_types(self):
+        dt = DiffTypes.MODIFIED
+        self.assertEqual(dt.canonical_name, "modified")
+        self.assertEqual(dt, DiffTypes.from_canonical(dt.canonical_name))
+
     def test_stringify(self):
         """Test behavior of Record.__str__"""
         # this actually uses repr()
@@ -343,6 +348,14 @@ class TestRecordComparison(unittest.TestCase):
 
         self.assertDifferences(
             compare_record_iter(wall_one, wall_two), expected_differences,
+        )
+        self.assertDifferences(
+            wall_one.diff_iter(wall_two), expected_differences,
+        )
+        difference = wall_one.diff(wall_two)
+        self.assertEqual(len(difference), len(expected_differences))
+        self.assertRegexpMatches(
+            str(difference), r'<Diff \[Wall\]; \d+ item\(s\)>',
         )
 
         self.assertDifferences(
