@@ -67,13 +67,19 @@ class DiffInfo(Record):
         return "<DiffInfo: %s %s>" % (difftype, pathinfo)
 
 
+class Nothing(object):
+    pass
+
+
 class DiffOptions(object):
     """Optional data structure to pass diff options down"""
     def __init__(self, ignore_ws=True, ignore_case=False,
                  unicode_normal=True, unchanged=False,
+                 ignore_empty_slots=False,
                  duck_type=False, extraneous=False):
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
+        self.ignore_empty_slots = ignore_empty_slots
         self.unicode_normal = unicode_normal
         self.unchanged = unchanged
         self.duck_type = duck_type
@@ -103,7 +109,7 @@ class DiffOptions(object):
         # left as an exercise for a subclass.
         return value.upper()
 
-    def normalize_val(self, value):
+    def normalize_val(self, value=Nothing):
         if isinstance(value, basestring):
             if self.ignore_ws:
                 value = self.normalize_whitespace(value)
@@ -111,6 +117,8 @@ class DiffOptions(object):
                 value = self.normalize_case(value)
             if self.unicode_normal:
                 value = self.normalize_unf(value)
+        elif self.ignore_empty_slots and value in ("", None):
+            value = Nothing
         return value
 
     def record_id(self, record, type_=None):
@@ -140,17 +148,17 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         if prop.extraneous and not options.extraneous:
             continue
 
-        propval_a = getattr(a, propname, None)
-        propval_b = getattr(b, propname, None)
+        propval_a = options.normalize_val(getattr(a, propname, Nothing))
+        propval_b = options.normalize_val(getattr(b, propname, Nothing))
 
-        if propval_a is None and propval_b is None:
+        if propval_a is Nothing and propval_b is Nothing:
             continue
-        elif propval_a is None and propval_b is not None:
+        elif propval_a is Nothing and propval_b is not Nothing:
             yield DiffInfo(
                 diff_type=DiffTypes.ADDED,
                 other=fs_b + [propname],
             )
-        elif propval_b is None and propval_a is not None:
+        elif propval_b is Nothing and propval_a is not Nothing:
             yield DiffInfo(
                 diff_type=DiffTypes.REMOVED,
                 base=fs_a + [propname],
@@ -299,9 +307,10 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         i = 0
         for v in propval_x:
             v = options.normalize_val(v)
-            vals.add((v, seen[v]))
-            rev_key[(v, seen[v])] = i
-            seen[v] += 1
+            if v is not Nothing or not options.ignore_empty_slots:
+                vals.add((v, seen[v]))
+                rev_key[(v, seen[v])] = i
+                seen[v] += 1
             i += 1
 
     removed = values['a'] - values['b']
@@ -352,9 +361,10 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         seen = collections.Counter()
         for k, v in propval_x.iteritems():
             v = options.normalize_val(v)
-            vals.add((v, seen[v]))
-            rev_key[(v, seen[v])] = k
-            seen[v] += 1
+            if v is not Nothing or not options.ignore_empty_slots:
+                vals.add((v, seen[v]))
+                rev_key[(v, seen[v])] = k
+                seen[v] += 1
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
