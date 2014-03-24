@@ -254,6 +254,9 @@ class FieldSelector(object):
                 "Cannot add a %s to a FieldSelector" % type(other).__name__
             )
 
+    def __getitem__(self, key):
+        return self.selectors[key]
+
     @property
     def path(self):
         selector_parts = []
