@@ -299,10 +299,18 @@ class TestRecordMarshaling(unittest2.TestCase):
             pass
 
         rjcr = RegularJsonCheeseRecord(input_json)
-        for diff in compare_record_iter(
-            jcr, rjcr, options=DiffOptions(duck_type=True)
-        ):
+        diff = jcr.diff(rjcr, duck_type=True)
+        if diff:
             self.fail("Found a difference: %s" % diff)
+
+        jcr2 = JsonCheeseRecord(input_json)
+        jcr2.variety += " (old)"
+        jcr2.smelliness -= 5
+
+        diff = jcr.diff(jcr2)
+        diff_json = diff.json_data()
+        self.assertEqual(len(diff_json), 2)
+        self.assertTrue(all(x['diff_type'] == 'modified' for x in diff_json))
 
         sanitized = rjcr.json_data()
         self.assertNotIn("origin", sanitized)
