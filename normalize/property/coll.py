@@ -55,5 +55,5 @@ class ListProperty(CollectionProperty):
         )
 
 
-class SafeListCollectionProperty(ListProperty, SafeCollectionProperty):
+class SafeListProperty(ListProperty, SafeCollectionProperty):
     pass

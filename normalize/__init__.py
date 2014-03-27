@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from normalize.property import Property
 from normalize.property.json import JsonProperty
-from normalize.property.json import JsonCollection
 from normalize.property.json import JsonCollectionProperty
 from normalize.record import Record
 from normalize.coll import ListCollection
@@ -14,6 +13,7 @@ from normalize.selector import FieldSelectorException
 
 
 RecordList = ListCollection
+JsonCollection = ListCollection
 
 
 __all__ = [
