@@ -145,19 +145,19 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         # bad property name
         fs = FieldSelector(["bad_name"])
-        #with self.assertRaises(KeyError):
+        # with self.assertRaises(KeyError):
         with self.assertRaises(FieldSelectorException):
             fs.get(record)
         # bad index
         fs = FieldSelector(["children", 10])
-        #with self.assertRaises(IndexError):
+        # with self.assertRaises(IndexError):
         with self.assertRaises(FieldSelectorException):
             fs.get(record)
         # bad nested property name
         fs = FieldSelector(
             ["children", 1, "bad_name"],
         )
-        #with self.assertRaises(KeyError):
+        # with self.assertRaises(KeyError):
         with self.assertRaises(FieldSelectorException):
             fs.get(record)
 
@@ -167,7 +167,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         # Test invalid FieldSelector
         fs = FieldSelector(["name"])
         fs.put(record, "pass")
-        #self.assertEqual(record.raw_data, {"children": [], 'name': 'pass'})
+        # self.assertEqual(record.raw_data, {"children": [], 'name': 'pass'})
 
         record = MockComplexJsonRecord()
 

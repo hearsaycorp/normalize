@@ -2,7 +2,6 @@ from datetime import datetime
 import unittest
 
 from normalize import (
-    #JsonCollection,
     JsonCollectionProperty,
     JsonProperty,
     JsonRecord,
