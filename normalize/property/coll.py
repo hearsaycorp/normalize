@@ -27,7 +27,9 @@ class CollectionProperty(Property):
 
 class SafeCollectionProperty(CollectionProperty, SafeProperty):
     def __set__(self, obj, value):
-        super(SafeCollectionProperty, self).__set__(obj, self._coerce(value))
+        super(SafeCollectionProperty, self).__set__(
+            obj, self.type_safe_value(value),
+        )
 
 
 class ListProperty(CollectionProperty):

@@ -11,7 +11,7 @@ script:
   - pep8 --max-line-length=100 tests
   - |
     fails=0
-    for rstfile in $(find . -name "*.rst")
+    for rstfile in $(find . -name doc -prune -o -name "*.rst" -print)
     do
        err_count=$(rst2html $rstfile |
                    lynx -dump -stdin 2>&1 |
@@ -20,3 +20,4 @@ script:
        fails=$(($fails + $err_count))
     done
     test $fails -eq 0
+  - cd doc && make text
