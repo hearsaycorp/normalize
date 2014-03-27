@@ -50,11 +50,10 @@ class JsonListProperty(ListProperty, JsonProperty):
     pass
 
 
-JsonCollectionProperty = JsonListProperty
-
-
-class SafeJsonListProperty(JsonCollectionProperty, SafeProperty):
+class SafeJsonListProperty(JsonListProperty, SafeProperty):
     pass
 
 
+# deprecated compatibility exports
+JsonCollectionProperty = JsonListProperty
 SafeJsonCollectionProperty = SafeJsonListProperty
