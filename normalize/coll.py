@@ -35,7 +35,8 @@ class Collection(Record):
             yield x
 
     def __eq__(self, other):
-        return self.itemtype == other.itemtype and self.values == other.values
+        return self.itemtype == getattr(other, "itemtype", None) and \
+            self.values == getattr(other, "values", None)
 
     def __ne__(self, other):
         return not self.__eq__(other)

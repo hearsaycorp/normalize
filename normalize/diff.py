@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import collections
 from itertools import chain
 import re
+import types
 import unicodedata
 
 from richenum import OrderedRichEnum
@@ -109,6 +110,9 @@ class DiffOptions(object):
         # left as an exercise for a subclass.
         return value.upper()
 
+    def value_is_empty(self, value):
+        return (not value and isinstance(value, (basestring, types.NoneType)))
+
     def normalize_val(self, value=Nothing):
         if isinstance(value, basestring):
             if self.ignore_ws:
@@ -117,7 +121,7 @@ class DiffOptions(object):
                 value = self.normalize_case(value)
             if self.unicode_normal:
                 value = self.normalize_unf(value)
-        elif self.ignore_empty_slots and value in ("", None):
+        elif self.ignore_empty_slots and self.value_is_empty(value):
             value = Nothing
         return value
 
