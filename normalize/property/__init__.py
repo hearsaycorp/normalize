@@ -44,6 +44,11 @@ class Property(object):
         self.check = check
         self.valuetype = isa
         self.coerce = coerce or isa
+        if self.coerce and not self.valuetype:
+            raise Exception(
+                "In order to coerce types, the intended type must be known; "
+                "pass isa=TYPE or isa=(TYPE, TYPE, ...) to Property"
+            )
         self.extraneous = extraneous
 
     @property
