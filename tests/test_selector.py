@@ -1,14 +1,50 @@
 from __future__ import absolute_import
 
+from datetime import datetime
 import unittest
 
 from normalize import FieldSelector
 from normalize import FieldSelectorException
+from normalize import JsonCollectionProperty
+from normalize import JsonProperty
+from normalize import JsonRecord
 from normalize import Property
 from normalize import Record
+from normalize import Record
+from normalize import RecordList
 from normalize.property.coll import ListProperty
 from normalize.selector import MultiFieldSelector
-from testclasses import MockChildRecord, MockJsonRecord
+
+
+class MockChildRecord(JsonRecord):
+    name = JsonProperty()
+
+
+class MockDelegateJsonRecord(JsonRecord):
+    other = JsonProperty()
+
+
+class MockJsonRecord(JsonRecord):
+    name = JsonProperty()
+    age = JsonProperty(isa=int)
+    seen = JsonProperty(
+        json_name='last_seen', isa=datetime,
+        coerce=lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S'),
+    )
+    children = JsonCollectionProperty(of=MockChildRecord)
+
+
+class MockExtraneousJsonRecord(JsonRecord):
+    count = JsonProperty(isa=int)
+    last_updated = JsonProperty(
+        isa=datetime,
+        coerce=lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S'),
+        extraneous=False,
+    )
+
+
+class MockRecordList(RecordList):
+    itemtype = MockExtraneousJsonRecord
 
 
 class MockComplexJsonRecord(MockJsonRecord):
@@ -145,19 +181,19 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         # bad property name
         fs = FieldSelector(["bad_name"])
-        #with self.assertRaises(KeyError):
+        # with self.assertRaises(KeyError):
         with self.assertRaises(FieldSelectorException):
             fs.get(record)
         # bad index
         fs = FieldSelector(["children", 10])
-        #with self.assertRaises(IndexError):
+        # with self.assertRaises(IndexError):
         with self.assertRaises(FieldSelectorException):
             fs.get(record)
         # bad nested property name
         fs = FieldSelector(
             ["children", 1, "bad_name"],
         )
-        #with self.assertRaises(KeyError):
+        # with self.assertRaises(KeyError):
         with self.assertRaises(FieldSelectorException):
             fs.get(record)
 
@@ -167,7 +203,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         # Test invalid FieldSelector
         fs = FieldSelector(["name"])
         fs.put(record, "pass")
-        #self.assertEqual(record.raw_data, {"children": [], 'name': 'pass'})
+        # self.assertEqual(record.raw_data, {"children": [], 'name': 'pass'})
 
         record = MockComplexJsonRecord()
 

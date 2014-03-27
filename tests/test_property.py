@@ -43,6 +43,7 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(lazyprop, LazyProperty)
         self.assertFalse(isinstance(lazyprop, SafeProperty))
         self.assertRaises(Exception, Property, lazy=False)
+        self.assertRaises(Exception, Property, coerce=lambda x: 1)
 
     def test_1_basic(self):
         """Test that basic Properties can be defined and used"""

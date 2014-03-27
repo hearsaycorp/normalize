@@ -5,7 +5,6 @@ from normalize.property import LazySafeProperty
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
-from normalize.coll import ListCollection
 
 
 class Default(object):
@@ -47,13 +46,14 @@ class LazySafeJsonProperty(JsonProperty, LazySafeProperty):
     pass
 
 
-class JsonCollectionProperty(ListProperty, JsonProperty):
+class JsonListProperty(ListProperty, JsonProperty):
     pass
 
 
-class JsonCollection(ListCollection):
+class SafeJsonListProperty(JsonListProperty, SafeProperty):
     pass
 
 
-class SafeJsonCollectionProperty(JsonCollectionProperty, SafeProperty):
-    pass
+# deprecated compatibility exports
+JsonCollectionProperty = JsonListProperty
+SafeJsonCollectionProperty = SafeJsonListProperty

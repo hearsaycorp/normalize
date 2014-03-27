@@ -1,0 +1,174 @@
+
+from __future__ import absolute_import
+
+import collections
+
+from normalize.coll import Collection
+from normalize.record import Record
+from normalize.selector import FieldSelector
+
+
+class Visitor(object):
+    """Class for writing Record visitor pattern functions.  This Visitor is
+    intended to be subclassed; a generic version which can take the apply and
+    reduce functions as arguments may be implemented later.
+    """
+    def __init__(self, ignore_none=True, ignore_empty_string=False,
+                 apply_records=False, apply_empty_slots=False):
+        """Create a new visitor.  The built-in parameters, which affect the
+        default 'map' function operation, are:
+
+        ``ignore_none`` (bool)
+            If the 'apply' function returns ``None``, treat it as if the
+            slot or object did not exist.  On by default.
+
+        ``ignore_empty_string`` (bool)
+            If the 'apply' function returns the empty string, treat it as if
+            the slot or object did not exist.  Not on by default.
+
+        ``apply_records`` (bool)
+            Normally, traversal happens in depth-first order, and fields
+            which are Records never have ``apply`` called on them.  If you
+            want them to, set this field.  This affects the arguments passed
+            to ``reduce_record``
+            If the ``apply`` function returns
+            ``self.StopVisiting`` (or an instance of it), then traversal
+            does not descend into the fields of the record.  If it returns
+            something else, then ``reduce_record`` is expected to take a
+            tuple of the return value, and the dictio
+
+        """
+        self.ignore_none = ignore_none
+        self.ignore_empty_string = ignore_empty_string
+        self.apply_records = apply_records
+        self.apply_empty_slots = apply_empty_slots
+
+    def apply(self, value, fs, prop=None, parent_obj=None):
+        """'apply' is a general place to put a function which is called
+        on every extant record slot.
+
+        Data structures are normally traversed in depth-first order.
+        """
+        pass
+
+    def reduce_record(self, result_dict, fs, record_type):
+        """Hook called for each record, with the results of mapping each
+        member."""
+        return result_dict
+
+    def reduce_collection(self, result_coll, fs, coll_type):
+        """Hook called for each normalize.coll.Collection."""
+        return result_coll
+
+    def reduce_complex(self, record_result, coll_result, fs, value_type):
+        """If a Collection has properties that map to something, this
+        reduction."""
+        if record_result.get("values", False):
+            raise Exception("Override reduce_complex in your visitor")
+        record_result['values'] = coll_result
+        return record_result
+
+    class StopVisiting(object):
+        return_value = None
+
+        def __init__(self, return_value):
+            self.return_value = return_value
+
+    def map(self, value, fs=None, value_type=None):
+        if not fs:
+            fs = FieldSelector([])
+        if not value_type:
+            value_type = type(value)
+
+        prune = False
+
+        if issubclass(value_type, Record):
+            record_mapped = self.map_record(value, fs, value_type)
+
+        if record_mapped == self.StopVisiting or isinstance(
+            record_mapped, self.StopVisiting
+        ):
+            record_mapped = record_mapped.return_value
+            prune = True
+
+        if not prune and issubclass(value_type, Collection):
+            coll_mapped = self.map_collection(value, fs, value_type)
+
+            if coll_mapped and record_mapped:
+                return self.reduce_complex(
+                    record_mapped, coll_mapped, fs, value_type,
+                )
+            elif coll_mapped:
+                return coll_mapped
+
+        return record_mapped
+
+    def map_record(self, record, fs, record_type):
+        """Function responsible for descending an object.
+        """
+        if not record_type:
+            record_type = type(record)
+        if not fs:
+            fs = FieldSelector([])
+
+        if self.apply_records:
+            result = self.apply(record, fs, None, None)
+            if result == self.StopVisiting or \
+                    isinstance(result, self.StopVisiting):
+                return result.return_value
+
+        result_dict = dict()
+
+        for name, prop in record_type.properties.iteritems():
+            mapped = self.map_prop(record, prop, fs)
+            if mapped is None and self.ignore_none:
+                pass
+            elif mapped == "" and self.ignore_empty_string:
+                pass
+            else:
+                result_dict[name] = mapped
+
+        to_reduce = (
+            result_dict if not self.apply_records or result is None else
+            (result, result_dict)
+        )
+
+        return self.reduce_record(to_reduce, fs, record_type)
+
+    def map_prop(self, record, prop, fs):
+        if self.apply_empty_slots or hasattr(record, prop.name):
+            value = prop.__get__(record, None)
+            fs = fs + [prop.name]
+            if isinstance(value, Record):
+                mapped = self.map(value, fs, prop.valuetype)
+            else:
+                mapped = self.apply(value, fs, prop, record)
+
+            return mapped
+
+    def collection_type(self, coll, fs, coll_type):
+        return coll_type().values
+
+    def map_collection(self, coll, fs, coll_type):
+        rv = self.collection_type(coll, fs, coll_type)
+        for key, value in coll.itertuples():
+            mapped = self.map(value, fs + [key], coll_type.itemtype)
+            if mapped is None and self.ignore_none:
+                pass
+            elif mapped == "" and self.ignore_empty_string:
+                pass
+            else:
+                if isinstance(rv, collections.MutableMapping):
+                    rv[key] = mapped
+                elif isinstance(rv, collections.MutableSequence):
+                    rv.append(mapped)
+                elif isinstance(rv, collections.MutableSet):
+                    rv.add(mapped)
+                else:
+                    raise Exception(
+                        "I don't know how to map into a %s" % (
+                            type(rv).__name__
+                        )
+                    )
+
+        return self.reduce_collection(rv, fs, coll_type)
