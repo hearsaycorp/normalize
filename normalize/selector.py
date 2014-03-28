@@ -87,7 +87,7 @@ class FieldSelector(object):
         i = 0
         for selector in self.selectors:
             if selector is None:
-                sub_field_selector = FieldSelector(self.selectors[i + 1:])
+                sub_field_selector = type(self)(self.selectors[i + 1:])
                 return [sub_field_selector.get(r) for r in record]
             elif isinstance(selector, (int, long)):
                 try:
@@ -138,7 +138,7 @@ class FieldSelector(object):
                     )
         else:
             selector = self.selectors[0]
-            sub_selector = FieldSelector(self.selectors[1:])
+            sub_selector = type(self)(self.selectors[1:])
             if selector is None:
                 for x in record:
                     sub_selector.put(x, value)
@@ -171,7 +171,7 @@ class FieldSelector(object):
         i = 0
         for selector in self.selectors[:-1]:
             if selector is None:
-                sub_field_selector = FieldSelector(self.selectors[i + 1:])
+                sub_field_selector = type(self)(self.selectors[i + 1:])
                 return sum(sub_field_selector.post(r) for r in record)
             elif isinstance(selector, (int, long)):
                 try:
@@ -195,7 +195,7 @@ class FieldSelector(object):
                     setattr(record, selector, prop.valuetype())
                 record = getattr(record, selector)
             i = i + 1
-        FieldSelector([self.selectors[-1]]).put(record, value)
+        type(self)([self.selectors[-1]]).put(record, value)
         return 1
 
     def __eq__(self, other):
@@ -244,11 +244,11 @@ class FieldSelector(object):
 
     def __add__(self, other):
         if isinstance(other, (basestring, int, long)):
-            return FieldSelector(self.selectors + [other])
+            return type(self)(self.selectors + [other])
         elif isinstance(other, collections.Iterable):
-            return FieldSelector(self.selectors + list(other))
+            return type(self)(self.selectors + list(other))
         elif isinstance(other, FieldSelector):
-            return FieldSelector(self).extend(other)
+            return type(self)(self).extend(other)
         else:
             raise TypeError(
                 "Cannot add a %s to a FieldSelector" % type(other).__name__
@@ -287,6 +287,8 @@ class FieldSelector(object):
 
 
 class MultiFieldSelector(object):
+    FieldSelector = FieldSelector
+
     """Version of a FieldSelector which stores 'selectors' as a tree"""
     def __init__(self, *others):
         selectors = list()
@@ -298,13 +300,13 @@ class MultiFieldSelector(object):
             elif isinstance(other, FieldSelector):
                 selectors.append(other)
             else:
-                selectors.append(FieldSelector(other))
+                selectors.append(self.FieldSelector(other))
 
         for selector in selectors:
             chain = selector.selectors
             if chain:
                 head = chain[0]
-                tail = FieldSelector(chain[1:]) if len(chain) > 1 else all
+                tail = self.FieldSelector(chain[1:]) if len(chain) > 1 else all
                 heads[head].add(tail)
             else:
                 heads[None].add(all)
@@ -335,10 +337,10 @@ class MultiFieldSelector(object):
     def __iter__(self):
         """Generates FieldSelectors from this MultiFieldSelector"""
         for head, tail in self.heads.iteritems():
-            head_selector = FieldSelector((head,))
+            head_selector = self.FieldSelector((head,))
             if tail is all:
                 if head is None:
-                    yield FieldSelector(())
+                    yield self.FieldSelector(())
                 yield head_selector
             else:
                 for x in tail:
