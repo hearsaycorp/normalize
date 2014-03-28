@@ -254,8 +254,21 @@ class FieldSelector(object):
                 "Cannot add a %s to a FieldSelector" % type(other).__name__
             )
 
+    def __len__(self):
+        return len(self.selectors)
+
     def __getitem__(self, key):
         return self.selectors[key]
+
+    def startswith(self, key_or_fs):
+        if isinstance(key_or_fs, FieldSelector):
+            return all(
+                key_or_fs[i] == self.selectors[i] for i in range(
+                    0, len(key_or_fs),
+                )
+            )
+        else:
+            return self.selectors[0] == key_or_fs
 
     @property
     def path(self):

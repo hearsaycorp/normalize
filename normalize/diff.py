@@ -46,10 +46,12 @@ class DiffInfo(Record):
     values diffed.
     """
     diff_type = SafeProperty(
-        coerce=coerce_diff, isa=DiffTypes.EnumValue,
+        coerce=coerce_diff,
+        isa=DiffTypes.EnumValue,
+        required=True,
     )
-    base = SafeProperty(isa=FieldSelector)
-    other = SafeProperty(isa=FieldSelector)
+    base = SafeProperty(isa=FieldSelector, required=True)
+    other = SafeProperty(isa=FieldSelector, required=True)
 
     def __init__(self, *args, **kwargs):
         super(DiffInfo, self).__init__(*args, **kwargs)
@@ -57,11 +59,16 @@ class DiffInfo(Record):
             raise Exception("DiffInfo must have a FieldSelector")
 
     def __str__(self):
-        if hasattr(self, "base"):
-            if hasattr(self, "other") and self.base.path != self.other.path:
-                pathinfo = "(%s/%s)" % (self.base.path, self.other.path)
-            else:
-                pathinfo = self.base.path
+        if self.base.path != self.other.path:
+            pathinfo = (
+                self.base.path if (
+                    len(self.base) > len(self.other) and
+                    self.base.startswith(self.other)
+                ) else self.other.path if (
+                    len(self.other) > len(self.base) and
+                    self.other.startswith(self.base)
+                ) else "(%s/%s)" % (self.base.path, self.other.path)
+            )
         else:
             pathinfo = self.other.path
         difftype = self.diff_type.display_name
@@ -160,12 +167,14 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         elif propval_a is Nothing and propval_b is not Nothing:
             yield DiffInfo(
                 diff_type=DiffTypes.ADDED,
+                base=fs_a + [propname],
                 other=fs_b + [propname],
             )
         elif propval_b is Nothing and propval_a is not Nothing:
             yield DiffInfo(
                 diff_type=DiffTypes.REMOVED,
                 base=fs_a + [propname],
+                other=fs_b + [propname],
             )
         elif (options.duck_type or type(propval_a) == type(propval_b)) \
                 and isinstance(propval_a, COMPARABLE):
@@ -270,6 +279,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         yield DiffInfo(
             diff_type=DiffTypes.REMOVED,
             base=selector,
+            other=fs_b,
         )
 
     for pk, seq in added:
@@ -277,6 +287,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         selector = fs_b + [b_key]
         yield DiffInfo(
             diff_type=DiffTypes.ADDED,
+            base=fs_a,
             other=selector,
         )
 
@@ -337,6 +348,7 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         yield DiffInfo(
             diff_type=DiffTypes.REMOVED,
             base=selector,
+            other=fs_b,
         )
 
     for v, seq in added:
@@ -344,6 +356,7 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         selector = fs_b + [b_key]
         yield DiffInfo(
             diff_type=DiffTypes.ADDED,
+            base=fs_a,
             other=selector,
         )
 
@@ -390,6 +403,7 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         yield DiffInfo(
             diff_type=DiffTypes.REMOVED,
             base=selector,
+            other=fs_b,
         )
 
     for v, seq in added:
@@ -397,6 +411,7 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         selector = fs_b + [b_key]
         yield DiffInfo(
             diff_type=DiffTypes.ADDED,
+            base=fs_a,
             other=selector,
         )
 

@@ -232,8 +232,10 @@ class TestRecordComparison(unittest.TestCase):
                 'MODIFIED .posts[0].content',
                 'MODIFIED .posts[0].edited',
                 'REMOVED .owner.interests[1]',
-                'REMOVED .posts[0].comments[1].poster.interests[1]',
-                "ADDED .posts[0].comments[1].poster.info['birth name']",
+                'REMOVED (.posts[0].comments[1].poster.interests[1]/'
+                '.posts[0].comments[0].poster.interests)',
+                "ADDED (.posts[0].comments[2].poster.info/"
+                ".posts[0].comments[1].poster.info['birth name'])",
             }
         )
 
