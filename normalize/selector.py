@@ -258,7 +258,10 @@ class FieldSelector(object):
         return len(self.selectors)
 
     def __getitem__(self, key):
-        return self.selectors[key]
+        if isinstance(key, slice):
+            return type(self)(self.selectors[key])
+        else:
+            return self.selectors[key]
 
     def startswith(self, key_or_fs):
         if isinstance(key_or_fs, FieldSelector):
