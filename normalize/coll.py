@@ -1,10 +1,21 @@
 
 from __future__ import absolute_import
 
+import collections
+import types
+
 from normalize.record import Record
 
 """This class contains container classes which can act like collections but
 conform to this package's metaclass API"""
+
+
+class classproperty(object):
+    def __init__(self, f):
+        self.f = f
+
+    def __get__(self, obj, owner):
+        return self.f(owner)
 
 
 class Collection(Record):
@@ -12,13 +23,21 @@ class Collection(Record):
     Bags are not currently supported, ie the keys must be unique for the diff
     machinery as currently written to function.
     """
-    @property
-    def itemtype(self):
+    @classproperty
+    def itemtype(cls):
         raise Exception("itemtype must be defined in a subclass")
 
-    @property
-    def record_cls(self):
-        return self.itemtype
+    @classproperty
+    def coerceitem(cls):
+        return cls.itemtype
+
+    @classproperty
+    def colltype(cls):
+        raise Exception("colltype must be defined in a subclass")
+
+    @classmethod
+    def record_cls(cls):
+        return cls.itemtype
 
     """This is the base class for Record property values which contain
     iterable sets of values with a particular common type."""
@@ -27,7 +46,9 @@ class Collection(Record):
         @param of The Record type of members in this collection
         @param values The iterable collection to fill this Collection with
         """
-        self.init_values(values)
+        self.values = type(self).tuples_to_coll(
+            type(self).coll_to_tuples(values)
+        )
         super(Collection, self).__init__(**kwargs)
 
     def __iter__(self):
@@ -44,14 +65,21 @@ class Collection(Record):
     def __len__(self):
         return len(self.values)
 
-    def init_values(self, values):
-        raise Exception("init_values must be overridden by a subclass")
+    @classmethod
+    def tuples_to_coll(cls, generator):
+        raise Exception("tuples_to_coll must be overridden by a subclass")
 
     def itertuples(self):
         """Iterate over the items in the collection; return (k, v) where k is
         the key, index etc into the collection (or potentially the value
         itself, for sets)"""
-        pass
+        raise Exception("itertuples must be overridden by a subclass")
+
+    @classmethod
+    def coll_to_tuples(cls, coll):
+        """Generate 'conformant' tuples from an input collection, similar to
+        itertuples"""
+        raise Exception("coll_to_tuples must be overridden by a subclass")
 
     def walk(self, fs=None):
         if fs is None:
@@ -74,14 +102,30 @@ class KeyedCollection(Collection):
 
 class DictCollection(KeyedCollection):
     suffix = "Map"
+    colltype = dict
 
-    def init_values(self, values):
-        self.values = dict()
-        if values:
-            for k, v in values.iteritems():
-                # XXX - is a coerce here sensible?
-                self.values[k] = (v if isinstance(v, self.itemtype) else
-                                  self.itemtype(v))
+    @classmethod
+    def tuples_to_coll(cls, generator):
+        return cls.colltype(generator)
+
+    @classmethod
+    def coll_to_tuples(cls, coll):
+        if isinstance(coll, collections.Mapping):
+            for k, v in coll.iteritems():
+                yield k, v
+        elif isinstance(coll, collections.Sequence):
+            i = 0
+            for v in coll:
+                yield (i, v)
+                i += 1
+        elif isinstance(coll, types.GeneratorType):
+            i = 0
+            for v in coll:
+                if isinstance(v, tuple) and len(v) == 2:
+                    yield v
+                else:
+                    yield (i, v)
+                i += 1
 
     def itertuples(self):
         return self.values.iteritems()
@@ -89,20 +133,42 @@ class DictCollection(KeyedCollection):
 
 class ListCollection(KeyedCollection):
     suffix = "List"
+    colltype = list
 
-    def init_values(self, values):
-        self.values = list()
-        if values:
-            for k in values:
-                self.values.append(k if isinstance(k, self.itemtype) else
-                                   self.itemtype(k))
+    @classmethod
+    def tuples_to_coll(cls, tuples):
+        itemtype = cls.itemtype
+        coerceitem = cls.coerceitem
+        return cls.colltype(
+            v if isinstance(v, itemtype) else coerceitem(v) for
+            k, v in tuples
+        )
+
+    @classmethod
+    def coll_to_tuples(cls, coll):
+        if isinstance(coll, collections.Mapping):
+            i = 0
+            for k in sorted(coll.keys()):
+                yield (i, coll[k])
+        elif isinstance(coll, (collections.Sequence, types.GeneratorType)):
+            i = 0
+            for v in coll:
+                yield i, v
+                i += 1
+        elif not coll:
+            return
+        else:
+            raise Exception(
+                "Cannot interpret %s as a %s constructor" % (
+                    type(coll).__name__, cls.__name__,
+                ),
+            )
 
     def append(self, item):
         self.values.append(item)
 
     def itertuples(self):
-        for i in range(0, len(self.values)):
-            yield (i, self.values[i])
+        return type(self).coll_to_tuples(self.values)
 
     def __str__(self):
         return "<%s: %d item(s)>" % (
