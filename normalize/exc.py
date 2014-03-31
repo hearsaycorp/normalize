@@ -55,7 +55,7 @@ class StringFormatException(Exception):
 
 
 # exception base classes
-class CoercionError(StringFormatException):
+class CoercionError(StringFormatException, ValueError):
     pass
 
 
@@ -99,6 +99,14 @@ class CoerceWithoutType(PropertyDefinitionError):
     )
 
 
+class CollectionCoerceError(CoercionError):
+    message = "Cannot interpret {giventype} as a {fortype} constructor"
+
+
+class CollectionDefinitionError(SubclassError):
+    message = "{property} must be defined in a {coll} subclass"
+
+
 class DefaultSignatureError(PropertyDefinitionError):
     message = (
         "default functions may take 0 or 1 arguments; {module}.{func} "
@@ -116,6 +124,13 @@ class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
 
 class FieldSelectorKeyError(FieldSelectorException, KeyError):
     message = "Could not find Record specified by index: {key}"
+
+
+class KeyHashError(StringFormatException):
+    message = (
+        "PK for {prop} returned an unhashable value; try setting "
+        "a primary key in type {typename}"
+    )
 
 
 class KeywordExceptionFormatError(StringFormatExceptionError):

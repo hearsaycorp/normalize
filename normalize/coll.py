@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import collections
 import types
 
+import normalize.exc as exc
 from normalize.record import Record
 
 """This class contains container classes which can act like collections but
@@ -25,7 +26,10 @@ class Collection(Record):
     """
     @classproperty
     def itemtype(cls):
-        raise Exception("itemtype must be defined in a subclass")
+        raise exc.CollectionDefinitionError(
+            property='itemtype',
+            coll='Collection',
+        )
 
     @classproperty
     def coerceitem(cls):
@@ -33,7 +37,10 @@ class Collection(Record):
 
     @classproperty
     def colltype(cls):
-        raise Exception("colltype must be defined in a subclass")
+        raise exc.CollectionDefinitionError(
+            property='colltype',
+            coll='Collection',
+        )
 
     @classmethod
     def record_cls(cls):
@@ -67,19 +74,28 @@ class Collection(Record):
 
     @classmethod
     def tuples_to_coll(cls, generator):
-        raise Exception("tuples_to_coll must be overridden by a subclass")
+        raise exc.CollectionDefinitionError(
+            property='tuples_to_coll',
+            coll='Collection',
+        )
 
     def itertuples(self):
         """Iterate over the items in the collection; return (k, v) where k is
         the key, index etc into the collection (or potentially the value
         itself, for sets)"""
-        raise Exception("itertuples must be overridden by a subclass")
+        raise exc.CollectionDefinitionError(
+            property='itertuples',
+            coll='Collection',
+        )
 
     @classmethod
     def coll_to_tuples(cls, coll):
         """Generate 'conformant' tuples from an input collection, similar to
         itertuples"""
-        raise Exception("coll_to_tuples must be overridden by a subclass")
+        raise exc.CollectionDefinitionError(
+            property='coll_to_tuples',
+            coll='Collection',
+        )
 
     def walk(self, fs=None):
         if fs is None:
@@ -158,10 +174,9 @@ class ListCollection(KeyedCollection):
         elif not coll:
             return
         else:
-            raise Exception(
-                "Cannot interpret %s as a %s constructor" % (
-                    type(coll).__name__, cls.__name__,
-                ),
+            raise exc.CollectionCoerceError(
+                giventype=type(coll).__name__,
+                fortype=cls.__name__,
             )
 
     def append(self, item):
@@ -209,11 +224,7 @@ def make_generic(of, coll):
     key = (coll.__name__, "%s.%s" % (of.__module__, of.__name__))
     if key in GENERIC_TYPES:
         if GENERIC_TYPES[key].itemtype != of:
-            raise Exception(
-                "Duplicate ListProperties of the same class name defined "
-                "in the same module.  I'm sorry Dave, I'm afraid I can't "
-                "let you do that."
-            )
+            raise exc.PropertyNotUnique(key=key)
     else:
         # oh, we get to name it?  Goodie!
         generic_name = "%s%s" % (of.__name__, coll.suffix)
