@@ -75,6 +75,10 @@ class SubclassError(StringFormatException):
     pass
 
 
+class UsageException(StringFormatException):
+    pass
+
+
 # concrete exception types
 class CollectionCoerceError(CoercionError):
     message = "Cannot interpret {giventype} as a {fortype} constructor"
@@ -82,6 +86,10 @@ class CollectionCoerceError(CoercionError):
 
 class CollectionDefinitionError(SubclassError):
     message = "{property} must be defined in a {coll} subclass"
+
+
+class DiffOptionsException(UsageException):
+    message = "pass options= or DiffOptions constructor arguments; not both"
 
 
 class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
