@@ -143,6 +143,8 @@ class TestProperties(unittest2.TestCase):
             fr = FussyRecord()
 
         fr = FussyRecord(id=123, must="sugary", rbn="Hello")
+        print str(fr)
+        self.assertEqual(fr, eval(repr(fr)))
         with self.assertRaises(ValueError):
             del fr.must
         with self.assertRaises(ValueError):
