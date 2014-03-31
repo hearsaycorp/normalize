@@ -55,11 +55,23 @@ class StringFormatException(Exception):
 
 
 # exception base classes
+class FieldSelectorException(StringFormatException):
+    pass
+
+
 class StringFormatExceptionError(StringFormatException):
     pass
 
 
 # concrete exception types
+class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
+    message = "Could not find property specified by name: {name}"
+
+
+class FieldSelectorKeyError(FieldSelectorException, KeyError):
+    message = "Could not find Record specified by index: {key}"
+
+
 class KeywordExceptionFormatError(StringFormatExceptionError):
     message = (
         "{typename} raised without passing {missing}; saw only: {passed}"
