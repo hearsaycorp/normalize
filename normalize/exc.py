@@ -162,6 +162,13 @@ class ListPropertyMustDeriveListCollection(PropertyDefinitionError):
     )
 
 
+class PositionalArgumentsProhibited(PropertyDefinitionError):
+    message = (
+        "Positional arguments to Property constructors will only end "
+        "in tears.  Convert to keyword argument form."
+    )
+
+
 class PositionalExceptionFormatError(StringFormatExceptionError):
     message = (
         "{typename} expects a positional format string; passed: "
@@ -174,6 +181,26 @@ class PropertyNotUnique(PropertyTypeDefinitionError):
         "Duplicate ListProperties of the same class name defined in the "
         "same module.  Both end up being called {key} in my global map.  "
         "I'm sorry Dave, I'm afraid I can't let you do that."
+    )
+
+
+class PropertyTypeClash(StringFormatException):
+    message = (
+        "Both {oldtype} and {newtype} purport to provide the mix of "
+        "traits: {traitlist} (perhaps a module import error is causing "
+        "module initialization to happen multiple times?)"
+    )
+
+
+class PropertyTypeMismatch(PropertyDefinitionError):
+    message = "Can't create {selected} property using {base} constructor"
+
+
+class PropertyTypeMixNotFound(StringFormatException):
+    message = (
+        "Failed to find a Property type which provides traits {traitlist}; "
+        "try subclassing SafeProperty instead of Property in your custom "
+        "Property type."
     )
 
 
