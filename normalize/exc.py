@@ -63,6 +63,10 @@ class FieldSelectorException(StringFormatException):
     pass
 
 
+class PropertyDefinitionError(StringFormatException):
+    pass
+
+
 class PropertyTypeDefinitionError(StringFormatException):
     pass
 
@@ -80,12 +84,26 @@ class UsageException(StringFormatException):
 
 
 # concrete exception types
+class CoerceWithoutType(PropertyDefinitionError):
+    message = (
+        "In order to coerce types, the intended type must be known; "
+        "pass isa=TYPE or isa=(TYPE, TYPE, ...) to Property()"
+    )
+
+
 class CollectionCoerceError(CoercionError):
     message = "Cannot interpret {giventype} as a {fortype} constructor"
 
 
 class CollectionDefinitionError(SubclassError):
     message = "{property} must be defined in a {coll} subclass"
+
+
+class DefaultSignatureError(PropertyDefinitionError):
+    message = (
+        "default functions may take 0 or 1 arguments; {module}.{func} "
+        "wants {nargs}"
+    )
 
 
 class DiffOptionsException(UsageException):
@@ -113,6 +131,10 @@ class KeywordExceptionFormatError(StringFormatExceptionError):
     )
 
 
+class LazyIsFalse(PropertyDefinitionError):
+    message = "To make an eager property, do not pass lazy= to Property()"
+
+
 class PositionalExceptionFormatError(StringFormatExceptionError):
     message = (
         "{typename} expects a positional format string; passed: "
@@ -126,3 +148,7 @@ class PropertyNotUnique(PropertyTypeDefinitionError):
         "same module.  Both end up being called {key} in my global map.  "
         "I'm sorry Dave, I'm afraid I can't let you do that."
     )
+
+
+class ReadOnlyAttributeError(StringFormatException, AttributeError):
+    message = "{attrname} is read-only"
