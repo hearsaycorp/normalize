@@ -10,6 +10,7 @@ from normalize.coll import Collection
 from normalize.coll import ListCollection as RecordList
 from normalize.diff import Diff
 from normalize.diff import DiffInfo
+import normalize.exc as exc
 from normalize.property.json import JsonProperty
 from normalize.record import Record
 
@@ -76,7 +77,10 @@ def from_json(record_type, json_struct):
         instance = record_type(**init_kwargs)
         return instance
     else:
-        raise Exception("Can't coerce to %r" % record_type)
+        raise exc.JsonRecordCoerceError(
+            given=repr(json_struct),
+            type=record_type.__name__,
+        )
 
 
 # caches for _json_data
@@ -251,7 +255,10 @@ class JsonRecordList(RecordList, JsonRecord):
                 for x in json_struct:
                     values.append(from_json(member_type, x))
             else:
-                raise Exception("Collection type %s has no itemtype" % cls)
+                raise exc.CollectionDefinitionError(
+                    coll="JsonRecordList",
+                    property='itemtype',
+                )
         return kwargs
 
     def json_data(self, extraneous=False):
