@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from normalize.coll import DictCollection
 from normalize.coll import ListCollection
+import normalize.exc as exc
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
 from normalize.property import make_property_type
@@ -30,6 +31,7 @@ JsonCollection = ListCollection
 
 __all__ = [
     "DictCollection",
+    "exc",
     "FieldSelector",
     "FieldSelectorException",
     "JsonCollection",  # deprecated - use JsonRecordList
