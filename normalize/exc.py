@@ -63,7 +63,19 @@ class StringFormatExceptionError(StringFormatException):
     pass
 
 
+class SubclassError(StringFormatException):
+    pass
+
+
+class UsageException(StringFormatException):
+    pass
+
+
 # concrete exception types
+class DiffOptionsException(UsageException):
+    message = "pass options= or DiffOptions constructor arguments; not both"
+
+
 class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
     message = "Could not find property specified by name: {name}"
 
