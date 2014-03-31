@@ -55,7 +55,15 @@ class StringFormatException(Exception):
 
 
 # exception base classes
+class CoercionError(StringFormatException, ValueError):
+    pass
+
+
 class FieldSelectorException(StringFormatException):
+    pass
+
+
+class PropertyTypeDefinitionError(StringFormatException):
     pass
 
 
@@ -63,13 +71,32 @@ class StringFormatExceptionError(StringFormatException):
     pass
 
 
+class SubclassError(StringFormatException):
+    pass
+
+
 # concrete exception types
+class CollectionCoerceError(CoercionError):
+    message = "Cannot interpret {giventype} as a {fortype} constructor"
+
+
+class CollectionDefinitionError(SubclassError):
+    message = "{property} must be defined in a {coll} subclass"
+
+
 class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
     message = "Could not find property specified by name: {name}"
 
 
 class FieldSelectorKeyError(FieldSelectorException, KeyError):
     message = "Could not find Record specified by index: {key}"
+
+
+class KeyHashError(StringFormatException):
+    message = (
+        "PK for {prop} returned an unhashable value; try setting "
+        "a primary key in type {typename}"
+    )
 
 
 class KeywordExceptionFormatError(StringFormatExceptionError):
@@ -82,4 +109,12 @@ class PositionalExceptionFormatError(StringFormatExceptionError):
     message = (
         "{typename} expects a positional format string; passed: "
         "{received}"
+    )
+
+
+class PropertyNotUnique(PropertyTypeDefinitionError):
+    message = (
+        "Duplicate ListProperties of the same class name defined in the "
+        "same module.  Both end up being called {key} in my global map.  "
+        "I'm sorry Dave, I'm afraid I can't let you do that."
     )
