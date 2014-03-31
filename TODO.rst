@@ -11,8 +11,6 @@ TODO
 
 * exceptions:
 
-  * need to be proper classes;
-
   * should return context information when marshaling in (perhaps
     containing ``FieldSelector`` objects)
 
@@ -76,14 +74,6 @@ The following cases are known to be missing tests:
   * check ``json_name=None`` suppresses marshal out via JSON
   * using ``from_json`` with json strings (not JSON data)
   * double-check setting ``extraneous`` suppresses marshal out
-
-* test case for sub-classing property types to provide ``isa=`` in a way
-  that might be more natural for some folk; this should work (after all,
-  it works for ``ListProperty``), but it should be tested
-
-* iteration over Records; I've been reluctant to test this because I
-  believe that the API is not very pythonic.  An API like schematics'
-  ``.atoms()`` would be cleaner IMHO.
 
 * ``SafeCollectionProperty`` is untested
 

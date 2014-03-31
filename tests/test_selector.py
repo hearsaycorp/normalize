@@ -161,40 +161,37 @@ class TestStructableFieldSelector(unittest.TestCase):
         # test invalid selectors
         fs = FieldSelector(["bad_name"])  # bad property name
         with self.assertRaisesRegexp(
-            FieldSelectorException, "Could not find Record specified by "
-            "property name: bad_name."
+            FieldSelectorException, "Could not find property specified "
+            "by name: bad_name"
         ):
             fs.get(record)
         fs = FieldSelector(["children", 10])  # bad index
         with self.assertRaisesRegexp(
             FieldSelectorException, "Could not find Record specified by "
-            "index: 10."
+            "index: 10"
         ):
             fs.get(record)
         # bad nested property name
         fs = FieldSelector(["children", 1, "bad_name"])
         with self.assertRaisesRegexp(
-            FieldSelectorException, "Could not find Record specified by "
-            "property name: bad_name."
+            FieldSelectorException, "Could not find property specified "
+            "by name: bad_name"
         ):
             fs.get(record)
 
         # bad property name
         fs = FieldSelector(["bad_name"])
-        # with self.assertRaises(KeyError):
-        with self.assertRaises(FieldSelectorException):
+        with self.assertRaises(AttributeError):
             fs.get(record)
         # bad index
         fs = FieldSelector(["children", 10])
-        # with self.assertRaises(IndexError):
-        with self.assertRaises(FieldSelectorException):
+        with self.assertRaises(KeyError):
             fs.get(record)
         # bad nested property name
         fs = FieldSelector(
             ["children", 1, "bad_name"],
         )
-        # with self.assertRaises(KeyError):
-        with self.assertRaises(FieldSelectorException):
+        with self.assertRaises(AttributeError):
             fs.get(record)
 
     def test_put(self):
@@ -277,6 +274,15 @@ class TestStructableFieldSelector(unittest.TestCase):
             "Incompatibility detected at index: 1 for selectors: .* and .*"
         ):
             fs1 < fs2
+
+    def test_subscripting(self):
+        fs = FieldSelector(("somewhere", "over", "the", "rainbow"))
+        self.assertEqual(len(fs), 4)
+        self.assertEqual(fs[-1], "rainbow")
+        shorter = fs[:-1]
+        self.assertIsInstance(shorter, FieldSelector)
+        self.assertEqual(len(shorter), 3)
+        self.assertTrue(fs.startswith(shorter))
 
     def test_sort(self):
         fs1 = FieldSelector(["bar"])

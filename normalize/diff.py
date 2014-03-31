@@ -13,6 +13,7 @@ from richenum import OrderedRichEnumValue
 from normalize.property import SafeProperty
 from normalize.coll import Collection
 from normalize.coll import ListCollection
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.record import record_id
 from normalize.selector import FieldSelector
@@ -52,11 +53,6 @@ class DiffInfo(Record):
     )
     base = SafeProperty(isa=FieldSelector, required=True)
     other = SafeProperty(isa=FieldSelector, required=True)
-
-    def __init__(self, *args, **kwargs):
-        super(DiffInfo, self).__init__(*args, **kwargs)
-        if not (hasattr(self, "base") or hasattr(self, "other")):
-            raise Exception("DiffInfo must have a FieldSelector")
 
     def __str__(self):
         if self.base.path != self.other.path:
@@ -433,9 +429,8 @@ def diff_iter(base, other, options=None, **kwargs):
     if options is None:
         options = DiffOptions(**kwargs)
     elif len(kwargs):
-        raise Exception(
-            "pass options= or DiffOptions constructor arguments; not both"
-        )
+        raise exc.DiffOptionsException()
+
     generators = []
 
     for types, func in COMPARE_FUNCTIONS.iteritems():

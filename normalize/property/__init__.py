@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import inspect
 import weakref
 
+import normalize.exc as exc
 from normalize.property.meta import MetaProperty
 
 
@@ -36,8 +37,10 @@ class Property(object):
                 if args.defaults:
                     required_args -= len(args.defaults)
                 if required_args > 1:
-                    raise Exception(
-                        "default functions may take 0 or 1 arguments"
+                    raise exc.DefaultSignatureError(
+                        func=default,
+                        module=default.__module__,
+                        nargs=required_args,
                     )
             self.default_wants_arg = bool(required_args)
         self.required = required
@@ -45,10 +48,7 @@ class Property(object):
         self.valuetype = isa
         self.coerce = coerce or isa
         if self.coerce and not self.valuetype:
-            raise Exception(
-                "In order to coerce types, the intended type must be known; "
-                "pass isa=TYPE or isa=(TYPE, TYPE, ...) to Property"
-            )
+            raise exc.CoerceWithoutType()
         self.extraneous = extraneous
 
     @property
@@ -125,7 +125,7 @@ class LazyProperty(Property):
 
     def __init__(self, lazy=True, **kwargs):
         if not lazy:
-            raise Exception("To make an eager property, do not pass lazy")
+            raise exc.LazyIsFalse()
         super(LazyProperty, self).__init__(**kwargs)
 
     def init_prop(self, obj, value=_Default):
@@ -150,13 +150,13 @@ class ROProperty(Property):
         return super(ROProperty, self).__get__(obj, type_)
 
     def __set__(self, obj, value):
-        raise AttributeError("%s is read-only" % self.fullname)
+        raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
     def __delete__(self, instance):
         """
         Note: instance is normally an instance of a Record
         """
-        raise AttributeError("%s is read-only" % self.fullname)
+        raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
 
 class SlowLazyProperty(LazyProperty):
