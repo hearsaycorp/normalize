@@ -107,6 +107,19 @@ class CollectionDefinitionError(SubclassError):
     message = "{property} must be defined in a {coll} subclass"
 
 
+class CollRequiredError(PropertyDefinitionError):
+    message = (
+        "coll is required; specify coll type or use a sub-class "
+        "like ListProperty"
+    )
+
+
+class CollTypeMismatch(PropertyDefinitionError):
+    message = (
+        "collection property 'isa' must match collection type"
+    )
+
+
 class DefaultSignatureError(PropertyDefinitionError):
     message = (
         "default functions may take 0 or 1 arguments; {module}.{func} "
@@ -141,6 +154,20 @@ class KeywordExceptionFormatError(StringFormatExceptionError):
 
 class LazyIsFalse(PropertyDefinitionError):
     message = "To make an eager property, do not pass lazy= to Property()"
+
+
+class ListOfWhat(PropertyDefinitionError):
+    message = (
+        "List Properties must have a defined item type; pass of= "
+        "or list_of= to the declaration"
+    )
+
+
+class ListPropertyMustDeriveListCollection(PropertyDefinitionError):
+    message = (
+        "List Property collections must derive ListCollection, and "
+        "{got} doesn't"
+    )
 
 
 class MultipleInheritanceClash(SubclassError):

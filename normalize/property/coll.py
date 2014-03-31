@@ -1,6 +1,7 @@
 
 from normalize.coll import ListCollection
 from normalize.coll import make_generic
+import normalize.exc as exc
 from normalize.property import Property
 from normalize.property import SafeProperty
 
@@ -11,16 +12,11 @@ class CollectionProperty(Property):
     def __init__(self, of=None, coll=None, check_item=None, isa=None,
                  **kwargs):
         if isa is None and coll is None:
-            raise Exception(
-                "coll is required; specify coll type or use a sub-class "
-                "like ListProperty"
-            )
+            raise exc.CollRequiredError()
         if isa:
             if (coll and not issubclass(isa, coll)) or \
                     (of and not issubclass(of, isa.itemtype)):
-                raise Exception(
-                    "collection property 'isa' must match collection type"
-                )
+                raise exc.CollTypeMismatch()
             self.of = isa.itemtype
             self.coll = isa
         else:
@@ -41,15 +37,13 @@ class ListProperty(CollectionProperty):
         if list_of is None:
             list_of = kwargs.pop("of", None)
         if not list_of:
-            raise Exception(
-                "List Properties must have a defined item type; pass of= "
-                "or list_of= to the declaration"
-            )
+            raise exc.ListOfWhat()
         colltype = kwargs.pop('coll', ListCollection)
         if not issubclass(colltype, ListCollection):
-            raise Exception(
-                "List Property collections must derive ListCollection"
+            raise exc.ListPropertyMustDeriveListCollection(
+                got=colltype.__name__,
             )
+
         super(ListProperty, self).__init__(
             of=list_of, coll=colltype, **kwargs
         )
