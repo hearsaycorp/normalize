@@ -59,6 +59,14 @@ class FieldSelectorException(StringFormatException):
     pass
 
 
+class PropertyDefinitionError(StringFormatException):
+    pass
+
+
+class PropertyTypeDefinitionError(StringFormatException):
+    pass
+
+
 class StringFormatExceptionError(StringFormatException):
     pass
 
@@ -72,6 +80,20 @@ class UsageException(StringFormatException):
 
 
 # concrete exception types
+class CoerceWithoutType(PropertyDefinitionError):
+    message = (
+        "In order to coerce types, the intended type must be known; "
+        "pass isa=TYPE or isa=(TYPE, TYPE, ...) to Property()"
+    )
+
+
+class DefaultSignatureError(PropertyDefinitionError):
+    message = (
+        "default functions may take 0 or 1 arguments; {module}.{func} "
+        "wants {nargs}"
+    )
+
+
 class DiffOptionsException(UsageException):
     message = "pass options= or DiffOptions constructor arguments; not both"
 
@@ -90,8 +112,16 @@ class KeywordExceptionFormatError(StringFormatExceptionError):
     )
 
 
+class LazyIsFalse(PropertyDefinitionError):
+    message = "To make an eager property, do not pass lazy= to Property()"
+
+
 class PositionalExceptionFormatError(StringFormatExceptionError):
     message = (
         "{typename} expects a positional format string; passed: "
         "{received}"
     )
+
+
+class ReadOnlyAttributeError(StringFormatException, AttributeError):
+    message = "{attrname} is read-only"
