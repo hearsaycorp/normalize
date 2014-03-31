@@ -39,5 +39,12 @@ def record_id(object_, type_=None):
                         set_elements = pk_elements
 
             val_pk = val_pk or val
+            try:
+                val_pk.__hash__()
+            except TypeError:
+                raise Exception(
+                    "PK for %s returned unhashable type; try setting a "
+                    "primary key in type %s" % (prop, type_)
+                )
             key_vals.append(val_pk)
     return tuple(key_vals)
