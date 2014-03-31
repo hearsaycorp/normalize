@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 from normalize.coll import Collection
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.selector import FieldSelector
 
@@ -65,7 +66,11 @@ class Visitor(object):
         """If a Collection has properties that map to something, this
         reduction."""
         if record_result.get("values", False):
-            raise Exception("Override reduce_complex in your visitor")
+            raise exc.VisitorTooSimple(
+                fs=fs,
+                value_type_name=value_type.__name__,
+                visitor=type(self).__name__,
+            )
         record_result['values'] = coll_result
         return record_result
 

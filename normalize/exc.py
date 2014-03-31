@@ -71,6 +71,10 @@ class PropertyTypeDefinitionError(StringFormatException):
     pass
 
 
+class RecordDefinitionError(StringFormatException):
+    pass
+
+
 class StringFormatExceptionError(StringFormatException):
     pass
 
@@ -84,6 +88,10 @@ class UsageException(StringFormatException):
 
 
 # concrete exception types
+class AmbiguousConstruction(UsageException):
+    message = "only init_dict or kwargs may be specified"
+
+
 class CoerceWithoutType(PropertyDefinitionError):
     message = (
         "In order to coerce types, the intended type must be known; "
@@ -162,6 +170,13 @@ class ListPropertyMustDeriveListCollection(PropertyDefinitionError):
     )
 
 
+class MultipleInheritanceClash(SubclassError):
+    message = (
+        "Property {propname} defined by multiple base "
+        "classes of {typename}"
+    )
+
+
 class PositionalArgumentsProhibited(PropertyDefinitionError):
     message = (
         "Positional arguments to Property constructors will only end "
@@ -174,6 +189,18 @@ class PositionalExceptionFormatError(StringFormatExceptionError):
         "{typename} expects a positional format string; passed: "
         "{received}"
     )
+
+
+class PropertiesNotKnown(RecordDefinitionError):
+    message = (
+        "{proplist} cannot be interpreted as a sequence of Properties "
+        "in this class (string names or Property objects); first bad "
+        "value: {badprop}"
+    )
+
+
+class PropertyNotKnown(UsageException):
+    message = "unknown property {propname} in {typename}"
 
 
 class PropertyNotUnique(PropertyTypeDefinitionError):
@@ -206,3 +233,20 @@ class PropertyTypeMixNotFound(StringFormatException):
 
 class ReadOnlyAttributeError(StringFormatException, AttributeError):
     message = "{attrname} is read-only"
+
+
+class JsonRecordCoerceError(CoercionError):
+    message = "Cannot interpret {given} as a {typename} constructor"
+
+
+class ReservedPropertyName(RecordDefinitionError):
+    message = "Attribute {attrname} is reserved"
+
+
+class VisitorTooSimple(SubclassError):
+    message = (
+        "{visitor} mapped over a RecordList ({value_type_name}) with "
+        "properties but had no reduce method defined; override "
+        "mroreduce_complex in your visitor (or map the properties to "
+        "nothing)"
+    )

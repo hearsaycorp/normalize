@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import
 
+import normalize.exc as exc
 from normalize.property import Property
 
 
@@ -14,9 +15,9 @@ class RecordMeta(type):
             if hasattr(base, "properties"):
                 for propname, prop in base.properties.iteritems():
                     if propname in properties:
-                        raise Exception(
-                            "Property '%s' defined by multiple base "
-                            "classes of %s" % (propname, name)
+                        raise exc.MultipleInheritanceClash(
+                            propname=propname,
+                            typename=name,
                         )
                     else:
                         properties[propname] = prop
@@ -27,7 +28,7 @@ class RecordMeta(type):
             # don't allow clobbering of these meta-properties in class
             # definitions
             if attrname in frozenset(('properties', 'eager_properties')):
-                raise Exception("Attribute '%s' is reserved")
+                raise exc.ReservedPropertyName(attrname=attrname)
             if isinstance(attrval, Property):
                 properties[attrname] = attrval
                 if not attrval.bound:
@@ -45,11 +46,9 @@ class RecordMeta(type):
                     if not isinstance(prop, Property) or (
                         prop not in all_properties
                     ):
-                        raise Exception(
-                            "%s must be a collection of Properties "
-                            "in this class (names or Property objects)" % (
-                                prop_list_field
-                            )
+                        raise exc.PropertiesNotKnown(
+                            badprop=repr(prop),
+                            proplist=repr(proplist),
                         )
                     good_props.append(prop)
             return tuple(good_props)

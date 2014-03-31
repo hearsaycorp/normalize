@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import normalize.exc as exc
 from normalize.identity import record_id
 from normalize.record.meta import RecordMeta
 
@@ -14,14 +15,15 @@ class Record(object):
 
     def __init__(self, init_dict=None, **kwargs):
         if init_dict and kwargs:
-            raise Exception("only init_dict or kwargs may be specified")
+            raise exc.AmbiguousConstruction()
         if not init_dict:
             init_dict = kwargs
         for prop, val in init_dict.iteritems():
             meta_prop = type(self).properties.get(prop, None)
             if meta_prop is None:
-                raise Exception(
-                    "unknown property '%s' in %s" % (prop, type(self).__name__)
+                raise exc.PropertyNotKnown(
+                    propname=prop,
+                    typename=type(self).__name__,
                 )
             meta_prop.init_prop(self, val)
         missing = type(self).eager_properties - set(init_dict.keys())
