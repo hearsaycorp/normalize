@@ -11,8 +11,6 @@ TODO
 
 * exceptions:
 
-  * need to be proper classes;
-
   * should return context information when marshaling in (perhaps
     containing ``FieldSelector`` objects)
 

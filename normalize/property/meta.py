@@ -1,6 +1,8 @@
 from collections import defaultdict
 import inspect
 
+import normalize.exc as exc
+
 
 PROPERTY_TYPES = dict()
 
@@ -27,10 +29,7 @@ def has(selfie, self, args, kwargs):
     one class to another.
     """
     if args:
-        raise Exception(
-            "Positional arguments to Property constructors will only end "
-            "in tears.  Convert to keyword argument form."
-        )
+        raise exc.PositionalArgumentsProhibited()
     extra_traits = set(kwargs.pop('traits', tuple()))
     # detect initializer arguments only supported by a subclass and add
     # them to extra_traits
@@ -52,16 +51,12 @@ def has(selfie, self, args, kwargs):
     trait_set_key = tuple(sorted(all_traits))
 
     if trait_set_key not in PROPERTY_TYPES:
-        raise Exception(
-            "Failed to find a Property type which provides traits %r" %
-            list(trait_set_key)
-        )
+        raise exc.PropertyTypeMixNotFound(traitlist=repr(trait_set_key))
     property_type = PROPERTY_TYPES[trait_set_key]
     if not isinstance(property_type, type(self)):
-        raise Exception(
-            "Can't create %s property using %s constructor" % (
-                type(property_type).__name__, type(self).__name__,
-            )
+        raise exc.PropertyTypeMismatch(
+            selected=type(property_type).__name__,
+            base=type(self).__name__,
         )
 
     return super(selfie, self).__new__(property_type)
@@ -98,10 +93,10 @@ class MetaProperty(type):
                 all_duckwargs.update(base.all_duckwargs)
         traits = tuple(sorted(traits))
         if traits in PROPERTY_TYPES:
-            raise Exception(
-                "Both %s and %s purport to provide the mix of traits: %r" % (
-                    PROPERTY_TYPES[traits].__name__, name, traits,
-                )
+            raise exc.PropertyTypeClash(
+                newtype=name,
+                oldtype=PROPERTY_TYPES[traits].__name__,
+                traitlist=repr(traits),
             )
         attrs['traits'] = traits
         attrs['duckwargs'] = duckwargs

@@ -1,4 +1,5 @@
 import normalize.coll
+import normalize.exc as exc
 import normalize.record
 
 
@@ -42,9 +43,9 @@ def record_id(object_, type_=None):
             try:
                 val_pk.__hash__()
             except TypeError:
-                raise Exception(
-                    "PK for %s returned unhashable type; try setting a "
-                    "primary key in type %s" % (prop, type_)
+                raise exc.KeyHashError(
+                    prop=str(prop),
+                    typename=type_.__name__,
                 )
             key_vals.append(val_pk)
     return tuple(key_vals)
