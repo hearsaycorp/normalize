@@ -278,6 +278,15 @@ class TestStructableFieldSelector(unittest.TestCase):
         ):
             fs1 < fs2
 
+    def test_subscripting(self):
+        fs = FieldSelector(("somewhere", "over", "the", "rainbow"))
+        self.assertEqual(len(fs), 4)
+        self.assertEqual(fs[-1], "rainbow")
+        shorter = fs[:-1]
+        self.assertIsInstance(shorter, FieldSelector)
+        self.assertEqual(len(shorter), 3)
+        self.assertTrue(fs.startswith(shorter))
+
     def test_sort(self):
         fs1 = FieldSelector(["bar"])
         fs2 = FieldSelector(["foo"])
