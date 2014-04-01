@@ -178,8 +178,8 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
             )
         elif (options.duck_type or type(propval_a) == type(propval_b)) \
                 and isinstance(propval_a, COMPARABLE):
-            for types, func in COMPARE_FUNCTIONS.iteritems():
-                if isinstance(propval_a, types):
+            for type_union, func in COMPARE_FUNCTIONS.iteritems():
+                if isinstance(propval_a, type_union):
                     for diff in func(
                         propval_a, propval_b, fs_a + [propname],
                         fs_b + [propname], options,
@@ -438,8 +438,8 @@ def diff_iter(base, other, options=None, **kwargs):
         )
     generators = []
 
-    for types, func in COMPARE_FUNCTIONS.iteritems():
-        if isinstance(base, types):
+    for type_union, func in COMPARE_FUNCTIONS.iteritems():
+        if isinstance(base, type_union):
             generators.append(func(base, other, options=options))
 
     if len(generators) == 1:
