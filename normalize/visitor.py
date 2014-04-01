@@ -1,9 +1,8 @@
 
 from __future__ import absolute_import
 
-import collections
-
 from normalize.coll import Collection
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.selector import FieldSelector
 
@@ -56,15 +55,22 @@ class Visitor(object):
         member."""
         return result_dict
 
-    def reduce_collection(self, result_coll, fs, coll_type):
-        """Hook called for each normalize.coll.Collection."""
-        return result_coll
+    def reduce_collection(self, result_coll_generator, fs, coll_type):
+        """Hook called for each normalize.coll.Collection.  The first argument
+        is a generator, which returns (key, value) pairs (like
+        Collection.itertuples())
+        """
+        return coll_type.colltype(result_coll_generator)
 
     def reduce_complex(self, record_result, coll_result, fs, value_type):
         """If a Collection has properties that map to something, this
         reduction."""
         if record_result.get("values", False):
-            raise Exception("Override reduce_complex in your visitor")
+            raise exc.VisitorTooSimple(
+                fs=fs,
+                value_type_name=value_type.__name__,
+                visitor=type(self).__name__,
+            )
         record_result['values'] = coll_result
         return record_result
 
@@ -92,7 +98,9 @@ class Visitor(object):
             prune = True
 
         if not prune and issubclass(value_type, Collection):
-            coll_mapped = self.map_collection(value, fs, value_type)
+            coll_mapped = self.reduce_collection(
+                self.map_collection(value, fs, value_type), fs, value_type,
+            )
 
             if coll_mapped and record_mapped:
                 return self.reduce_complex(
@@ -137,38 +145,30 @@ class Visitor(object):
 
     def map_prop(self, record, prop, fs):
         if self.apply_empty_slots or hasattr(record, prop.name):
-            value = prop.__get__(record, None)
+            try:
+                value = prop.__get__(record)
+            except AttributeError:
+                value = None
             fs = fs + [prop.name]
-            if isinstance(value, Record):
+            value_type = prop.valuetype or type(value)
+            if issubclass(value_type, Record):
                 mapped = self.map(value, fs, prop.valuetype)
             else:
                 mapped = self.apply(value, fs, prop, record)
 
             return mapped
 
-    def collection_type(self, coll, fs, coll_type):
-        return coll_type().values
-
     def map_collection(self, coll, fs, coll_type):
-        rv = self.collection_type(coll, fs, coll_type)
-        for key, value in coll.itertuples():
+        try:
+            generator = coll.itertuples()
+        except AttributeError:
+            generator = coll_type.coll_to_tuples(coll)
+
+        for key, value in generator:
             mapped = self.map(value, fs + [key], coll_type.itemtype)
             if mapped is None and self.ignore_none:
                 pass
             elif mapped == "" and self.ignore_empty_string:
                 pass
             else:
-                if isinstance(rv, collections.MutableMapping):
-                    rv[key] = mapped
-                elif isinstance(rv, collections.MutableSequence):
-                    rv.append(mapped)
-                elif isinstance(rv, collections.MutableSet):
-                    rv.add(mapped)
-                else:
-                    raise Exception(
-                        "I don't know how to map into a %s" % (
-                            type(rv).__name__
-                        )
-                    )
-
-        return self.reduce_collection(rv, fs, coll_type)
+                yield key, mapped

@@ -13,6 +13,7 @@ from richenum import OrderedRichEnumValue
 from normalize.property import SafeProperty
 from normalize.coll import Collection
 from normalize.coll import ListCollection
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.record import record_id
 from normalize.selector import FieldSelector
@@ -52,11 +53,6 @@ class DiffInfo(Record):
     )
     base = SafeProperty(isa=FieldSelector, required=True)
     other = SafeProperty(isa=FieldSelector, required=True)
-
-    def __init__(self, *args, **kwargs):
-        super(DiffInfo, self).__init__(*args, **kwargs)
-        if not (hasattr(self, "base") or hasattr(self, "other")):
-            raise Exception("DiffInfo must have a FieldSelector")
 
     def __str__(self):
         if self.base.path != self.other.path:
@@ -178,8 +174,8 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
             )
         elif (options.duck_type or type(propval_a) == type(propval_b)) \
                 and isinstance(propval_a, COMPARABLE):
-            for types, func in COMPARE_FUNCTIONS.iteritems():
-                if isinstance(propval_a, types):
+            for type_union, func in COMPARE_FUNCTIONS.iteritems():
+                if isinstance(propval_a, type_union):
                     for diff in func(
                         propval_a, propval_b, fs_a + [propname],
                         fs_b + [propname], options,
@@ -433,13 +429,12 @@ def diff_iter(base, other, options=None, **kwargs):
     if options is None:
         options = DiffOptions(**kwargs)
     elif len(kwargs):
-        raise Exception(
-            "pass options= or DiffOptions constructor arguments; not both"
-        )
+        raise exc.DiffOptionsException()
+
     generators = []
 
-    for types, func in COMPARE_FUNCTIONS.iteritems():
-        if isinstance(base, types):
+    for type_union, func in COMPARE_FUNCTIONS.iteritems():
+        if isinstance(base, type_union):
             generators.append(func(base, other, options=options))
 
     if len(generators) == 1:

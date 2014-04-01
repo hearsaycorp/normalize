@@ -8,6 +8,7 @@ import unittest2
 
 from normalize import RecordList
 from normalize.coll import ListCollection
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
@@ -42,8 +43,8 @@ class TestProperties(unittest2.TestCase):
         lazyprop = Property(lazy=True)
         self.assertIsInstance(lazyprop, LazyProperty)
         self.assertFalse(isinstance(lazyprop, SafeProperty))
-        self.assertRaises(Exception, Property, lazy=False)
-        self.assertRaises(Exception, Property, coerce=lambda x: 1)
+        self.assertRaises(exc.LazyIsFalse, Property, lazy=False)
+        self.assertRaises(exc.CoerceWithoutType, Property, coerce=lambda x: 1)
 
     def test_1_basic(self):
         """Test that basic Properties can be defined and used"""
@@ -143,6 +144,8 @@ class TestProperties(unittest2.TestCase):
             fr = FussyRecord()
 
         fr = FussyRecord(id=123, must="sugary", rbn="Hello")
+        self.assertIn("Hello", str(fr))
+        self.assertEqual(fr, eval(repr(fr)))
         with self.assertRaises(ValueError):
             del fr.must
         with self.assertRaises(ValueError):
@@ -220,15 +223,9 @@ class TestProperties(unittest2.TestCase):
         class Item(Record):
             age = Property()
 
-        try:
+        with self.assertRaises(exc.PropertyNotUnique):
             class GR2(Record):
                 members = ListProperty(of=Item)
-        except Exception, e:
-            # callers: don't really test using exception string matching
-            # like this.  wait or submit a PR for proper exception classes
-            self.assertRegexpMatches(str(e), r'sorry Dave')
-        else:
-            self.fail("should have thrown exception")
 
     def test_customized_list_properties(self):
         """Test that list properties with custom collection behavior invoke
@@ -237,11 +234,15 @@ class TestProperties(unittest2.TestCase):
             name = Property()
 
         class CustomColl(ListCollection):
-            def init_values(self, values):
+            @classmethod
+            def coll_to_tuples(cls, values):
                 if isinstance(values, types.StringType):
                     values = values.split(',')
-                    values = [{'name': v} for v in values]
-                super(CustomColl, self).init_values(values)
+                    for i, v in zip(xrange(0, len(values)), values):
+                        yield i, {'name': v}
+                else:
+                    for x in super(CustomColl, cls).coll_to_tuples(values):
+                        yield x
 
         class GroupingRecord(Record):
             members = ListProperty(coll=CustomColl, of=Eyetem)

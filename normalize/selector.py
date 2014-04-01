@@ -7,10 +7,9 @@ import re
 import types
 
 from normalize.coll import ListCollection
-
-
-class FieldSelectorException(Exception):
-    pass
+from normalize.exc import FieldSelectorAttributeError
+from normalize.exc import FieldSelectorException
+from normalize.exc import FieldSelectorKeyError
 
 
 @functools.total_ordering
@@ -93,16 +92,10 @@ class FieldSelector(object):
                 try:
                     record = record[selector]
                 except LookupError:
-                    raise FieldSelectorException(
-                        "Could not find Record specified by index: %s." %
-                        selector
-                    )
+                    raise FieldSelectorKeyError(key=selector)
             else:
                 if not hasattr(record, selector):
-                    raise FieldSelectorException(
-                        "Could not find Record specified by property "
-                        "name: %s." % selector
-                    )
+                    raise FieldSelectorAttributeError(name=selector)
                 record = getattr(record, selector)
             i = i + 1
         return record
