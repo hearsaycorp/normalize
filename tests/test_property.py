@@ -239,11 +239,15 @@ class TestProperties(unittest2.TestCase):
             name = Property()
 
         class CustomColl(ListCollection):
-            def init_values(self, values):
+            @classmethod
+            def coll_to_tuples(cls, values):
                 if isinstance(values, types.StringType):
                     values = values.split(',')
-                    values = [{'name': v} for v in values]
-                super(CustomColl, self).init_values(values)
+                    for i, v in zip(xrange(0, len(values)), values):
+                        yield i, {'name': v}
+                else:
+                    for x in super(CustomColl, cls).coll_to_tuples(values):
+                        yield x
 
         class GroupingRecord(Record):
             members = ListProperty(coll=CustomColl, of=Eyetem)
