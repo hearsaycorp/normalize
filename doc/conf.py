@@ -1,6 +1,12 @@
 
 import sys, os
 
+sys.path[:0] = [
+    os.path.realpath(
+        os.path.join(os.path.dirname(__file__), os.path.pardir)
+    )
+]
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',

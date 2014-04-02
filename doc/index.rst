@@ -38,6 +38,12 @@ Contents of this manual:
    visitor
    
 
+Module Exports
+==============
+
+.. automodule:: normalize
+   :members:
+
 
 Indices and tables
 ==================
