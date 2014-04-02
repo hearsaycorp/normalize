@@ -483,6 +483,29 @@ whether to normalize whitespace and unicode normal form (on by
 default) or whether to distinguish between an attribute set to an
 empty string, and no attribute set at all.
 
+It's also possible to compare against object structures which are not
+``Record`` classes at all:
+
+  ::
+
+      >>> from schematics.models import Model
+      >>> from schematics.types import IntType, StringType
+      >>> class Starmatic(Model):
+              hip_id = IntType(required=True)
+              name = StringType()
+              spectral_type = StringType()
+      >>> maia3 = Starmatic({"hip_id": 17573,
+                             "name": "20 Tauri"})
+      >>> for diff in maia.diff(maia3, duck_type=True):
+              print diff
+      <DiffInfo: MODIFIED .name>
+      <DiffInfo: ADDED .spectral_type>
+      >>>
+
+Naturally, this "duck typing" diff is only comparing properties
+defined in the ``normalize`` class.  This functionality is useful for
+those transitioning from other similar systems or ad-hoc classes.
+
 Collections and primary keys
 ----------------------------
 
