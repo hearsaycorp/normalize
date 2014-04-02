@@ -1,5 +1,6 @@
 
 import re
+import sys
 import unittest2
 
 from normalize.record import Record
@@ -35,3 +36,44 @@ class TestTypeLibrary(unittest2.TestCase):
         demo.name = "Foo Bar"
         self.assertEqual(demo.fullname, "Foo Bar")
         self.assertIsInstance(demo.fullname, unicode)
+
+
+class TestSubTypes(unittest2.TestCase):
+    """Proof of concept test for coercing between sub-types of real types.
+    """
+    def test_sub_types(self):
+        class NaturalNumberMeta(type):
+            @classmethod
+            def __instancecheck__(cls, val):
+                return isinstance(val, (int, long)) and val > 0
+
+        class NaturalNumber(int):
+            __metaclass__ = NaturalNumberMeta
+
+        self.assertIsInstance(50, NaturalNumber)
+        self.assertFalse(isinstance(-50, NaturalNumber))
+
+        class BigNaturalNumber(long):
+            __metaclass__ = NaturalNumberMeta
+
+        class NaturalBornObject(Record):
+            count = Property(
+                isa=(NaturalNumber, BigNaturalNumber),
+                coerce=lambda x: (
+                    abs(int(x)) if abs(long(x)) < sys.maxint else
+                    abs(long(x))
+                ),
+                check=lambda N: N > 0,
+            )
+
+        nbo = NaturalBornObject()
+        # regular coercions: type mismatches
+        nbo.count = "256"
+        self.assertEqual(nbo.count, 256)
+        nbo.count = 1.832e19
+        self.assertEqual(nbo.count, 18320000000000000000L)
+        # type matches, but subtype doesn't
+        nbo.count = -10
+        self.assertEqual(nbo.count, 10)
+        with self.assertRaises(ValueError):
+            nbo.count = 0.5
