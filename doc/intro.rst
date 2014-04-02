@@ -123,8 +123,9 @@ started *coercion*.
 Property Type Coercion
 ----------------------
 
-Every place where a value is set in a property goes through the same
-process.
+Whenever a value is set in a property (either during initial
+construction or when the attribute is assigned), the type is checked
+to be type safe according to its definition.  The rules are:
 
 1. **is** the value being assigned of the right type already?
 
@@ -142,12 +143,12 @@ process.
    ``None``) gets a pass here.  If you want to explicitly allow
    ``None`` as a value, then you must use a tuple which includes
    ``types.NoneType``.  Otherwise, you can expect the declared type or
-   ``AttributeError``.
+   ``AttributeError`` when you access the attribute.
 
 2. If the value is not already of the right type, try to **coerce** it.
 
    Each property has a coerce function for dealing with malfeasant
-   values.  If you specified ``isa=``, then the default is that,
+   values.  If you specified ``isa=``, then the default is the type,
    because in Python, types are also constructors.  This can lead to
    some confusion; see the gotcha section later in this introduction.
 
@@ -159,10 +160,13 @@ process.
    any declared ``check=`` function.
 
    Most of the time you probably don't need to bother with this, but
-   it is there.
+   it is there if you need it.
 
    Note that the check method is called *after* type coercion, and it
-   is always called when a value is set.
+   is *always* called when a property is set: either during
+   construction or later by assignment.
+   If an object is constructed without the property, then it is *not*
+   called.
 
 So, let's go back to our example.  Let's extend the definition with a
 ``check`` function and a custom ``coerce`` method:
