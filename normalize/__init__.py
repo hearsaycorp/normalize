@@ -19,10 +19,13 @@ from normalize.property.json import SafeJsonListProperty
 from normalize.property.json import LazySafeJsonProperty
 from normalize.record import Record
 from normalize.record.meta import RecordMeta
+from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
 from normalize.record.json import JsonRecordList
+from normalize.record.json import to_json
 from normalize.selector import FieldSelector
 from normalize.selector import FieldSelectorException
+from normalize.selector import MultiFieldSelector
 
 
 RecordList = ListCollection
@@ -34,6 +37,7 @@ __all__ = [
     "exc",
     "FieldSelector",
     "FieldSelectorException",
+    "from_json",
     "JsonCollection",  # deprecated - use JsonRecordList
     "JsonCollectionProperty",  # deprecated
     "JsonListProperty",
@@ -46,6 +50,8 @@ __all__ = [
     "LazySafeProperty",
     "ListCollection",
     "ListProperty",
+    "make_property_type",
+    "MultiFieldSelector",
     "Property",
     "ROProperty",
     "Record",
@@ -54,5 +60,5 @@ __all__ = [
     "SafeJsonListProperty",
     "SafeJsonProperty",
     "SafeProperty",
-    "make_property_type",
+    "to_json",
 ]
