@@ -51,6 +51,22 @@ unsurprising way:
       True
       >>>
 
+You can also construct from ``dict`` objects and other objects which
+implement ``collections.Mapping`` to a sufficient level:
+
+  ::
+
+      >>> maia = Star({"hip_id": 17573,
+                       "name": "maia"})
+      >>>
+
+One of the things that distinguishes ``normalize`` from other similar
+libraries is that it supports **type information** on properties,
+along with **constraints**.  These are not required, but allow some
+useful applications, such as validation and marshalling.  They also
+allow programming mistakes to be discovered earlier, by throwing an
+error when the first incorrect assignment is made, rather than later.
+
 The ``hip_id`` property was declared to be *required*, so
 unsurprisingly, if you try to create an object without it, you get an
 exception:
@@ -61,7 +77,7 @@ exception:
       ValueError: Star.hip_id is required
       >>>
 
-(for the rest of this document, tracebacks will be omitted from the
+(for brevity, in this document, tracebacks will be omitted from the
 python interpreter output).
 
 In addition to marking properties as ``required``, you can pass a
@@ -79,22 +95,6 @@ to pass:
       >>> Star(hip_id=150000)
       ValueError: Star.hip_id value '150000' failed type check
 
-
-You can also construct from ``dict`` objects and other objects which
-implement ``collections.Mapping`` to a sufficient level:
-
-  ::
-
-      >>> maia = Star({"hip_id": 17573,
-                       "name": "maia"})
-      >>>
-
-One of the things that distinguishes ``normalize`` from other similar
-libraries is that it supports **type information** on properties,
-along with **constraints**.  These are not required, but allow some
-useful applications, such as validation and marshalling.  They also
-allow programming mistakes to be discovered earlier, by throwing an
-error when the first incorrect assignment is made, rather than later.
 
 For instance, if we put a string into the ``hip_id`` field, then we
 can expect an error:
