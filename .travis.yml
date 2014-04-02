@@ -11,7 +11,7 @@ script:
   - pep8 --max-line-length=100 tests
   - |
     fails=0
-    for rstfile in $(find . -name doc -prune -o -name "*.rst" -print)
+    for rstfile in $(git ls-files \*.rst | grep -v '^doc/')
     do
        err_count=$(rst2html $rstfile |
                    lynx -dump -stdin 2>&1 |
