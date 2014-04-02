@@ -131,7 +131,7 @@ class LazyProperty(Property):
     def init_prop(self, obj, value=_Default):
         if value is _Default:
             return
-        super(LazyProperty, self).init_prop(obj)
+        super(LazyProperty, self).init_prop(obj, value)
 
     def eager_init(self):
         return False
