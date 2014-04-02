@@ -231,7 +231,7 @@ You can even use this to make properties that do not raise
               anything = Property(default=None)
               goes = Property(default='')
               here = Property(default=None, isa=(types.NoneType, int))
-          
+
       >>> slop = Sloppy()
       >>> slop
       Sloppy(anything=None, goes='', here=None)
@@ -248,10 +248,10 @@ returns a new instance of the value:
 
       >>> class Foo(Record):
       ...   bar = Property(default=lambda: [])
-      ... 
+      ...
       >>> Foo()
       Foo(bar=[])
-      >>> 
+      >>>
 
 
 Lazy Evaluation
@@ -349,7 +349,7 @@ This also works when using the ``dict`` constructor:
 Properties which are Lists of Records
 -------------------------------------
 
-It's also possible to make properties which lists of records:
+It's also possible to make properties which are lists of records:
 
   ::
 
@@ -413,7 +413,7 @@ individual properties from a record:
      'Alpha Centauri B'
      >>> FieldSelector(["components", 2, "hip_id"]).get(acent)
      70890
-     >>> 
+     >>>
 
 You can also use ``None`` as a wildcard, if the component at the path
 is a collection such as a list:
@@ -471,7 +471,7 @@ fields are different:
               print diff
       <DiffInfo: MODIFIED .name>
       <DiffInfo: ADDED .spectral_type>
-      >>> 
+      >>>
 
 Each item in the returned ``Diff`` object has two ``FieldSelector``
 objects which refer to where in the passed-in object structures the
