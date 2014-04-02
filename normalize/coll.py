@@ -134,7 +134,7 @@ class DictCollection(KeyedCollection):
             for v in coll:
                 yield (i, v)
                 i += 1
-        elif isinstance(coll, types.GeneratorType):
+        elif hasattr(coll, "next") and callable(coll.next):
             i = 0
             for v in coll:
                 if isinstance(v, tuple) and len(v) == 2:
@@ -166,7 +166,9 @@ class ListCollection(KeyedCollection):
             i = 0
             for k in sorted(coll.keys()):
                 yield (i, coll[k])
-        elif isinstance(coll, (collections.Sequence, types.GeneratorType)):
+        elif isinstance(coll, (collections.Sequence, types.GeneratorType)) or (
+            hasattr(coll, "next") and callable(coll.next)
+        ):
             i = 0
             for v in coll:
                 yield i, v
