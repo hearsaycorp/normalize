@@ -64,6 +64,22 @@ exception:
 (for the rest of this document, tracebacks will be omitted from the
 python interpreter output).
 
+In addition to marking properties as ``required``, you can pass a
+*check* function, which must return something true-ish for the value
+to pass:
+
+  ::
+
+      >>> class Star(Record):
+             hip_id = Property(isa=int, required=True,
+                               check=lambda x: 0 < x < 120000)
+             name = Property(isa=str)
+             spectral_type = Property(isa=str)
+
+      >>> Star(hip_id=150000)
+      ValueError: Star.hip_id value '150000' failed type check
+
+
 You can also construct from ``dict`` objects and other objects which
 implement ``collections.Mapping`` to a sufficient level:
 
@@ -189,6 +205,12 @@ But if we pass an unreasonable ID, it fails:
       >>> maia.hip_id = None
       TypeError: int() argument must be a string or a number, not 'NoneType'
       >>>
+
+The first two examples failed because they failed the ``check``
+function.  The second failed *after* type coercion, so the invalid
+value in the exception is the coerced value, not the original value.
+The third and fourth examples threw exceptions inside the ``coerce``
+function.
 
 .. _defaults:
 
