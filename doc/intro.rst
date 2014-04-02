@@ -2,6 +2,24 @@
 An introduction to using ``normalize``
 ======================================
 
+This introduction is designed to first familiarize you with how "pure"
+``normalize`` Records work.  This core behavior is important to learn,
+as it will avoid surprises later.
+
+It is not normally the way of python to labor over object definitions
+and type declarations.  But it is these definitions that drive the
+useful applications of the module: converting to and from JSON, deep
+object comparison, etc.
+
+Thankfully, very little is compulsory, for instance most of the time
+you probably don't really need to declare what type a field is.  The
+default JSON marshall in function ignores unknown keys, so you can
+also just declare the keys you care about extracting.
+
+This tutorial should help you see the purpose of the various parts of
+the declaration API, so that you can write your classes in minimal,
+pythonic style.
+
 Basic Records and Properties
 ----------------------------
 

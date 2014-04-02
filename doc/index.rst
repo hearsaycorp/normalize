@@ -2,9 +2,9 @@
  the ``normalize`` library
 ===========================
 
-The ``normalize`` package is primarily a for writing "plain old data
-structures" to wrap data from network sources in python objects (and
-send them back).
+The ``normalize`` package is primarily for writing "plain old data
+structures" to wrap data from network sources (typically JSON) in
+python objects, use them in python, and frequently send them back.
 It is also a useful generic class builder which can be leveraged for
 interesting and powerful meta-programming.
 
