@@ -2,7 +2,7 @@ language: python
 python: "2.7"
 install:
   - sudo apt-get install python-docutils lynx-cur
-  - pip install pep8 pyflakes nose unittest2
+  - pip install pep8 pyflakes nose unittest2 sphinx
   - "pip install -r requirements.txt"
 script:
   - nosetests -s -v
