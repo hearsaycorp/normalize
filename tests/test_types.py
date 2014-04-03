@@ -1,4 +1,6 @@
 
+from datetime import date
+from datetime import datetime
 import re
 import sys
 import unittest2
@@ -26,7 +28,7 @@ class TestTypeLibrary(unittest2.TestCase):
             id = IntProperty(required=True)
             name = StringProperty()
             seq = IntProperty(lazy=True, default=_seq)
-            fullname = ROLazyUnicodeProperty(default=lambda x: x.name)
+            fullname = UnicodeProperty(default=lambda x: x.name, lazy=True)
 
         self.assertIsInstance(DemoType.properties['id'], SafeProperty)
 
@@ -36,6 +38,30 @@ class TestTypeLibrary(unittest2.TestCase):
         demo.name = "Foo Bar"
         self.assertEqual(demo.fullname, "Foo Bar")
         self.assertIsInstance(demo.fullname, unicode)
+
+    def test_dates_and_integer_types(self):
+        class Props(Record):
+            isadate = DateProperty()
+            isadatetime = DatetimeProperty()
+            integer = IntegerProperty()
+
+        p = Props(isadate="20121212")
+        self.assertEqual(p.isadate, date(2012, 12, 12))
+        p.isadatetime = "2012-12-12"
+        self.assertEqual(p.isadatetime, datetime(2012, 12, 12, 0, 0))
+        self.assertEqual(p.isadatetime.isoformat(), '2012-12-12T00:00:00')
+
+        p.isadatetime = "2014-04-02T12:34"
+        self.assertEqual(p.isadatetime.isoformat(), '2014-04-02T12:34:00')
+        p.isadatetime = "2014-04-02T12:34:12"
+        self.assertEqual(p.isadatetime, datetime(2014, 4, 2, 12, 34, 12))
+        
+        p.integer = 123
+        p.integer = "123125"
+        with self.assertRaises(ValueError):
+            p.integer = "foo"
+        p.integer = 1e20
+        self.assertEqual(p.integer, 100000000000000000000L)
 
 
 class TestSubTypes(unittest2.TestCase):

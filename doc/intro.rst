@@ -793,3 +793,8 @@ adopters that I think are noteworthy.
         >>> DatedObject(timestamp="2012-12-25T12:00")
         DatedObject(timestamp=datetime.datetime(2012, 12, 25, 12, 0))
         >>> 
+
+  There's one shipped with this module as
+  :py:mod:`normalize.property.types.DatetimeProperty` which already
+  does this.  Did I mention this module comes with ABSOLUTELY NO
+  WARRANTY?  :-)  Patches and bug reports welcome.
