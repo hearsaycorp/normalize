@@ -1,4 +1,5 @@
-"""``normalize.property.types`` provides an assortment of pre-generated types"""
+"""``normalize.property.types`` provides an assortment of pre-generated
+types"""
 
 from datetime import date
 from datetime import datetime
@@ -17,6 +18,7 @@ except ImportError:
         16: "%Y%m%d%H:%M:%S",
         17: "%Y%m%d%H:%M:%SZ",
     }
+
     def parse_datetime(not_a_datetime):
         datetime_stripped = not_a_datetime.replace(
             "-", "").replace("T", "").replace(" ", "")
@@ -100,7 +102,8 @@ DateProperty = make_property_type(
     "DateProperty",
     trait_name="date", isa=date, coerce=coerce_date,
     attrs={
-        "__doc__": "A property which must holds a python date; coercion from string is provided via ``dateutil.parse``",
+        "__doc__": "A property which must holds a python date; coercion "
+                   "from string is provided via ``dateutil.parse``",
     },
 )
 DatetimeProperty = make_property_type(

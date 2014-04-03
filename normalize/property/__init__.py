@@ -283,9 +283,10 @@ trait_num = 0
 def make_property_type(name, base_type=Property,
                        attrs=None, trait_name=None,
                        **default_kwargs):
-    """Makes a new ``Property`` type, which supplies the given arguments as
-    defaults to the ``Property()`` constructor.  Note: defaults which affect the
-    property type returned cannot be supplied by this mechanism.
+    """Makes a new ``Property`` type, which supplies the given arguments
+    as defaults to the ``Property()`` constructor.  Note: defaults
+    which affect the property type returned cannot be supplied by this
+    mechanism.
 
     The typical use of this function is to make types for the API you are
     mapping so that, for instance, any time they use a date you can convert

@@ -55,7 +55,7 @@ class TestTypeLibrary(unittest2.TestCase):
         self.assertEqual(p.isadatetime.isoformat(), '2014-04-02T12:34:00')
         p.isadatetime = "2014-04-02T12:34:12"
         self.assertEqual(p.isadatetime, datetime(2014, 4, 2, 12, 34, 12))
-        
+
         p.integer = 123
         p.integer = "123125"
         with self.assertRaises(ValueError):
