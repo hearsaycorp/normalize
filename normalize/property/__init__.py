@@ -282,10 +282,55 @@ trait_num = 0
 
 def make_property_type(name, base_type=Property,
                        attrs=None, trait_name=None,
-                       *default_args, **default_kwargs):
-    """Makes a new Property type, which supplies the given arguments as
-    defaults to the Property() constructor.  Note: defaults which affect the
-    property type returned cannot be supplied by this mechanism."""
+                       **default_kwargs):
+    """Makes a new ``Property`` type, which supplies the given arguments as
+    defaults to the ``Property()`` constructor.  Note: defaults which affect the
+    property type returned cannot be supplied by this mechanism.
+
+    The typical use of this function is to make types for the API you are
+    mapping so that, for instance, any time they use a date you can convert
+    it in a consistent way to a ``datetime.date``, or to supply
+    ``default=None`` because you and prefer subtle bugs caused by stray
+    ``None`` values to ``AttributeError`` exceptions.
+
+    It's also used by :py:mod:`normalize.property.types` to create all
+    of its Property subclasses.
+
+    Args:
+        ``name=``\ *STR*
+            Specifies the name of the new property type.  This is entirely
+            cosmetic, but it is probably a good idea to make this exactly
+            the same as the symbol you are assigning the result to.
+
+        ``base_type=``\ *Property sub-class*
+            Specifies which property type you are adding defaults to.
+            Currently, this must be the computed type your schema will
+            use for these options (usually ``SafeProperty`` or
+            ``SafeJsonProperty``); in the future this may become more
+            streamlined.  You can pass in a tuple of types here.
+
+        ``attrs=``\ *DICT*
+            This lets you pass in a dictionary that will be used as
+            the new Property type's class dictionary.  i.e., it gets
+            passed as the third argument to ``type(NAME, BASES, ATTRS)``,
+            after the properties necessary to implement the defaults
+            are added to it.  If you use this for anything less than
+            trivial, it may be simpler just to make a whole class
+            definition.
+
+        ``trait_name=``\ *STR*
+            Specify the unique identifier of the trait that is created.
+            This probably doesn't matter, unless you want to use the
+            ``traits=`` keyword to ``Property()``.  The default is to
+            make up a new numbered trait name, starting with "``trait1``".
+
+        ``**kwargs``
+            Everything not known is used as defaults for the eventual
+            call to ``Property()`` (or ``SafeProperty()`` or whichever
+            sub-class you chose).  If the user of the Property type
+            passes it as well, this overrides the defaults passed to
+            ``make_property_type``.
+    """
 
     if not attrs:
         attrs = {}
@@ -296,13 +341,11 @@ def make_property_type(name, base_type=Property,
         trait_num += 1
         trait_name = "trait%d" % trait_num
 
-    def __init__(self, *args, **kwargs):
-        if not len(args) and len(default_args):
-            args = default_args
+    def __init__(self, **kwargs):
         for arg, val in default_kwargs.iteritems():
             if arg not in kwargs:
                 kwargs[arg] = val
-        return super(self_type[0], self).__init__(*args, **kwargs)
+        return super(self_type[0], self).__init__(**kwargs)
 
     attrs['__init__'] = __init__
     attrs['__trait__'] = trait_name
