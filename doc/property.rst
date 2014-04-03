@@ -2,53 +2,99 @@
 ``normalize.property`` reference
 ================================
 
-And here is:
+.. WARNING::
 
-.. autoclass:: normalize.property
+   The ``Property()`` constructor usually returns a different object
+   type than the class name passed.  It decides on the keyword
+   arguments passed to it which subclass takes those arguments and
+   calls that class' constructor instead.
 
-ra ra!
+   Hopefully, this implementation detail should not be of huge
+   importance to most users.  For more details on how a property class
+   is selected, see :ref:`meta`.
 
-Standard Property behavior
---------------------------
-
-go see:
+Core Property Types
+-------------------
 
 .. automodule:: normalize.property
+   :no-members:
+
+``Property``
+^^^^^^^^^^^^
+
+.. autoclass:: normalize.property.Property
    :members:
-
-W00t!
-
-Property Flavors
-----------------
-
-``ROProperty``
-^^^^^^^^^^^^^^
+   :special-members: __get__, __init__
 
 ``LazyProperty``
 ^^^^^^^^^^^^^^^^
 
+.. autoclass:: normalize.property.LazyProperty
+   :members:
+   :special-members:
+
+``ROProperty``
+^^^^^^^^^^^^^^
+
+.. autoclass:: normalize.property.ROProperty
+   :special-members: __get__, __init__
+
 ``SafeProperty``
 ^^^^^^^^^^^^^^^^
 
-"Slow" Property types: ``LazySafeProperty``, ``ROLazyProperty``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: normalize.property.SafeProperty
+   :members:
+   :special-members:
+
+"Slow" Property types: ``LazySafeProperty``, ``ROLazyProperty``, ``SlowLazyProperty``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Your lazy attributes will normally end up with these types.  All it
+means is that the ``__get__`` descriptor is always called, even after
+the default has been assigned, because the ``__set__`` descriptor must
+also exist to unforce the type safety or keep the property read-only.
+If you add ``unsafe`` to the ``traits`` parameter, then you can avoid
+this (very minor) slowdown.
+
+.. autoclass:: normalize.property.SlowLazyProperty
+   :show-inheritance:
+
+.. autoclass:: normalize.property.LazySafeProperty
+   :show-inheritance:
+
+.. autoclass:: normalize.property.ROLazyProperty
+   :show-inheritance:
+
+.. _types:
 
 Typed Properties
 ----------------
 
-Supplied types: ``IntProperty``, ``StringProperty``, etc
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: normalize.property.make_property_type
 
-Creating your own domain-specific property types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automodule:: normalize.property.types
+   :undoc-members:
 
-Property subclasses
--------------------
+.. _coll:
 
-``ListProperty``
-^^^^^^^^^^^^^^^^
+Properties containing collections
+---------------------------------
 
-``JsonProperty``
-^^^^^^^^^^^^^^^^
+.. automodule:: normalize.property.coll
+   :undoc-members:
 
-JsonCollection
+.. _json:
+
+Declaring JSON hints on Properties
+----------------------------------
+
+.. automodule:: normalize.property.json
+
+.. _meta:
+
+Addendum: Property MetaClass
+----------------------------
+
+.. automodule:: normalize.property.meta
+   :undoc-members:
+

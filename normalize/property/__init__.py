@@ -1,5 +1,12 @@
 
-"""property Class' docstring"""
+"""Property objects are "new"-style object *data descriptors*.  They define
+*getters* and *setters* for object attribute access, and allow the module to
+hang on extra information and customize behavior.
+
+For information on data descriptors, see the `Descriptor HowTo Guide
+<https://docs.python.org/2/howto/descriptor.html>`_ in the main python
+documentation.
+"""
 
 from __future__ import absolute_import
 
@@ -10,8 +17,9 @@ import normalize.exc as exc
 from normalize.property.meta import MetaProperty
 
 
-class _Default():
-    pass
+class _Default(object):
+    def __repr__(self):
+        return "<not set>"
 
 
 _none = _Default()
@@ -19,13 +27,61 @@ _none = _Default()
 
 class Property(object):
     """This is the base class for all property types.  It is a data descriptor,
-    so care should be taken before adding any SPECIALMETHODS which might change
-    the way it behaves.
+    so care should be taken before adding any ``SPECIALMETHODS`` which might
+    change the way it behaves.
     """
     __metaclass__ = MetaProperty
 
-    def __init__(self, default=_none, traits=None, extraneous=False,
-                 required=False, check=None, isa=None, coerce=None):
+    def __init__(self, isa=None,  coerce=None, check=None,
+                 required=False, default=_none, traits=None,
+                 extraneous=False):
+        """Declares a new standard Property.  Note: if you pass arguments which
+        are not understood by this constructor, or pass extra property traits
+        to ``traits``, then the call will be redirected to a sub-class; see
+        :py:mod:`normalize.property.meta` for more.
+
+        Because of this magic, all ``Property`` arguments *must* be passed in
+        keyword argument form.  All arguments are optional.
+
+            ``isa=``\ *TYPE|TUPLE*
+                Any assigned property must be one of these types according to
+                ``isinstance()``.  Also used by visitor functions which are
+                missing an instance, such as marshal in.
+
+                If ``isa`` is not set, then *any* value (including ``None``)
+                is acceptable.
+
+            ``coerce=``\ *FUNCTION*
+                If the value fails the ``isa`` isinstance check, then this
+                function is called with the value, and should return a value of
+                a conformant type or throw an exception.
+
+            ``check=``\ *FUNCTION*
+                Once the value is of the correct type, this function is called
+                and should return something true (according to ``bool()``) if
+                the value is acceptable.
+
+            ``required=``\ *BOOL*
+                If ``True``, then the value must be passed during construction,
+                and may not be ``None`` (this is only meaningful if ``isa=`` is
+                not passed)
+
+            ``default=``\ *VALUE|FUNCTION*
+                If no value is passed during construction, then use this value
+                instead.  If the argument is a function, then the function is
+                called and the value it returns used as the default.
+
+            ``traits=``\ *LIST|SEQUENCE*
+                Manually specify a list of named Property traits.  The default
+                is ``["safe"]``, and any unknown keyword arguments will add
+                extra traits on.
+
+            ``extraneous=``\ *BOOL*
+                This Property is considered *denormalized* and does not affect
+                the ``Record`` equality operator.  Visitor functions typically
+                ignore extraneous properties or require an extra option to
+                process them.
+        """
         self.name = None
         self.class_ = None
         super(Property, self).__init__()
@@ -63,6 +119,8 @@ class Property(object):
 
     @property
     def fullname(self):
+        """Returns the name of the ``Record`` class this ``Property`` is
+        attached to, and attribute name it is attached as."""
         if not self.bound:
             return "(unbound)"
         elif not self.class_():
@@ -85,6 +143,7 @@ class Property(object):
     def get_default(self, obj):
         if callable(self.default):
             if self.default_wants_arg:
+                # XXX - only 'lazy' properties should be allowed to do this.
                 rv = self.default(obj)
             else:
                 rv = self.default()
@@ -112,7 +171,7 @@ class Property(object):
             raise AttributeError
         return obj.__dict__[self.name]
 
-    def __repr__(self):
+    def __str__(self):
         metaclass = str(type(self).__name__)
         return "<%s %s>" % (metaclass, self.fullname)
 
@@ -121,11 +180,24 @@ class LazyProperty(Property):
     """This declares a property which has late evaluation using its 'default'
     method.  This type uses the support built-in to python for lazy attribute
     setting, which means subsequent attribute assignments will not be prevented
-    or checked.  See LazySafeProperty for the descriptor version
+    or checked.  See LazySafeProperty for the descriptor version.
     """
     __trait__ = "lazy"
 
     def __init__(self, lazy=True, **kwargs):
+        """Creates a Lazy property.  In addition to the standard Property
+        arguments, accepts:
+
+            ``lazy=``\ *BOOL*
+                Must be ``True``. Used as a "distinguishing argument" to
+                request a lazy Property. Not required if you call
+                ``LazyProperty()`` directly.
+
+            ``default=``\ *FUNCTION|METHOD*
+                The default value for the property.  Unlike a standard
+                ``Property``, the value can also be set to a method, which can
+                reference other object properties.
+        """
         if not lazy:
             raise exc.LazyIsFalse()
         super(LazyProperty, self).__init__(**kwargs)
@@ -139,6 +211,9 @@ class LazyProperty(Property):
         return False
 
     def __get__(self, obj, type_=None):
+        """This getter is called when there is no value set, and calls the
+        default method/function.
+        """
         value = self.get_default(obj)
 
         obj.__dict__[self.name] = self.type_safe_value(value)
@@ -146,25 +221,26 @@ class LazyProperty(Property):
 
 
 class ROProperty(Property):
+    """A read-only property throws an exception when the attribute slot is
+    assigned to"""
     __trait__ = "ro"
 
-    def __get__(self, obj, type_=None):
-        return super(ROProperty, self).__get__(obj, type_)
-
     def __set__(self, obj, value):
+        """Raises ``ReadOnlyAttributeError``"""
         raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
-    def __delete__(self, instance):
-        """
-        Note: instance is normally an instance of a Record
-        """
+    def __delete__(self, obj):
+        """Raises ``ReadOnlyAttributeError``"""
         raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
 
 class SlowLazyProperty(LazyProperty):
+    """Base class used by LazySafeProperty and ROLazyProperty"""
     __trait__ = "slow"
 
     def __get__(self, obj, type_=None):
+        """This getter checks to see if the slot is already set in the object
+        and if so, returns it."""
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
         return super(SlowLazyProperty, self).__get__(obj, type_)
@@ -176,13 +252,22 @@ class ROLazyProperty(SlowLazyProperty, ROProperty):
 
 class SafeProperty(Property):
     """A version of Property which always checks all assignments to
-    properties"""
+    properties.
+
+    Normalize gives you safe properties by default; if you want unsafe
+    properties, then you (currently) need to pass ``traits=["unsafe"]`` to the
+    ``Property()`` declaration.
+    """
     __trait__ = "safe"
 
     def __set__(self, obj, value):
+        """This setter checks the type of the value before allowing it to be
+        set."""
         obj.__dict__[self.name] = self.type_safe_value(value)
 
     def __delete__(self, obj):
+        """Checks the property's ``required`` setting, and allows the delete if
+        it is false"""
         if self.required:
             raise ValueError("%s is required" % self.fullname)
         super(SafeProperty, self).__delete__(obj)

@@ -49,5 +49,7 @@ texinfo_documents = [
    'Object-Oriented Programming'),
 ]
 
+autoclass_content = "class"
 
-
+autodoc_member_order = "bysource"
+autodoc_default_flags = ['members']
