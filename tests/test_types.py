@@ -1,5 +1,8 @@
 
+from datetime import date
+from datetime import datetime
 import re
+import sys
 import unittest2
 
 from normalize.record import Record
@@ -25,7 +28,7 @@ class TestTypeLibrary(unittest2.TestCase):
             id = IntProperty(required=True)
             name = StringProperty()
             seq = IntProperty(lazy=True, default=_seq)
-            fullname = ROLazyUnicodeProperty(default=lambda x: x.name)
+            fullname = UnicodeProperty(default=lambda x: x.name, lazy=True)
 
         self.assertIsInstance(DemoType.properties['id'], SafeProperty)
 
@@ -35,3 +38,68 @@ class TestTypeLibrary(unittest2.TestCase):
         demo.name = "Foo Bar"
         self.assertEqual(demo.fullname, "Foo Bar")
         self.assertIsInstance(demo.fullname, unicode)
+
+    def test_dates_and_integer_types(self):
+        class Props(Record):
+            isadate = DateProperty()
+            isadatetime = DatetimeProperty()
+            integer = IntegerProperty()
+
+        p = Props(isadate="20121212")
+        self.assertEqual(p.isadate, date(2012, 12, 12))
+        p.isadatetime = "2012-12-12"
+        self.assertEqual(p.isadatetime, datetime(2012, 12, 12, 0, 0))
+        self.assertEqual(p.isadatetime.isoformat(), '2012-12-12T00:00:00')
+
+        p.isadatetime = "2014-04-02T12:34"
+        self.assertEqual(p.isadatetime.isoformat(), '2014-04-02T12:34:00')
+        p.isadatetime = "2014-04-02T12:34:12"
+        self.assertEqual(p.isadatetime, datetime(2014, 4, 2, 12, 34, 12))
+
+        p.integer = 123
+        p.integer = "123125"
+        with self.assertRaises(ValueError):
+            p.integer = "foo"
+        p.integer = 1e20
+        self.assertEqual(p.integer, 100000000000000000000L)
+
+
+class TestSubTypes(unittest2.TestCase):
+    """Proof of concept test for coercing between sub-types of real types.
+    """
+    def test_sub_types(self):
+        class NaturalNumberMeta(type):
+            @classmethod
+            def __instancecheck__(cls, val):
+                return isinstance(val, (int, long)) and val > 0
+
+        class NaturalNumber(int):
+            __metaclass__ = NaturalNumberMeta
+
+        self.assertIsInstance(50, NaturalNumber)
+        self.assertFalse(isinstance(-50, NaturalNumber))
+
+        class BigNaturalNumber(long):
+            __metaclass__ = NaturalNumberMeta
+
+        class NaturalBornObject(Record):
+            count = Property(
+                isa=(NaturalNumber, BigNaturalNumber),
+                coerce=lambda x: (
+                    abs(int(x)) if abs(long(x)) < sys.maxint else
+                    abs(long(x))
+                ),
+                check=lambda N: N > 0,
+            )
+
+        nbo = NaturalBornObject()
+        # regular coercions: type mismatches
+        nbo.count = "256"
+        self.assertEqual(nbo.count, 256)
+        nbo.count = 1.832e19
+        self.assertEqual(nbo.count, 18320000000000000000L)
+        # type matches, but subtype doesn't
+        nbo.count = -10
+        self.assertEqual(nbo.count, 10)
+        with self.assertRaises(ValueError):
+            nbo.count = 0.5

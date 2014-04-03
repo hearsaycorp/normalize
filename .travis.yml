@@ -2,7 +2,7 @@ language: python
 python: "2.7"
 install:
   - sudo apt-get install python-docutils lynx-cur
-  - pip install pep8 pyflakes nose unittest2
+  - pip install pep8 pyflakes nose unittest2 sphinx
   - "pip install -r requirements.txt"
 script:
   - nosetests -s -v
@@ -11,7 +11,7 @@ script:
   - pep8 --max-line-length=100 tests
   - |
     fails=0
-    for rstfile in $(find . -name "*.rst")
+    for rstfile in $(git ls-files \*.rst | grep -v '^doc/')
     do
        err_count=$(rst2html $rstfile |
                    lynx -dump -stdin 2>&1 |
@@ -20,3 +20,4 @@ script:
        fails=$(($fails + $err_count))
     done
     test $fails -eq 0
+  - cd doc && make text

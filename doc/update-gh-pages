@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+
+base="$(dirname "$0")"
+[ -n "$base" ] && cd "$base"
+
+echo -n "Building HTML pages: "
+make html >/dev/null
+description=$(git describe --dirty)
+echo "built from $description"
+
+# make sure all tracking refs are up to date
+branch=$(git symbolic-ref HEAD | sed s:refs/heads/::)
+remote=$(git config branch.$branch.remote)
+[ -n "$remote" ]
+echo -n "Updating from $remote: "
+git fetch -q $remote
+echo "done"
+
+gd=$(git rev-parse --git-dir)
+
+export GIT_INDEX_FILE=$gd/gh-pages-index
+[ -f $GIT_INDEX_FILE ] && rm $GIT_INDEX_FILE || true
+
+git read-tree $remote/gh-pages || true
+
+export GIT_WORK_TREE=sphinx-build/html
+
+git rm -q -r --cached '*.html' _static
+git add '*.html' _static
+
+gh_pages_commit=$(
+    echo "Update sphinx docs to commit $description" |
+        git commit-tree -p $(git rev-parse $remote/gh-pages) -p HEAD $(
+            git write-tree
+        )
+)
+
+git diff $remote/gh-pages $gh_pages_commit
+
+echo -n "Press enter to push what you just saw to $remote/gh-pages: "
+read junk
+
+git push $remote $gh_pages_commit:gh-pages

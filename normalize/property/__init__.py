@@ -1,4 +1,13 @@
 
+"""Property objects are "new"-style object *data descriptors*.  They define
+*getters* and *setters* for object attribute access, and allow the module to
+hang on extra information and customize behavior.
+
+For information on data descriptors, see the `Descriptor HowTo Guide
+<https://docs.python.org/2/howto/descriptor.html>`_ in the main python
+documentation.
+"""
+
 from __future__ import absolute_import
 
 import inspect
@@ -8,8 +17,9 @@ import normalize.exc as exc
 from normalize.property.meta import MetaProperty
 
 
-class _Default():
-    pass
+class _Default(object):
+    def __repr__(self):
+        return "<not set>"
 
 
 _none = _Default()
@@ -17,13 +27,61 @@ _none = _Default()
 
 class Property(object):
     """This is the base class for all property types.  It is a data descriptor,
-    so care should be taken before adding any SPECIALMETHODS which might change
-    the way it behaves.
+    so care should be taken before adding any ``SPECIALMETHODS`` which might
+    change the way it behaves.
     """
     __metaclass__ = MetaProperty
 
-    def __init__(self, default=_none, traits=None, extraneous=False,
-                 required=False, check=None, isa=None, coerce=None):
+    def __init__(self, isa=None,  coerce=None, check=None,
+                 required=False, default=_none, traits=None,
+                 extraneous=False):
+        """Declares a new standard Property.  Note: if you pass arguments which
+        are not understood by this constructor, or pass extra property traits
+        to ``traits``, then the call will be redirected to a sub-class; see
+        :py:mod:`normalize.property.meta` for more.
+
+        Because of this magic, all ``Property`` arguments *must* be passed in
+        keyword argument form.  All arguments are optional.
+
+            ``isa=``\ *TYPE|TUPLE*
+                Any assigned property must be one of these types according to
+                ``isinstance()``.  Also used by visitor functions which are
+                missing an instance, such as marshal in.
+
+                If ``isa`` is not set, then *any* value (including ``None``)
+                is acceptable.
+
+            ``coerce=``\ *FUNCTION*
+                If the value fails the ``isa`` isinstance check, then this
+                function is called with the value, and should return a value of
+                a conformant type or throw an exception.
+
+            ``check=``\ *FUNCTION*
+                Once the value is of the correct type, this function is called
+                and should return something true (according to ``bool()``) if
+                the value is acceptable.
+
+            ``required=``\ *BOOL*
+                If ``True``, then the value must be passed during construction,
+                and may not be ``None`` (this is only meaningful if ``isa=`` is
+                not passed)
+
+            ``default=``\ *VALUE|FUNCTION*
+                If no value is passed during construction, then use this value
+                instead.  If the argument is a function, then the function is
+                called and the value it returns used as the default.
+
+            ``traits=``\ *LIST|SEQUENCE*
+                Manually specify a list of named Property traits.  The default
+                is ``["safe"]``, and any unknown keyword arguments will add
+                extra traits on.
+
+            ``extraneous=``\ *BOOL*
+                This Property is considered *denormalized* and does not affect
+                the ``Record`` equality operator.  Visitor functions typically
+                ignore extraneous properties or require an extra option to
+                process them.
+        """
         self.name = None
         self.class_ = None
         super(Property, self).__init__()
@@ -61,6 +119,8 @@ class Property(object):
 
     @property
     def fullname(self):
+        """Returns the name of the ``Record`` class this ``Property`` is
+        attached to, and attribute name it is attached as."""
         if not self.bound:
             return "(unbound)"
         elif not self.class_():
@@ -83,6 +143,7 @@ class Property(object):
     def get_default(self, obj):
         if callable(self.default):
             if self.default_wants_arg:
+                # XXX - only 'lazy' properties should be allowed to do this.
                 rv = self.default(obj)
             else:
                 rv = self.default()
@@ -110,7 +171,7 @@ class Property(object):
             raise AttributeError
         return obj.__dict__[self.name]
 
-    def __repr__(self):
+    def __str__(self):
         metaclass = str(type(self).__name__)
         return "<%s %s>" % (metaclass, self.fullname)
 
@@ -119,11 +180,24 @@ class LazyProperty(Property):
     """This declares a property which has late evaluation using its 'default'
     method.  This type uses the support built-in to python for lazy attribute
     setting, which means subsequent attribute assignments will not be prevented
-    or checked.  See LazySafeProperty for the descriptor version
+    or checked.  See LazySafeProperty for the descriptor version.
     """
     __trait__ = "lazy"
 
     def __init__(self, lazy=True, **kwargs):
+        """Creates a Lazy property.  In addition to the standard Property
+        arguments, accepts:
+
+            ``lazy=``\ *BOOL*
+                Must be ``True``. Used as a "distinguishing argument" to
+                request a lazy Property. Not required if you call
+                ``LazyProperty()`` directly.
+
+            ``default=``\ *FUNCTION|METHOD*
+                The default value for the property.  Unlike a standard
+                ``Property``, the value can also be set to a method, which can
+                reference other object properties.
+        """
         if not lazy:
             raise exc.LazyIsFalse()
         super(LazyProperty, self).__init__(**kwargs)
@@ -131,12 +205,15 @@ class LazyProperty(Property):
     def init_prop(self, obj, value=_Default):
         if value is _Default:
             return
-        super(LazyProperty, self).init_prop(obj)
+        super(LazyProperty, self).init_prop(obj, value)
 
     def eager_init(self):
         return False
 
     def __get__(self, obj, type_=None):
+        """This getter is called when there is no value set, and calls the
+        default method/function.
+        """
         value = self.get_default(obj)
 
         obj.__dict__[self.name] = self.type_safe_value(value)
@@ -144,25 +221,26 @@ class LazyProperty(Property):
 
 
 class ROProperty(Property):
+    """A read-only property throws an exception when the attribute slot is
+    assigned to"""
     __trait__ = "ro"
 
-    def __get__(self, obj, type_=None):
-        return super(ROProperty, self).__get__(obj, type_)
-
     def __set__(self, obj, value):
+        """Raises ``ReadOnlyAttributeError``"""
         raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
-    def __delete__(self, instance):
-        """
-        Note: instance is normally an instance of a Record
-        """
+    def __delete__(self, obj):
+        """Raises ``ReadOnlyAttributeError``"""
         raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
 
 class SlowLazyProperty(LazyProperty):
+    """Base class used by LazySafeProperty and ROLazyProperty"""
     __trait__ = "slow"
 
     def __get__(self, obj, type_=None):
+        """This getter checks to see if the slot is already set in the object
+        and if so, returns it."""
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
         return super(SlowLazyProperty, self).__get__(obj, type_)
@@ -174,13 +252,22 @@ class ROLazyProperty(SlowLazyProperty, ROProperty):
 
 class SafeProperty(Property):
     """A version of Property which always checks all assignments to
-    properties"""
+    properties.
+
+    Normalize gives you safe properties by default; if you want unsafe
+    properties, then you (currently) need to pass ``traits=["unsafe"]`` to the
+    ``Property()`` declaration.
+    """
     __trait__ = "safe"
 
     def __set__(self, obj, value):
+        """This setter checks the type of the value before allowing it to be
+        set."""
         obj.__dict__[self.name] = self.type_safe_value(value)
 
     def __delete__(self, obj):
+        """Checks the property's ``required`` setting, and allows the delete if
+        it is false"""
         if self.required:
             raise ValueError("%s is required" % self.fullname)
         super(SafeProperty, self).__delete__(obj)
@@ -195,10 +282,56 @@ trait_num = 0
 
 def make_property_type(name, base_type=Property,
                        attrs=None, trait_name=None,
-                       *default_args, **default_kwargs):
-    """Makes a new Property type, which supplies the given arguments as
-    defaults to the Property() constructor.  Note: defaults which affect the
-    property type returned cannot be supplied by this mechanism."""
+                       **default_kwargs):
+    """Makes a new ``Property`` type, which supplies the given arguments
+    as defaults to the ``Property()`` constructor.  Note: defaults
+    which affect the property type returned cannot be supplied by this
+    mechanism.
+
+    The typical use of this function is to make types for the API you are
+    mapping so that, for instance, any time they use a date you can convert
+    it in a consistent way to a ``datetime.date``, or to supply
+    ``default=None`` because you and prefer subtle bugs caused by stray
+    ``None`` values to ``AttributeError`` exceptions.
+
+    It's also used by :py:mod:`normalize.property.types` to create all
+    of its Property subclasses.
+
+    Args:
+        ``name=``\ *STR*
+            Specifies the name of the new property type.  This is entirely
+            cosmetic, but it is probably a good idea to make this exactly
+            the same as the symbol you are assigning the result to.
+
+        ``base_type=``\ *Property sub-class*
+            Specifies which property type you are adding defaults to.
+            Currently, this must be the computed type your schema will
+            use for these options (usually ``SafeProperty`` or
+            ``SafeJsonProperty``); in the future this may become more
+            streamlined.  You can pass in a tuple of types here.
+
+        ``attrs=``\ *DICT*
+            This lets you pass in a dictionary that will be used as
+            the new Property type's class dictionary.  i.e., it gets
+            passed as the third argument to ``type(NAME, BASES, ATTRS)``,
+            after the properties necessary to implement the defaults
+            are added to it.  If you use this for anything less than
+            trivial, it may be simpler just to make a whole class
+            definition.
+
+        ``trait_name=``\ *STR*
+            Specify the unique identifier of the trait that is created.
+            This probably doesn't matter, unless you want to use the
+            ``traits=`` keyword to ``Property()``.  The default is to
+            make up a new numbered trait name, starting with "``trait1``".
+
+        ``**kwargs``
+            Everything not known is used as defaults for the eventual
+            call to ``Property()`` (or ``SafeProperty()`` or whichever
+            sub-class you chose).  If the user of the Property type
+            passes it as well, this overrides the defaults passed to
+            ``make_property_type``.
+    """
 
     if not attrs:
         attrs = {}
@@ -209,13 +342,11 @@ def make_property_type(name, base_type=Property,
         trait_num += 1
         trait_name = "trait%d" % trait_num
 
-    def __init__(self, *args, **kwargs):
-        if not len(args) and len(default_args):
-            args = default_args
+    def __init__(self, **kwargs):
         for arg, val in default_kwargs.iteritems():
             if arg not in kwargs:
                 kwargs[arg] = val
-        return super(self_type[0], self).__init__(*args, **kwargs)
+        return super(self_type[0], self).__init__(**kwargs)
 
     attrs['__init__'] = __init__
     attrs['__trait__'] = trait_name

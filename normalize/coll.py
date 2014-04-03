@@ -11,7 +11,7 @@ from normalize.record import Record
 conform to this package's metaclass API"""
 
 
-class classproperty(object):
+class _classproperty(object):
     def __init__(self, f):
         self.f = f
 
@@ -24,18 +24,18 @@ class Collection(Record):
     Bags are not currently supported, ie the keys must be unique for the diff
     machinery as currently written to function.
     """
-    @classproperty
+    @_classproperty
     def itemtype(cls):
         raise exc.CollectionDefinitionError(
             property='itemtype',
             coll='Collection',
         )
 
-    @classproperty
+    @_classproperty
     def coerceitem(cls):
         return cls.itemtype
 
-    @classproperty
+    @_classproperty
     def colltype(cls):
         raise exc.CollectionDefinitionError(
             property='colltype',
@@ -134,7 +134,7 @@ class DictCollection(KeyedCollection):
             for v in coll:
                 yield (i, v)
                 i += 1
-        elif isinstance(coll, types.GeneratorType):
+        elif hasattr(coll, "next") and callable(coll.next):
             i = 0
             for v in coll:
                 if isinstance(v, tuple) and len(v) == 2:
@@ -166,7 +166,9 @@ class ListCollection(KeyedCollection):
             i = 0
             for k in sorted(coll.keys()):
                 yield (i, coll[k])
-        elif isinstance(coll, (collections.Sequence, types.GeneratorType)):
+        elif isinstance(coll, (collections.Sequence, types.GeneratorType)) or (
+            hasattr(coll, "next") and callable(coll.next)
+        ):
             i = 0
             for v in coll:
                 yield i, v
