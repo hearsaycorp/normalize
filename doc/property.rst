@@ -70,31 +70,90 @@ this (very minor) slowdown.
 Typed Properties
 ----------------
 
-.. autofunction:: normalize.property.make_property_type
+Typed properties are convenient shorthands to specifying the various
+``isa`` and ``coerce`` parameters when declaring properties.
+
+Bundled Typed Properties
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: normalize.property.types
    :undoc-members:
 
+Rolling your own typed properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: normalize.property.make_property_type
+
 .. _coll:
 
 Properties containing collections
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: normalize.property.coll
-   :undoc-members:
+The following typed properties are similar to the other typed
+properties, in that they provide some checks and convenience around
+making new collection types and hooking them up correctly.
+
+.. autoclass:: normalize.property.coll.CollectionProperty
+   :members:
+   :show-inheritance:
+   :special-members: __get__, __init__
+
+.. autoclass:: normalize.property.coll.SafeCollectionProperty
+   :show-inheritance:
+   :special-members: __set__
+
+.. autoclass:: normalize.property.coll.ListProperty
+   :show-inheritance:
+   :special-members: __init__
+
+.. autoclass:: normalize.property.coll.SafeListProperty
+   :show-inheritance:
 
 .. _json:
 
 Declaring JSON hints on Properties
 ----------------------------------
 
-.. automodule:: normalize.property.json
+The various ``json_``\ *X* parameters are *distinguishing options*
+which will select the "``json``" trait.
+
+.. autoclass:: normalize.property.json.JsonProperty
+   :members: json_name, to_json, from_json
+   :special-members: __init__, __trait__
+
+The other classes in this module are just mixed-in combinations of
+``JsonProperty`` with various other base types.  This is required
+because currently the metaclass does not mix them in dynamically.
+Once it does, the trivial, undocumented mixes here may be deprecated
+or removed.
+
+.. autoclass:: normalize.property.json.SafeJsonProperty
+   :show-inheritance:
+
+.. autoclass:: normalize.property.json.LazyJsonProperty
+   :show-inheritance:
+
+.. autoclass:: normalize.property.json.LazySafeJsonProperty
+   :show-inheritance:
+
+.. autoclass:: normalize.property.json.JsonListProperty
+   :show-inheritance:
+
+.. autoclass:: normalize.property.json.SafeJsonListProperty
+   :show-inheritance:
+
+There are also two deprecated aliases: ``JsonCollectionProperty`` is
+the same as ``JsonListProperty``, and ``SafeJsonCollectionProperty``
+is the same as ``SafeJsonListProperty``.
 
 .. _meta:
 
 Addendum: Property MetaClass
 ----------------------------
 
+This module was mostly a proof of concept.
+
 .. automodule:: normalize.property.meta
    :undoc-members:
+   :special-members: __new__
 
