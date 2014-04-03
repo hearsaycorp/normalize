@@ -65,8 +65,13 @@ def from_json(record_type, json_struct):
     """JSON marshall in function: a 'visitor' function which looks for JSON
     types/hints but does not require them.
 
-    @param json_struct a loaded (via ``json.loads``) data structure
-    @param record_type a Record object to load items into
+    Args:
+        ``record_type=``\ *TYPE*
+            Record type to convert data to
+
+        ``json_struct=``\ *DICT|LIST*
+            a loaded (via ``json.loads``) data structure, normally a
+            dict or a list.
     """
     if issubclass(record_type, JsonRecord):
         return record_type(json_struct)
@@ -176,9 +181,19 @@ class JsonRecord(Record):
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
 
-        @param json_data JSON data (string or already json.load'd)
-        @param **kwargs fall-back defaults for properties not passed in via
-                        JSON; of a type allowed by the Property.
+        args:
+            ``json_data=``\ *DICT|other*
+                JSON data (string or already ``json.loads``'d).  If not
+                a JSON dictionary with keys corresponding to the
+                ``json_name`` or the properties within, then
+                ``json_to_initkwargs`` should be overridden to handle
+                the unpacking differently
+
+            ``**kwargs``
+                ``JsonRecord`` instances may also be constructed by
+                passing in attribute initializers in keyword form.  The
+                keys here should be the names of the attributes and the
+                python values, not the JSON names or form.
         """
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
@@ -230,9 +245,13 @@ class JsonRecordList(RecordList, JsonRecord):
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
 
-        @param json_data JSON data (string or already json.load'd)
-        @param **kwargs fall-back defaults for properties not passed in via
-                        JSON; of a type allowed by the Property.
+        Args:
+            ``json_data=``\ *LIST|other*
+                JSON data (string or already ``json.loads``'d)
+
+            ``**kwargs``
+                Other initializer attributes, for lists with extra
+                attributes (eg, paging information)
         """
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)

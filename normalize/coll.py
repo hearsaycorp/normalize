@@ -11,7 +11,7 @@ from normalize.record import Record
 conform to this package's metaclass API"""
 
 
-class classproperty(object):
+class _classproperty(object):
     def __init__(self, f):
         self.f = f
 
@@ -24,18 +24,18 @@ class Collection(Record):
     Bags are not currently supported, ie the keys must be unique for the diff
     machinery as currently written to function.
     """
-    @classproperty
+    @_classproperty
     def itemtype(cls):
         raise exc.CollectionDefinitionError(
             property='itemtype',
             coll='Collection',
         )
 
-    @classproperty
+    @_classproperty
     def coerceitem(cls):
         return cls.itemtype
 
-    @classproperty
+    @_classproperty
     def colltype(cls):
         raise exc.CollectionDefinitionError(
             property='colltype',
