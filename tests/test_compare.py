@@ -66,6 +66,29 @@ class TestRecordComparison(unittest.TestCase):
         self.assertEqual(self.foo1.__pk__, (2, "foo"))
         self.assertEqual(self.bob1.__pk__, (123,))
 
+    def test_diff_collection_complex_pk(self):
+        class Component(Record):
+            ident = Property(isa=str)
+            pk = (ident)
+
+        class Compound(Record):
+            part_a = Property(isa=Component)
+            part_b = Property(isa=Component)
+            pk = [part_a, part_b]
+
+        class CompoundListHolder(Record):
+            parts = ListProperty(of=Compound)
+
+        first = Compound(part_a=Component(ident='a'), part_b=Component(ident='b'))
+        second = Compound(part_a=Component(ident='a'), part_b=Component(ident='b'))
+        holder = CompoundListHolder(parts=[first])
+        other_holder = CompoundListHolder(parts=[second])
+        diff_a = holder.diff(other_holder)
+        self.assertEqual([], diff_a.values)
+        second.part_a.ident = 'z'
+        diff_b = holder.diff(other_holder)
+        self.assertNotEqual([], diff_b.values)
+
     def test_diff_list(self):
         """Test diff'ing of simple lists/tuples"""
         self.assertDifferences(
