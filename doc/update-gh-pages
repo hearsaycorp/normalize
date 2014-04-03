@@ -37,7 +37,7 @@ gh_pages_commit=$(
         )
 )
 
-git show $gh_pages_commit
+git diff $remote/gh-pages $gh_pages_commit
 
 echo -n "Press enter to push what you just saw to $remote/gh-pages: "
 read junk
