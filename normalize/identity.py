@@ -34,7 +34,7 @@ def record_id(object_, type_=None):
             for value_type in value_type_list:
                 if issubclass(value_type, normalize.record.Record):
                     pk = record_id(val, value_type)
-                    pk_elements = len(x for x in pk if x is not None)
+                    pk_elements = len([x for x in pk if x is not None])
                     if not val_pk or pk_elements > set_elements:
                         val_pk = pk
                         set_elements = pk_elements
