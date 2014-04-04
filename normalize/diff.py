@@ -136,7 +136,8 @@ class DiffOptions(object):
         """Retrieve an object identifier from the given record; if it is an
         alien class, and the type is provided, then use duck typing to get the
         corresponding fields of the alien class."""
-        return getattr(record, "__pk__", record_id(record, type_))
+        pk = getattr(record, "__pk__", None)
+        return pk if pk is not None else record_id(record, type_)
 
 
 def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
