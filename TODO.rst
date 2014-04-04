@@ -60,6 +60,8 @@ Untested cases
 
 The following cases are known to be missing tests:
 
+* the examples in the intro could do with a regression test
+
 * JSON marshaling tests;
 
   * ``Record`` types with attributes which are ``Record`` types that
@@ -74,8 +76,6 @@ The following cases are known to be missing tests:
   * check ``json_name=None`` suppresses marshal out via JSON
   * using ``from_json`` with json strings (not JSON data)
   * double-check setting ``extraneous`` suppresses marshal out
-
-* ``SafeCollectionProperty`` is untested
 
 * required, but lazy attributes
 
