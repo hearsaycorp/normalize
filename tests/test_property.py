@@ -279,6 +279,7 @@ class TestProperties(unittest2.TestCase):
             (SingleThing(name="bert"), SingleThing(name="phil"))
         )
         self.assertEqual(record_id(mtr[0]), ("bert",))
+        self.assertEqual(record_id(mtr), (("bert",), ("phil",)))
 
         self.assertTrue(mtr.__getitem__)
         self.assertIsInstance(mtr, ManyThingsRecord)

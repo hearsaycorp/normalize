@@ -18,8 +18,13 @@ def record_id(object_, type_=None):
     if not type_.primary_key and issubclass(
         type_, normalize.coll.Collection
     ):
+        # FIXME: unordered collections will rarely match each other
+        gen = (
+            object_.itertuples() if hasattr(object_, "itertuples") else
+            type_.coll_to_tuples(object_)
+        )
         return tuple(
-            record_id(v, type_.itemtype) for k, v in object_.iteritems()
+            record_id(v, type_.itemtype) for k, v in gen
         )
 
     for prop in type_.primary_key or type_._sorted_properties:
