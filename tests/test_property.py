@@ -281,6 +281,16 @@ class TestProperties(unittest2.TestCase):
         self.assertTrue(mtr.__getitem__)
         self.assertIsInstance(mtr, ManyThingsRecord)
 
+        # test construction from generators
+        def generator(seq):
+            for x in seq:
+                yield x
+
+        mtr2 = ManyThingsRecord(generator(mtr))
+
+        # ...iterators...
+        mtr2 = ManyThingsRecord(mtr)
+
     def test_subclassing(self):
         """Test that Record subclasses work"""
         class Thing(Record):
