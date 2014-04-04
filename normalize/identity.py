@@ -48,4 +48,7 @@ def record_id(object_, type_=None):
                     typename=type_.__name__,
                 )
             key_vals.append(val_pk)
+        else:
+            key_vals.append(val)
+
     return tuple(key_vals)

@@ -9,6 +9,7 @@ import unittest2
 from normalize import RecordList
 from normalize.coll import ListCollection
 import normalize.exc as exc
+from normalize.identity import record_id
 from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
@@ -277,6 +278,7 @@ class TestProperties(unittest2.TestCase):
         mtr = ManyThingsRecord(
             (SingleThing(name="bert"), SingleThing(name="phil"))
         )
+        self.assertEqual(record_id(mtr[0]), ("bert",))
 
         self.assertTrue(mtr.__getitem__)
         self.assertIsInstance(mtr, ManyThingsRecord)
