@@ -138,7 +138,7 @@ def to_json(record, extraneous=True):
                 else:
                     if hasattr(prop, "to_json"):
                         val = prop.to_json(val)
-                    rv_dict[json_name] = to_json(val, extraneous)
+                    rv_dict[json_name] = _json_data(val, extraneous)
 
         return rv_dict
 

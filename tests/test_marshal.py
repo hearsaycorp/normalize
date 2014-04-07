@@ -316,3 +316,26 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertNotIn("origin", sanitized)
 
         self.assertJsonDataEqual(rjcr.json_data(extraneous=True), input_json)
+
+        class NestedJsonRecord(JsonRecord):
+            cheese = Property(isa=JsonCheeseRecord)
+            cheese_list = ListProperty(of=JsonCheeseRecord)
+
+        nested_input = dict(
+            cheese=input_json,
+            cheese_list=[
+                {"variety": "Cream Havarti",
+                 "type": "semi-soft",
+                 "color": "pale yellow"},
+                {"variety": "Adelost",
+                 "type": "semi-soft",
+                 "color": "blue"},
+            ],
+        )
+
+        nested_record = NestedJsonRecord(nested_input)
+
+        self.assertJsonDataEqual(
+            nested_record.json_data(extraneous=True),
+            nested_input,
+        )
