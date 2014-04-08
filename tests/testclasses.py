@@ -84,7 +84,7 @@ id = 14
 for character, line in dialogue:
     when += 42
     id += 3
-    comments.append(dict(id=id, edited=datetime.fromtimestamp(when),
+    comments.append(dict(id=id, edited=datetime.utcfromtimestamp(when),
                          poster=character, content=line))
 
 wall_one = Wall(
@@ -94,7 +94,7 @@ wall_one = Wall(
         {
             "comments": copy.deepcopy(comments[0:3]),
             "content": "SEY-MOUR!!!",
-            "edited": datetime.fromtimestamp(1000000000),
+            "edited": datetime.utcfromtimestamp(1000000000),
             "post_id": 1,
             "wall_id": 123,
         }
@@ -111,7 +111,7 @@ wall_two = Wall(
         {
             "comments": comments[1:],
             "content": "SEY-MOUR!!!!",
-            "edited": datetime.fromtimestamp(1000000240),
+            "edited": datetime.utcfromtimestamp(1000000240),
             "post_id": 1,
             "wall_id": 123,
         }
