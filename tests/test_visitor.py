@@ -26,4 +26,6 @@ class TestVisitor(unittest.TestCase):
     def test_simple_dumper(self):
         dumper = SimpleDumper()
         dumpable = dumper.map(wall_one)
+        self.assertIsInstance(dumpable['posts'][0], dict)
+        self.assertEqual(dumpable['posts'][0]['edited'], "2001-09-08T18:46:40")
         json.dumps(dumpable)

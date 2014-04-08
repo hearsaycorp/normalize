@@ -60,7 +60,7 @@ class Visitor(object):
         is a generator, which returns (key, value) pairs (like
         Collection.itertuples())
         """
-        return coll_type.colltype(result_coll_generator)
+        return coll_type.tuples_to_coll(result_coll_generator, coerce=False)
 
     def reduce_complex(self, record_result, coll_result, fs, value_type):
         """If a Collection has properties that map to something, this
