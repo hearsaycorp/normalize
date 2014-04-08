@@ -73,7 +73,12 @@ class Collection(Record):
         return len(self.values)
 
     @classmethod
-    def tuples_to_coll(cls, generator):
+    def coerce_tuples(cls, generator):
+        for k, v in generator:
+            yield k, v if isinstance(v, cls.itemtype) else cls.coerceitem(v)
+
+    @classmethod
+    def tuples_to_coll(cls, generator, coerce=False):
         raise exc.CollectionDefinitionError(
             property='tuples_to_coll',
             coll='Collection',
@@ -121,8 +126,10 @@ class DictCollection(KeyedCollection):
     colltype = dict
 
     @classmethod
-    def tuples_to_coll(cls, generator):
-        return cls.colltype(generator)
+    def tuples_to_coll(cls, generator, coerce=True):
+        return cls.colltype(
+            cls.coerce_tuples(generator) if coerce else generator
+        )
 
     @classmethod
     def coll_to_tuples(cls, coll):
@@ -152,13 +159,9 @@ class ListCollection(KeyedCollection):
     colltype = list
 
     @classmethod
-    def tuples_to_coll(cls, tuples):
-        itemtype = cls.itemtype
-        coerceitem = cls.coerceitem
-        return cls.colltype(
-            v if isinstance(v, itemtype) else coerceitem(v) for
-            k, v in tuples
-        )
+    def tuples_to_coll(cls, generator, coerce=True):
+        tuples = cls.coerce_tuples(generator) if coerce else generator
+        return cls.colltype(v for k, v in tuples)
 
     @classmethod
     def coll_to_tuples(cls, coll):
