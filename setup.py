@@ -16,5 +16,5 @@ structures, and refer to fields within a structure using a 'selector'.
     packages=find_packages(),
     requires=['richenum (>=1.0.0)'],
     test_suite="run_tests",
-    version='0.1.1',
+    version='0.1.2',
 )
