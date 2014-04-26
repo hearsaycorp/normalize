@@ -142,5 +142,8 @@ for name, proptype in _prop_types.iteritems():
         typename = prefix + name
         globals()[typename] = type(typename, (proptype, variant), {})
 
+# reload _prop_types with new definitions
+_prop_types = dict((k, v) for k, v in globals().iteritems() if
+                   k.endswith("Property"))
 
 __all__ = _prop_types.keys()
