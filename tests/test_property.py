@@ -43,7 +43,7 @@ class TestProperties(unittest2.TestCase):
 
         lazyprop = Property(lazy=True)
         self.assertIsInstance(lazyprop, LazyProperty)
-        self.assertFalse(isinstance(lazyprop, SafeProperty))
+        self.assertIsInstance(lazyprop, SafeProperty)
         self.assertRaises(exc.LazyIsFalse, Property, lazy=False)
         self.assertRaises(exc.CoerceWithoutType, Property, coerce=lambda x: 1)
 

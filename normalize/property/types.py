@@ -127,14 +127,14 @@ from . import LazyProperty
 from . import ROLazyProperty
 from . import ROProperty
 from . import SafeProperty
-from . import SlowLazyProperty
+from . import LazySafeProperty
 
 _variants = {
     "Lazy": LazyProperty,
     "RO": ROProperty,
     "ROLazy": ROLazyProperty,
     "Safe": SafeProperty,
-    "SlowLazy": SlowLazyProperty,
+    "LazySafe": LazySafeProperty,
 }
 
 for name, proptype in _prop_types.iteritems():

@@ -234,20 +234,13 @@ class ROProperty(Property):
         raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
 
-class SlowLazyProperty(LazyProperty):
-    """Base class used by LazySafeProperty and ROLazyProperty"""
-    __trait__ = "slow"
-
+class ROLazyProperty(LazyProperty, ROProperty):
     def __get__(self, obj, type_=None):
         """This getter checks to see if the slot is already set in the object
         and if so, returns it."""
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
-        return super(SlowLazyProperty, self).__get__(obj, type_)
-
-
-class ROLazyProperty(SlowLazyProperty, ROProperty):
-    pass
+        return super(ROLazyProperty, self).__get__(obj, type_)
 
 
 class SafeProperty(Property):
@@ -270,11 +263,16 @@ class SafeProperty(Property):
         it is false"""
         if self.required:
             raise ValueError("%s is required" % self.fullname)
-        super(SafeProperty, self).__delete__(obj)
+        del obj.__dict__[self.name]
 
 
-class LazySafeProperty(SafeProperty, SlowLazyProperty):
-    pass
+class LazySafeProperty(SafeProperty, LazyProperty):
+    def __get__(self, obj, type_=None):
+        """This getter checks to see if the slot is already set in the object
+        and if so, returns it."""
+        if self.name in obj.__dict__:
+            return obj.__dict__[self.name]
+        return super(LazySafeProperty, self).__get__(obj, type_)
 
 
 trait_num = 0

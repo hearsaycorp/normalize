@@ -44,9 +44,8 @@ def has(selfie, self, args, kwargs):
 
     if "unsafe" in all_traits:
         all_traits.remove("unsafe")
-    else:
-        if "ro" not in all_traits and "lazy" not in all_traits:
-            all_traits.add("safe")
+    elif "ro" not in all_traits:
+        all_traits.add("safe")
 
     trait_set_key = tuple(sorted(all_traits))
 
