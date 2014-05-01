@@ -36,9 +36,20 @@ def has(selfie, self, args, kwargs):
     for argname in kwargs:
         if argname not in self.all_duckwargs:
             # initializer does not support this arg.  Do any subclasses?
+            implies_traits = set()
             for trait, proptype in DUCKWARGS[argname]:
                 if isinstance(proptype, type(self)):
-                    extra_traits.add(trait)
+                    implies_traits.add(trait)
+            if len(implies_traits) > 1:  # if it's 0, it'll fail later
+                raise exc.AmbiguousPropertyTraitArg(
+                    trait_arg=argname,
+                    could_be=" ".join(
+                        sorted(x.__name__ for x in implies_traits)
+                    ),
+                    matched_traits=implies_traits,
+                )
+            else:
+                extra_traits.update(implies_traits)
 
     all_traits = set(self.traits) | extra_traits
 
@@ -50,7 +61,7 @@ def has(selfie, self, args, kwargs):
     trait_set_key = tuple(sorted(all_traits))
 
     if trait_set_key not in PROPERTY_TYPES:
-        raise exc.PropertyTypeMixNotFound(traitlist=repr(trait_set_key))
+        create_property_type_from_traits(trait_set_key)
     property_type = PROPERTY_TYPES[trait_set_key]
     if not isinstance(property_type, type(self)):
         raise exc.PropertyTypeMismatch(
@@ -59,6 +70,109 @@ def has(selfie, self, args, kwargs):
         )
 
     return super(selfie, self).__new__(property_type)
+
+
+def _merge_camel_case_names(base_name, new_name):
+    import re
+    name_parts = re.sub(
+        r'([a-z])([A-Z])', lambda m: "%s,%s" % m.groups(), base_name,
+    ).split(",")
+
+    other_parts = list(
+        x for x in re.sub(
+            r'([a-z])([A-Z])', lambda m: "%s,%s" % m.groups(), new_name,
+        ).split(",") if x not in name_parts
+    )
+
+    return "".join(other_parts + name_parts)
+
+
+def create_property_type_from_traits(trait_set):
+    """Takes an iterable of trait names, and tries to compose a property type
+    from that.  Raises an exception if this is not possible.  Extra traits not
+    requested are not acceptable.
+
+    If this automatic generation doesn't work for you for some reason, then
+    compose your property types manually.
+
+    The details of this composition should not be relied upon; it may change in
+    future releases.  However, a given normalize version should behave
+    consistently for multiple runs, given the same starting sets of properties,
+    the composition order will be the same every time.
+    """
+    wanted_traits = set(trait_set)
+    stock_types = dict(
+        (k, v) for k, v in PROPERTY_TYPES.items() if
+        set(k).issubset(wanted_traits)
+    )
+
+    traits_available = set()
+    for key in stock_types.keys():
+        traits_available.update(key)
+
+    missing_traits = wanted_traits - traits_available
+    if missing_traits:
+        raise exc.PropertyTypeMixinNotPossible(
+            traitlist=repr(trait_set),
+            missing=repr(tuple(sorted(missing_traits))),
+        )
+
+    made_types = []
+    # mix together property types, until we have made the right type.
+    while trait_set not in PROPERTY_TYPES:
+
+        # be somewhat deterministic: always start with types which provide the
+        # 'first' trait on the list
+        start_with = set(
+            k for k in stock_types.keys() if k and k[0] == trait_set[0]
+        )
+
+        # prefer extending already composed trait sets, by only adding to the
+        # longest ones
+        longest = max(len(x) for x in start_with)
+        made_type = False
+
+        for base in sorted(start_with):
+            if len(base) != longest:
+                continue
+
+            # pick a type to join on which reduces the short-fall as much as
+            # possible.
+            shortfall = len(wanted_traits) - len(base)
+            mix_in = None
+            for other in sorted(stock_types.keys()):
+                # skip mixes that will fail; this means that the type on the
+                # list is a trait subset of 'base'
+                mixed_traits = tuple(sorted(set(base) | set(other)))
+                if mixed_traits in PROPERTY_TYPES:
+                    continue
+
+                this_shortfall = len(wanted_traits - (set(base) | set(other)))
+                if this_shortfall < shortfall:
+                    mix_in = other
+                    mixed_in_product = mixed_traits
+                    shortfall = this_shortfall
+                    if shortfall == 0:
+                        break
+
+            if mix_in:
+                base_type = PROPERTY_TYPES[base]
+                other_type = PROPERTY_TYPES[other]
+                new_name = _merge_camel_case_names(
+                    base_type.__name__, other_type.__name__,
+                )
+                new_type = type(new_name, (base_type, other_type), {})
+                stock_types[mixed_in_product] = new_type
+                made_types.append(new_type)
+                made_type = True
+
+        if not made_type:
+            raise exc.PropertyTypeMixinFailure(
+                traitlist=repr(trait_set),
+                newtypelist=", ".join(
+                    "%r (%s)" % (x.traits, x.__name__) for x in made_types
+                )
+            )
 
 
 class MetaProperty(type):

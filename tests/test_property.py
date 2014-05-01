@@ -18,6 +18,8 @@ from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
+from normalize.property.meta import create_property_type_from_traits
+from normalize.property.meta import _merge_camel_case_names
 from normalize.property.meta import MetaProperty
 
 
@@ -303,3 +305,50 @@ class TestProperties(unittest2.TestCase):
             name = Property()
 
         nt = NamedThing(id=123, name="adam")
+
+    def test_property_meta_names(self):
+        """Test the property metaclass creates new property names OK"""
+        self.assertEqual(
+            _merge_camel_case_names("MetaProperty", "SafeProperty"),
+            "SafeMetaProperty",
+        )
+        self.assertEqual(
+            _merge_camel_case_names("LazyListProperty", "SafeJsonProperty"),
+            "SafeJsonLazyListProperty",
+        )
+
+    def test_property_mixin_ok(self):
+        """Test that properties can be mixed in automagically"""
+
+        class MyLittleProperty(Property):
+            __trait__ = "mylittle"
+
+            def __init__(self, pony_name=None, **kwargs):
+                super(MyLittleProperty, self).__init__(**kwargs)
+
+        mlp = Property(pony_name="Applejack")
+
+        self.assertIsInstance(mlp, MyLittleProperty)
+        self.assertIsInstance(mlp, SafeProperty)
+        self.assertEqual(type(mlp).traits, ("mylittle", "safe"))
+
+        lazypony = Property(pony_name="Persnickety", lazy=True)
+        self.assertEqual(type(lazypony).traits, ("lazy", "mylittle", "safe"))
+        self.assertIsInstance(lazypony, MyLittleProperty)
+        self.assertIsInstance(lazypony, SafeProperty)
+        self.assertIsInstance(lazypony, LazyProperty)
+
+    def test_property_mixin_exc(self):
+        """Test that bad property mixes raise the right exceptions"""
+
+        class SuperProperty(SafeProperty):
+            __trait__ = "pony"
+
+            def __init__(self, hero_name=None, **kwargs):
+                super(SuperProperty, self).__init__(**kwargs)
+
+        with self.assertRaises(exc.PropertyTypeMixinNotPossible):
+            sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
+
+        with self.assertRaises(exc.PropertyTypeMixinNotPossible):
+            sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])

@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-from normalize.property import LazyProperty
-from normalize.property import LazySafeProperty
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
@@ -72,14 +70,6 @@ class SafeJsonProperty(JsonProperty, SafeProperty):
     pass
 
 
-class LazyJsonProperty(JsonProperty, LazyProperty):
-    pass
-
-
-class LazySafeJsonProperty(JsonProperty, LazySafeProperty):
-    pass
-
-
 class JsonListProperty(ListProperty, JsonProperty):
     """A property which map to a list of records in JSON.
 
@@ -90,10 +80,5 @@ class JsonListProperty(ListProperty, JsonProperty):
     pass
 
 
-class SafeJsonListProperty(JsonListProperty, SafeProperty):
-    pass
-
-
 # deprecated compatibility exports
 JsonCollectionProperty = JsonListProperty
-SafeJsonCollectionProperty = SafeJsonListProperty

@@ -225,9 +225,21 @@ class PropertyTypeMismatch(PropertyDefinitionError):
 
 class PropertyTypeMixNotFound(StringFormatException):
     message = (
+        "Failed to find a Property type which provides traits {traitlist}"
+    )
+
+
+class PropertyTypeMixinNotPossible(PropertyTypeMixNotFound):
+    message = (
+        "Can't mix together a Property type for traits {traitlist}; "
+        "none of the types which provide those traits provide: {missing}"
+    )
+
+
+class PropertyTypeMixinFailure(PropertyTypeMixNotFound):
+    message = (
         "Failed to find a Property type which provides traits {traitlist}; "
-        "try subclassing SafeProperty instead of Property in your custom "
-        "Property type."
+        "but I did make these types: {newtypelist}"
     )
 
 
