@@ -13,6 +13,7 @@ from normalize.identity import record_id
 from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
+from normalize.property import make_property_type
 from normalize.property import Property
 from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
@@ -352,3 +353,11 @@ class TestProperties(unittest2.TestCase):
 
         with self.assertRaises(exc.PropertyTypeMixinNotPossible):
             sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
+
+    def test_make_property_type(self):
+        """Test that make_property_type can morph types"""
+        SimpleStrProperty = make_property_type(
+            "FooProperty", isa=str,
+        )
+        ssp = SimpleStrProperty()
+        self.assertEqual(ssp.valuetype, str)

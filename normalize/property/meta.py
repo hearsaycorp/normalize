@@ -183,10 +183,12 @@ class MetaProperty(type):
     def __new__(mcs, name, bases, attrs):
         """This __new__ method is called when new property trait combinations
         are created."""
-        selfie = []
+        selfie = [None, attrs.get('default_kwargs', {})]
 
         def _has(self, *args, **kwargs):
-            return has(selfie[0], self, args, kwargs)
+            mixed_kwargs = dict(selfie[1])
+            mixed_kwargs.update(kwargs)
+            return has(selfie[0], self, args, mixed_kwargs)
 
         attrs['__new__'] = _has
         duckwargs = set()
@@ -216,7 +218,7 @@ class MetaProperty(type):
         attrs['all_duckwargs'] = all_duckwargs
         self = super(MetaProperty, mcs).__new__(mcs, name, bases, attrs)
         PROPERTY_TYPES[self.traits] = self
-        selfie.append(self)
+        selfie[0] = self
         if trait:
             for kwarg in duckwargs:
                 DUCKWARGS[kwarg].add((trait, self))

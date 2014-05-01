@@ -31,6 +31,7 @@ class TestTypeLibrary(unittest2.TestCase):
             fullname = UnicodeProperty(default=lambda x: x.name, lazy=True)
 
         self.assertIsInstance(DemoType.properties['id'], SafeProperty)
+        self.assertEqual(DemoType.properties['id'].valuetype, int)
 
         demo = DemoType(id="345")
         self.assertEqual(demo.id, 345)
