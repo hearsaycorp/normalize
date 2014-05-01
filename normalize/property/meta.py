@@ -56,7 +56,8 @@ def has(selfie, self, args, kwargs):
     if "unsafe" in all_traits:
         all_traits.remove("unsafe")
     elif "ro" not in all_traits:
-        all_traits.add("safe")
+        if any(x in kwargs for x in ("required", "isa", "check")):
+            all_traits.add("safe")
 
     trait_set_key = tuple(sorted(all_traits))
 

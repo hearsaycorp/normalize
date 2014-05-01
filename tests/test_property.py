@@ -33,7 +33,6 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(prop, Property)
         self.assertIsInstance(type(prop), MetaProperty)
         self.assertRegexpMatches(str(prop), r".*unbound.*", re.I)
-        self.assertIsInstance(prop, SafeProperty)
 
         roprop = Property(traits=['ro'])
         self.assertIsNotNone(roprop)
@@ -46,7 +45,12 @@ class TestProperties(unittest2.TestCase):
 
         lazyprop = Property(lazy=True)
         self.assertIsInstance(lazyprop, LazyProperty)
-        self.assertIsInstance(lazyprop, SafeProperty)
+        self.assertFalse(isinstance(lazyprop, SafeProperty))
+
+        safelazyprop = Property(lazy=True, isa=str)
+        self.assertIsInstance(safelazyprop, LazyProperty)
+        self.assertIsInstance(safelazyprop, SafeProperty)
+
         self.assertRaises(exc.LazyIsFalse, Property, lazy=False)
         self.assertRaises(exc.CoerceWithoutType, Property, coerce=lambda x: 1)
 
@@ -327,16 +331,15 @@ class TestProperties(unittest2.TestCase):
             def __init__(self, pony_name=None, **kwargs):
                 super(MyLittleProperty, self).__init__(**kwargs)
 
-        mlp = Property(pony_name="Applejack")
+        mlp = Property(pony_name="Applejack", isa=str)
 
         self.assertIsInstance(mlp, MyLittleProperty)
         self.assertIsInstance(mlp, SafeProperty)
         self.assertEqual(type(mlp).traits, ("mylittle", "safe"))
 
-        lazypony = Property(pony_name="Persnickety", lazy=True)
-        self.assertEqual(type(lazypony).traits, ("lazy", "mylittle", "safe"))
+        lazypony = Property(pony_name="Persnickety", lazy=lambda: "x")
+        self.assertEqual(type(lazypony).traits, ("lazy", "mylittle"))
         self.assertIsInstance(lazypony, MyLittleProperty)
-        self.assertIsInstance(lazypony, SafeProperty)
         self.assertIsInstance(lazypony, LazyProperty)
 
     def test_property_mixin_exc(self):
