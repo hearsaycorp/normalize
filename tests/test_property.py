@@ -13,11 +13,14 @@ from normalize.identity import record_id
 from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
+from normalize.property import make_property_type
 from normalize.property import Property
 from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
+from normalize.property.meta import create_property_type_from_traits
+from normalize.property.meta import _merge_camel_case_names
 from normalize.property.meta import MetaProperty
 
 
@@ -30,7 +33,6 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(prop, Property)
         self.assertIsInstance(type(prop), MetaProperty)
         self.assertRegexpMatches(str(prop), r".*unbound.*", re.I)
-        self.assertIsInstance(prop, SafeProperty)
 
         roprop = Property(traits=['ro'])
         self.assertIsNotNone(roprop)
@@ -44,6 +46,11 @@ class TestProperties(unittest2.TestCase):
         lazyprop = Property(lazy=True)
         self.assertIsInstance(lazyprop, LazyProperty)
         self.assertFalse(isinstance(lazyprop, SafeProperty))
+
+        safelazyprop = Property(lazy=True, isa=str)
+        self.assertIsInstance(safelazyprop, LazyProperty)
+        self.assertIsInstance(safelazyprop, SafeProperty)
+
         self.assertRaises(exc.LazyIsFalse, Property, lazy=False)
         self.assertRaises(exc.CoerceWithoutType, Property, coerce=lambda x: 1)
 
@@ -303,3 +310,57 @@ class TestProperties(unittest2.TestCase):
             name = Property()
 
         nt = NamedThing(id=123, name="adam")
+
+    def test_property_meta_names(self):
+        """Test the property metaclass creates new property names OK"""
+        self.assertEqual(
+            _merge_camel_case_names("MetaProperty", "SafeProperty"),
+            "SafeMetaProperty",
+        )
+        self.assertEqual(
+            _merge_camel_case_names("LazyListProperty", "SafeJsonProperty"),
+            "SafeJsonLazyListProperty",
+        )
+
+    def test_property_mixin_ok(self):
+        """Test that properties can be mixed in automagically"""
+
+        class MyLittleProperty(Property):
+            __trait__ = "mylittle"
+
+            def __init__(self, pony_name=None, **kwargs):
+                super(MyLittleProperty, self).__init__(**kwargs)
+
+        mlp = Property(pony_name="Applejack", isa=str)
+
+        self.assertIsInstance(mlp, MyLittleProperty)
+        self.assertIsInstance(mlp, SafeProperty)
+        self.assertEqual(type(mlp).traits, ("mylittle", "safe"))
+
+        lazypony = Property(pony_name="Persnickety", lazy=lambda: "x")
+        self.assertEqual(type(lazypony).traits, ("lazy", "mylittle"))
+        self.assertIsInstance(lazypony, MyLittleProperty)
+        self.assertIsInstance(lazypony, LazyProperty)
+
+    def test_property_mixin_exc(self):
+        """Test that bad property mixes raise the right exceptions"""
+
+        class SuperProperty(SafeProperty):
+            __trait__ = "pony"
+
+            def __init__(self, hero_name=None, **kwargs):
+                super(SuperProperty, self).__init__(**kwargs)
+
+        with self.assertRaises(exc.PropertyTypeMixinNotPossible):
+            sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
+
+        with self.assertRaises(exc.PropertyTypeMixinNotPossible):
+            sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
+
+    def test_make_property_type(self):
+        """Test that make_property_type can morph types"""
+        SimpleStrProperty = make_property_type(
+            "FooProperty", isa=str,
+        )
+        ssp = SimpleStrProperty()
+        self.assertEqual(ssp.valuetype, str)

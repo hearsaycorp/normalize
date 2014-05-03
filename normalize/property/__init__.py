@@ -234,20 +234,13 @@ class ROProperty(Property):
         raise exc.ReadOnlyAttributeError(attrname=self.fullname)
 
 
-class SlowLazyProperty(LazyProperty):
-    """Base class used by LazySafeProperty and ROLazyProperty"""
-    __trait__ = "slow"
-
+class ROLazyProperty(LazyProperty, ROProperty):
     def __get__(self, obj, type_=None):
         """This getter checks to see if the slot is already set in the object
         and if so, returns it."""
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
-        return super(SlowLazyProperty, self).__get__(obj, type_)
-
-
-class ROLazyProperty(SlowLazyProperty, ROProperty):
-    pass
+        return super(ROLazyProperty, self).__get__(obj, type_)
 
 
 class SafeProperty(Property):
@@ -270,11 +263,16 @@ class SafeProperty(Property):
         it is false"""
         if self.required:
             raise ValueError("%s is required" % self.fullname)
-        super(SafeProperty, self).__delete__(obj)
+        del obj.__dict__[self.name]
 
 
-class LazySafeProperty(SafeProperty, SlowLazyProperty):
-    pass
+class LazySafeProperty(SafeProperty, LazyProperty):
+    def __get__(self, obj, type_=None):
+        """This getter checks to see if the slot is already set in the object
+        and if so, returns it."""
+        if self.name in obj.__dict__:
+            return obj.__dict__[self.name]
+        return super(LazySafeProperty, self).__get__(obj, type_)
 
 
 trait_num = 0
@@ -284,9 +282,7 @@ def make_property_type(name, base_type=Property,
                        attrs=None, trait_name=None,
                        **default_kwargs):
     """Makes a new ``Property`` type, which supplies the given arguments
-    as defaults to the ``Property()`` constructor.  Note: defaults
-    which affect the property type returned cannot be supplied by this
-    mechanism.
+    as defaults to the ``Property()`` constructor.
 
     The typical use of this function is to make types for the API you are
     mapping so that, for instance, any time they use a date you can convert
@@ -305,10 +301,7 @@ def make_property_type(name, base_type=Property,
 
         ``base_type=``\ *Property sub-class*
             Specifies which property type you are adding defaults to.
-            Currently, this must be the computed type your schema will
-            use for these options (usually ``SafeProperty`` or
-            ``SafeJsonProperty``); in the future this may become more
-            streamlined.  You can pass in a tuple of types here.
+            You can pass in a tuple of types here.
 
         ``attrs=``\ *DICT*
             This lets you pass in a dictionary that will be used as
@@ -327,8 +320,7 @@ def make_property_type(name, base_type=Property,
 
         ``**kwargs``
             Everything not known is used as defaults for the eventual
-            call to ``Property()`` (or ``SafeProperty()`` or whichever
-            sub-class you chose).  If the user of the Property type
+            call to ``Property()``.  If the user of the Property type
             passes it as well, this overrides the defaults passed to
             ``make_property_type``.
     """
@@ -348,6 +340,7 @@ def make_property_type(name, base_type=Property,
                 kwargs[arg] = val
         return super(self_type[0], self).__init__(**kwargs)
 
+    attrs['default_kwargs'] = default_kwargs
     attrs['__init__'] = __init__
     attrs['__trait__'] = trait_name
 

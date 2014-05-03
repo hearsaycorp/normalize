@@ -66,7 +66,3 @@ class ListProperty(CollectionProperty):
         super(ListProperty, self).__init__(
             of=list_of, coll=colltype, **kwargs
         )
-
-
-class SafeListProperty(ListProperty, SafeCollectionProperty):
-    pass

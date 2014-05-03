@@ -13,10 +13,7 @@ from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonListProperty
 from normalize.property.json import JsonCollectionProperty
-from normalize.property.json import LazyJsonProperty
 from normalize.property.json import SafeJsonProperty
-from normalize.property.json import SafeJsonListProperty
-from normalize.property.json import LazySafeJsonProperty
 from normalize.record import Record
 from normalize.record.meta import RecordMeta
 from normalize.record.json import from_json
@@ -44,9 +41,7 @@ __all__ = [
     "JsonProperty",
     "JsonRecord",
     "JsonRecordList",
-    "LazyJsonProperty",
     "LazyProperty",
-    "LazySafeJsonProperty",
     "LazySafeProperty",
     "ListCollection",
     "ListProperty",
@@ -57,7 +52,6 @@ __all__ = [
     "Record",
     "RecordList",
     "RecordMeta",
-    "SafeJsonListProperty",
     "SafeJsonProperty",
     "SafeProperty",
     "to_json",

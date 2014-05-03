@@ -29,40 +29,38 @@ Core Property Types
 ``LazyProperty``
 ^^^^^^^^^^^^^^^^
 
+``LazyProperty`` has a function which returns the value for a slot, if
+the slot is empty.
+
 .. autoclass:: normalize.property.LazyProperty
    :members:
    :special-members:
 
-``ROProperty``
-^^^^^^^^^^^^^^
+.. autoclass:: normalize.property.LazySafeProperty
+   :show-inheritance:
+   :special-members: __get__
+
+
+``ROProperty`` & ``ROLazyProperty``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These types cannot be assigned; however ``ROLazyProperty`` may take a
+function which provides the initial value on first access; this
+function is called at most once for each instance.
 
 .. autoclass:: normalize.property.ROProperty
    :special-members: __get__, __init__
+
+.. autoclass:: normalize.property.ROLazyProperty
+   :show-inheritance:
 
 ``SafeProperty``
 ^^^^^^^^^^^^^^^^
 
 .. autoclass:: normalize.property.SafeProperty
    :members:
-   :special-members:
+   :special-members: __get__
 
-"Slow" Property types: ``LazySafeProperty``, ``ROLazyProperty``, ``SlowLazyProperty``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Your lazy attributes will normally end up with these types.  All it
-means is that the ``__get__`` descriptor is always called, even after
-the default has been assigned, because the ``__set__`` descriptor must
-also exist to unforce the type safety or keep the property read-only.
-If you add ``unsafe`` to the ``traits`` parameter, then you can avoid
-this (very minor) slowdown.
-
-.. autoclass:: normalize.property.SlowLazyProperty
-   :show-inheritance:
-
-.. autoclass:: normalize.property.LazySafeProperty
-   :show-inheritance:
-
-.. autoclass:: normalize.property.ROLazyProperty
    :show-inheritance:
 
 .. _types:
@@ -106,9 +104,6 @@ making new collection types and hooking them up correctly.
    :show-inheritance:
    :special-members: __init__
 
-.. autoclass:: normalize.property.coll.SafeListProperty
-   :show-inheritance:
-
 .. _json:
 
 Declaring JSON hints on Properties
@@ -130,21 +125,11 @@ or removed.
 .. autoclass:: normalize.property.json.SafeJsonProperty
    :show-inheritance:
 
-.. autoclass:: normalize.property.json.LazyJsonProperty
-   :show-inheritance:
-
-.. autoclass:: normalize.property.json.LazySafeJsonProperty
-   :show-inheritance:
-
 .. autoclass:: normalize.property.json.JsonListProperty
    :show-inheritance:
 
-.. autoclass:: normalize.property.json.SafeJsonListProperty
-   :show-inheritance:
-
 There are also two deprecated aliases: ``JsonCollectionProperty`` is
-the same as ``JsonListProperty``, and ``SafeJsonCollectionProperty``
-is the same as ``SafeJsonListProperty``.
+the same as ``JsonListProperty``.
 
 .. _meta:
 

@@ -119,27 +119,4 @@ DatetimeProperty = make_property_type(
 )
 
 
-# now, go and generate ROLazyUnicodeProperty, SafeStringProperty etc
-_prop_types = dict((k, v) for k, v in globals().iteritems() if
-                   k.endswith("Property"))
-
-from . import LazyProperty
-from . import ROLazyProperty
-from . import ROProperty
-from . import SafeProperty
-from . import SlowLazyProperty
-
-_variants = {
-    "Lazy": LazyProperty,
-    "RO": ROProperty,
-    "ROLazy": ROLazyProperty,
-    "Safe": SafeProperty,
-    "SlowLazy": SlowLazyProperty,
-}
-
-for name, proptype in _prop_types.iteritems():
-    for prefix, variant in _variants.iteritems():
-        typename = prefix + name
-        globals()[typename] = type(typename, (proptype, variant), {})
-
 __all__ = tuple(k for k in globals().keys() if k.endswith("Property"))
