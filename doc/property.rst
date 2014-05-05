@@ -26,6 +26,14 @@ Core Property Types
    :members:
    :special-members: __get__, __init__
 
+``SafeProperty``
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: normalize.property.SafeProperty
+   :members:
+   :special-members: __get__
+   :show-inheritance:
+
 ``LazyProperty``
 ^^^^^^^^^^^^^^^^
 
@@ -49,19 +57,11 @@ function which provides the initial value on first access; this
 function is called at most once for each instance.
 
 .. autoclass:: normalize.property.ROProperty
-   :special-members: __get__, __init__
+   :special-members: __init__
 
 .. autoclass:: normalize.property.ROLazyProperty
    :show-inheritance:
-
-``SafeProperty``
-^^^^^^^^^^^^^^^^
-
-.. autoclass:: normalize.property.SafeProperty
-   :members:
    :special-members: __get__
-
-   :show-inheritance:
 
 .. _types:
 

@@ -118,6 +118,15 @@ What happened was that the passed value did not satisfy the type
 constraint (ie, the type passed to ``isa``).  So, the descriptor
 started *coercion*.
 
+.. note::
+
+   Adding any of the three *type constraint* options to a Property
+   (``isa=``, ``required=``, or ``check=``) automatically mixes in the
+   'safe' trait, turning your ``Property`` into a ``SafeProperty`` via
+   the facility described in :ref:`meta`.  This ensures that any rules
+   you specify for assignment to an attribute are also caught by
+   assignment to that attribute.
+
 .. _coercion:
 
 Property Type Coercion
