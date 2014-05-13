@@ -72,7 +72,7 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(br.defaulted, list)
         br.defaulted.append("foo")
         self.assertEqual(br.defaulted[0], "foo")
-        with self.assertRaises(AttributeError):
+        with self.assertRaisesRegexp(AttributeError, r'BasicRecord.name'):
             br.name
         self.assertEqual(br.default_none, None)
 
@@ -92,7 +92,9 @@ class TestProperties(unittest2.TestCase):
 
         tr = TrivialRecord(id=123)
         self.assertEqual(tr.id, 123)
-        with self.assertRaises(AttributeError):
+        with self.assertRaisesRegexp(
+            AttributeError, r'TrivialRecord.id.*read-only',
+        ):
             tr.id = 124
 
         tr.name = "Travel Guides"
