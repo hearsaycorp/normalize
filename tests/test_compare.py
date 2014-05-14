@@ -233,7 +233,7 @@ class TestRecordComparison(unittest.TestCase):
 
         sparta = list()
         for member in circle_b.members:
-            sparta.append(Spartan(member.__getnewargs__()[0]))
+            sparta.append(Spartan(member.__getstate__()))
 
         self.assertDifferences(
             compare_collection_iter(circle_b.members, sparta,

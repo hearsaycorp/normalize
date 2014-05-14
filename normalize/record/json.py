@@ -12,6 +12,7 @@ from normalize.diff import Diff
 from normalize.diff import DiffInfo
 import normalize.exc as exc
 from normalize.property.json import JsonProperty
+from normalize.record import OhPickle
 from normalize.record import Record
 
 
@@ -195,6 +196,8 @@ class JsonRecord(Record):
                 keys here should be the names of the attributes and the
                 python values, not the JSON names or form.
         """
+        if isinstance(json_data, OhPickle):
+            return
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
         if json_data is not None:
@@ -229,8 +232,8 @@ class JsonRecord(Record):
     def diff_iter(self, other, **kwargs):
         for diff in super(JsonRecord, self).diff_iter(other, **kwargs):
             # TODO: object copy/upgrade constructor
-            newargs = diff.__getnewargs__()
-            yield JsonDiffInfo(**(newargs[0]))
+            newargs = diff.__getstate__()
+            yield JsonDiffInfo(**(newargs))
 
     def diff(self, other, **kwargs):
         return JsonDiff(
@@ -253,6 +256,8 @@ class JsonRecordList(RecordList, JsonRecord):
                 Other initializer attributes, for lists with extra
                 attributes (eg, paging information)
         """
+        if isinstance(json_data, OhPickle):
+            return
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
         if json_data is not None:

@@ -14,6 +14,8 @@ class Record(object):
     __metaclass__ = RecordMeta
 
     def __init__(self, init_dict=None, **kwargs):
+        if isinstance(init_dict, OhPickle):
+            return
         if init_dict and kwargs:
             raise exc.AmbiguousConstruction()
         if not init_dict:
@@ -33,12 +35,17 @@ class Record(object):
             meta_prop.init_prop(self)
 
     def __getnewargs__(self):
-        """Implement saving for pickle API"""
-        newdict = dict()
-        for name in type(self).properties.keys():
-            if hasattr(self, name):
-                newdict[name] = getattr(self, name, None)
-        return (newdict,)
+        """Stub method which arranges for an ``OhPickle`` instance to be passed
+        to the constructor above when pickling out.
+        """
+        return (OhPickle(),)
+
+    def __getstate__(self):
+        """Implement saving, for the pickle API."""
+        return self.__dict__
+
+    def __setstate__(self, set_this_orz):
+        self.__dict__.update(set_this_orz)
 
     def __str__(self):
         """Marshalling to string form"""
@@ -101,3 +108,14 @@ class Record(object):
                 if isinstance(val, Record):
                     for x in val.walk(prop_fs):
                         yield x
+
+
+class OhPickle(object):
+    """Sentinel type for Un-Pickling.  ``pickle`` does not allow a
+    ``__getinitargs__``/``__getnewargs__`` to return keyword constructor
+    arguments, so this value is passed to ``__init__`` when unpickling.  It
+    indicates to not perform any immediate post-construction checks and instead
+    just return and let ``__getstate``__ set this object up.
+    """
+    def __str__(self):
+        return "<OhPickle>"
