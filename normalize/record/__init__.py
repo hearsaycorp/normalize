@@ -71,10 +71,17 @@ class Record(object):
         object to a string or use the ``%s`` format code, and is supposed to be
         an "informal" representation when you don't want a full object dump
         like ``repr()`` would provide.
+
+        If you defined a ``primary_key`` for the object, then the values of the
+        attributes you specified will be included in the string representation,
+        eg ``<Task 17>``.  Otherwise, the *implicit* primary key (eg, a tuple
+        of all of the defined attributes with their values) is included, up to
+        the first 30 characters or so.
         """
         pk = self.__pk__
+        key = repr(pk[0] if len(pk) == 1 else pk)
         return "<%s %s>" % (
-            type(self).__name__, repr(pk[0] if len(pk) == 1 else pk)
+            type(self).__name__, key[:30] + "..." if len(key) > 32 else key
         )
 
     def __repr__(self):
