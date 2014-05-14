@@ -360,12 +360,16 @@ class MultiFieldSelector(object):
                 )
             if self.has_none:
                 tail = self.heads[None]
-                return ctor(self._get(x, tail) for x in obj)
+                vals = list(self._get(x, tail) for x in obj)
             else:
-                return ctor(
+                vals = list(
                     self._get(obj[head], tail) for head, tail in
                     self.heads.iteritems()
                 )
+            if isinstance(obj, ListCollection):
+                return ctor(values=vals)
+            else:
+                return vals
         elif isinstance(obj, dict):
             if self.has_none:
                 tail = self.heads[None]
