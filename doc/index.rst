@@ -32,7 +32,6 @@ Contents of this manual:
    intro
    property
    record
-   coll
    selector
    diff
    visitor

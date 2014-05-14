@@ -1,6 +1,6 @@
 
 from normalize.coll import ListCollection
-from normalize.coll import make_generic
+from normalize.coll import _make_generic
 import normalize.exc as exc
 from normalize.property import Property
 from normalize.property import SafeProperty
@@ -8,7 +8,7 @@ from normalize.property import SafeProperty
 
 class CollectionProperty(Property):
     """Base class for properties which contain collections; responsible for
-    creating new collection types (via :py:func:`normalize.coll.make_generic`)
+    creating new collection types (via :py:func:`normalize.coll._make_generic`)
     """
     __trait__ = "coll"
 
@@ -37,7 +37,7 @@ class CollectionProperty(Property):
             self.of = isa.itemtype
             self.coll = isa
         else:
-            isa = make_generic(of, coll)
+            isa = _make_generic(of, coll)
 
         super(CollectionProperty, self).__init__(isa=isa, **kwargs)
 

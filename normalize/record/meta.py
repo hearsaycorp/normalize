@@ -6,9 +6,16 @@ from normalize.property import Property
 
 
 class RecordMeta(type):
-    """Metaclass to reify descriptors properly"""
+    """Metaclass for ``Record`` types.
+    """
     def __new__(mcs, name, bases, attrs):
-
+        """Invoked when a new ``Record`` type is declared, and is responsible
+        for copying the ``properties`` from superclass ``Record`` classes,
+        processing the ``primary_key`` declaration, and calling
+        :py:meth:`normalize.property.Property.bind` to link
+        :py:class:`normalize.property.Property` instances to their containing
+        :py:class:`normalize.record.Record` classes.
+        """
         properties = dict()
 
         for base in bases:
