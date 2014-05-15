@@ -168,7 +168,7 @@ class Property(object):
         """Default getter; does NOT fall back to regular descriptor behavior
         """
         if self.name not in obj.__dict__:
-            raise AttributeError
+            raise AttributeError(self.fullname)
         return obj.__dict__[self.name]
 
     def __str__(self):

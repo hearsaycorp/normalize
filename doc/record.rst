@@ -3,42 +3,56 @@
 ==============================
 
 .. automodule:: normalize.record
-   :undoc-members:
-   :special-members: __init__, __getnewargs__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__
-
-Standard ``Record`` behavior
-----------------------------
-
-Constructor
-^^^^^^^^^^^
-
-Pickle API
-^^^^^^^^^^
-
-Stringification
-^^^^^^^^^^^^^^^
-
-Hashing and Record Identity
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Comparison
-^^^^^^^^^^
+   :special-members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__
 
 Record Flavors
 --------------
+
+``Record`` subclasses don't have any special mix-in magic like
+``Property`` subclasses do.  To use a ``Record`` subclass you must
+explicitly derive it.  The most useful classes for general use are
+:py:class:`normalize.record.json.JsonRecord`,
+:py:class:`normalize.record.RecordList` and the combination,
+:py:class:`normalize.record.json.JsonRecordList`.
+
+Collection Types
+^^^^^^^^^^^^^^^^
+
+Collections are types of records, with a single property ``values``
+which contains the underlying collection object.
+
+.. automodule:: normalize.coll
+   :special-members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__, __reduce__
 
 ``JsonRecord``
 ^^^^^^^^^^^^^^
 
 .. automodule:: normalize.record.json
-   :undoc-members: json_data, diff_iter, diff
    :special-members: __init__
 
 Customizing JsonRecord Marshalling
 """"""""""""""""""""""""""""""""""
 
-``Collection``
-^^^^^^^^^^^^^^
+JSON record marshalling can be overridden in two important ways:
+
+1. By specifying ``json_in`` (or just ``coerce`` if you want to be
+   able to pass in values like this from Python as well) and
+   ``json_out`` on your ``Properties``, and the ``json_name`` key.
+
+   Remember, you don't need to explicitly instantiate ``JsonProperty``
+   objects; you can throw on these JSON specialization flags on any
+   property and :py:mod:`normalize.property.meta` will mix them in for
+   you.
+
+   See :ref:`json` for more details.
+
+2. Via the sub-class API.  The most convenient hooks are
+   :py:meth:`JsonRecord.json_to_initkwargs` (you must derive
+   ``JsonRecord`` for this) and :py:meth:`JsonRecord.json_data` (any
+   class can define this).  This is a more general API which can perform
+   more 'drastic' conversions, for instance if you want to marshall your
+   class to a JSON Array.
+
 
 Record MetaClass
 ----------------

@@ -136,8 +136,6 @@ the same as ``JsonListProperty``.
 Addendum: Property MetaClass
 ----------------------------
 
-This module was mostly a proof of concept.
-
 .. automodule:: normalize.property.meta
    :undoc-members:
    :special-members: __new__

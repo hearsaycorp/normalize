@@ -8,6 +8,7 @@ from normalize import FieldSelectorException
 from normalize import JsonCollectionProperty
 from normalize import JsonProperty
 from normalize import JsonRecord
+from normalize import JsonRecordList
 from normalize import Property
 from normalize import Record
 from normalize import Record
@@ -367,3 +368,31 @@ class TestStructableFieldSelector(unittest.TestCase):
                           dict(name="Piglet")]),
         )
         self.assertEqual(filtered, expected)
+
+    def test_mfs_json(self):
+        """MultiFieldSelector can work on JsonRecordList objects"""
+
+        class Thing(JsonRecord):
+            flintstone = JsonProperty()
+            element = JsonProperty()
+
+        class Things(JsonRecordList):
+            itemtype = Thing
+
+        flintstones = ("dino", "bammbamm", "wilma", "fred")
+        elements = ("Rb", "At", "Pm", "Fl")
+        data = list(
+            {"flintstone": x[0], "element": x[1]} for x in
+            zip(flintstones, elements)
+        )
+
+        all_the_things = Things(data)
+
+        mfs = MultiFieldSelector([None, "flintstone"])
+        self.assertEqual(
+            mfs.get(all_the_things).json_data(),
+            list(dict(flintstone=x) for x in flintstones),
+        )
+
+        mfs = MultiFieldSelector([None, "flintstone"], [None, "element"])
+        self.assertEqual(mfs.get(all_the_things), all_the_things)

@@ -12,6 +12,7 @@ from normalize.diff import Diff
 from normalize.diff import DiffInfo
 import normalize.exc as exc
 from normalize.property.json import JsonProperty
+from normalize.record import OhPickle
 from normalize.record import Record
 
 
@@ -19,7 +20,14 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
     """This function converts a JSON dict (json_struct) to a set of init
     keyword arguments for the passed Record (or JsonRecord).
 
-    It is called by the JsonRecord constructor.
+    It is called by the JsonRecord constructor.  This function takes a JSON
+    data structure and returns a keyword argument list to be passed to the
+    class constructor.  Any keys in the input dictionary which are not known
+    are passed as a single ``unknown_json_keys`` value as a dict.
+
+    It is called by the JsonRecord constructor.  This function should generally
+    not be called directly, except as a part of a ``__init__`` or specialized
+    visitor application.
     """
     if kwargs is None:
         kwargs = {}
@@ -63,7 +71,7 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
 
 def from_json(record_type, json_struct):
     """JSON marshall in function: a 'visitor' function which looks for JSON
-    types/hints but does not require them.
+    types/hints on types being converted to, but does not require them.
 
     Args:
         ``record_type=``\ *TYPE*
@@ -94,9 +102,10 @@ json_data_takes_extraneous = dict()
 
 
 def _json_data(x, extraneous):
-    """This function calls a to_json method, if the type has one, otherwise
+    """This function calls a json_json method, if the type has one, otherwise
     calls back into to_json().  It also check whether the method takes an
     'extraneous' argument and passes that through if possible."""
+
     if type(x) in has_json_data and has_json_data[type(x)]:
         if json_data_takes_extraneous[type(x)]:
             return x.json_data(extraneous=extraneous)
@@ -120,7 +129,19 @@ def _json_data(x, extraneous):
 def to_json(record, extraneous=True):
     """JSON marshall out function: a 'visitor' function which implements
     marshall out, honoring JSON property types/hints but does not require
-    them."""
+    them.
+
+    args:
+        ``record=``\ *anything*
+            This object can be of any type; a best-effort attempt is made to
+            convert to a form which ``json.dumps`` can accept; this function
+            will call itself recursively, respecting any types which define
+            ``.json_data()`` as a method and calling that.
+
+        ``extraneous=``\ *BOOL*
+            This parameter is passed through to any ``json_data()`` methods
+            which support it.
+    """
     if isinstance(record, Collection):
         return list(_json_data(x, extraneous) for x in record)
 
@@ -174,7 +195,7 @@ class JsonRecord(Record):
 
     2. Unknown keys are permitted, and saved in the "unknown_json_keys"
        property, which is merged back on output (ie, calling ``.json_data()``
-       or ``to_json()``) #TODO
+       or ``to_json()``)
     """
     unknown_json_keys = JsonProperty(json_name=None, extraneous=True)
 
@@ -195,6 +216,8 @@ class JsonRecord(Record):
                 keys here should be the names of the attributes and the
                 python values, not the JSON names or form.
         """
+        if isinstance(json_data, OhPickle):
+            return
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
         if json_data is not None:
@@ -217,6 +240,14 @@ class JsonRecord(Record):
         return self(json_data)
 
     def json_data(self, extraneous=False):
+        """Returns the JSON data form of this ``JsonRecord``.  The 'unknown'
+        JSON keys will be merged back in, if:
+
+        1. the ``extraneous=True`` argument is passed.
+
+        2. the ``unknown_json_keys`` property on this class is replaced by one
+           not marked as ``extraneous``
+        """
         jd = to_json(self, extraneous)
         if hasattr(self, "unknown_json_keys"):
             prop = type(self).properties['unknown_json_keys']
@@ -227,12 +258,19 @@ class JsonRecord(Record):
         return jd
 
     def diff_iter(self, other, **kwargs):
+        """Generator method which returns the differences from the invocant to
+        the argument.  This specializes :py:method:`Record.diff_iter` by
+        returning :py:class:`JsonDiffInfo` objects.
+        """
         for diff in super(JsonRecord, self).diff_iter(other, **kwargs):
             # TODO: object copy/upgrade constructor
-            newargs = diff.__getnewargs__()
-            yield JsonDiffInfo(**(newargs[0]))
+            newargs = diff.__getstate__()
+            yield JsonDiffInfo(**(newargs))
 
     def diff(self, other, **kwargs):
+        """Compare an object with another.  This specializes
+        :py:method:`Record.diff` by returning a :py:class:`JsonDiff` object.
+        """
         return JsonDiff(
             base_type_name=type(self).__name__,
             other_type_name=type(other).__name__,
@@ -253,6 +291,8 @@ class JsonRecordList(RecordList, JsonRecord):
                 Other initializer attributes, for lists with extra
                 attributes (eg, paging information)
         """
+        if isinstance(json_data, OhPickle):
+            return
         if isinstance(json_data, basestring):
             json_data = json.loads(json_data)
         if json_data is not None:
