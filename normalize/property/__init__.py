@@ -173,7 +173,7 @@ class Property(object):
             self.type_safe_value(value, _none_ok=True)
         )
 
-        if value is _none:
+        if new_value is _none:
             if self.required:
                 raise ValueError("%s is required" % self.fullname)
         else:
