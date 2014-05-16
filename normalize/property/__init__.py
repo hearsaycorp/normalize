@@ -129,11 +129,24 @@ class Property(object):
             classname = self.class_().__name__
         return "%s.%s" % (classname, self.name)
 
-    def type_safe_value(self, value):
+    def type_safe_value(self, value, _none_ok=False):
         if value is None and self.required and not self.valuetype:
             raise ValueError("%s is required" % self.fullname)
         if self.valuetype and not isinstance(value, self.valuetype):
-            value = self.coerce(value)
+            new_value = self.coerce(value)
+            if not isinstance(new_value, self.valuetype):
+                if _none_ok and new_value is None and not self.required:
+                    # allow coerce functions to return 'None' to silently
+                    # swallow optional properties on initialization
+                    return _none
+                else:
+                    raise exc.ValueCoercionError(
+                        prop=self.fullname,
+                        value=repr(value),
+                        coerced=repr(new_value),
+                    )
+            else:
+                value = new_value
         if self.check and not self.check(value):
             raise ValueError(
                 "%s value '%r' failed type check" % (self.fullname, value)
@@ -155,11 +168,16 @@ class Property(object):
         if value is _Default:
             value = self.get_default(obj)
 
+        new_value = (
+            _none if value is _none else
+            self.type_safe_value(value, _none_ok=True)
+        )
+
         if value is _none:
             if self.required:
                 raise ValueError("%s is required" % self.fullname)
         else:
-            obj.__dict__[self.name] = self.type_safe_value(value)
+            obj.__dict__[self.name] = new_value
 
     def eager_init(self):
         return self.required or self.default is not _none

@@ -255,6 +255,13 @@ class ReservedPropertyName(RecordDefinitionError):
     message = "Attribute {attrname} is reserved"
 
 
+class ValueCoercionError(CoercionError):
+    message = (
+        "Coerce function on proprety {prop} returned a bad coerced "
+        "value {coerced} from input {value}"
+    )
+
+
 class VisitorTooSimple(SubclassError):
     message = (
         "{visitor} mapped over a RecordList ({value_type_name}) with "

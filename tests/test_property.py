@@ -366,3 +366,61 @@ class TestProperties(unittest2.TestCase):
         )
         ssp = SimpleStrProperty()
         self.assertEqual(ssp.valuetype, str)
+
+    def test_isa_coerce_required(self):
+        """Test various combinations of isa=, coerce=, required="""
+        # should later add more tests for combinations including check= as well
+
+        def positive_int_or_none(x):
+            return int(x) if int(x) > 0 else None
+
+        class Mixed(Record):
+            id = Property(required=True, isa=int, coerce=positive_int_or_none)
+            num = Property(isa=int, coerce=positive_int_or_none)
+
+            def get_what(self):
+                return "I'm Mixed %d" % self.id
+
+            what = Property(required=True, isa=int, lazy=True, default=get_what)
+
+            def get_hmm(self):
+                return positive_int_or_none(self.what)
+
+            hmm = Property(isa=int, required=True, lazy=True, default=get_hmm)
+
+            def get_huh(self):
+                return str(self.what)
+
+            huh = Property(isa=int, required=True, lazy=True,
+                           coerce=positive_int_or_none, default=get_huh)
+
+        with self.assertRaisesRegexp(exc.ValueCoercionError, r'Mixed.id'):
+            mixer = Mixed(id="-1")
+
+        mixer = Mixed(id="1")
+
+        with self.assertRaises(ValueError):
+            mixer.num = "-2"
+        with self.assertRaises(ValueError):
+            mixer.id = "-3"
+
+        for i in 1, 2:
+            with self.assertRaises(ValueError):
+                mixer.what
+        mixer.what = 2
+        self.assertEqual(mixer.what, 2)
+
+        mixer.num = "3"
+        self.assertEqual(mixer.num, 3)
+        with self.assertRaises(ValueError):
+            mixer.num = "-4"
+
+        mixer.what = -5
+        with self.assertRaises(TypeError):
+            mixer.hmm
+        with self.assertRaises(ValueError):
+            mixer.huh
+
+        mixer.what = 4
+        self.assertEqual(mixer.hmm, 4)
+        self.assertEqual(mixer.huh, 4)
