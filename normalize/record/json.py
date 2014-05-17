@@ -16,6 +16,18 @@ from normalize.record import OhPickle
 from normalize.record import Record
 
 
+def _json_to_value_initializer(json_val, proptype):
+    if proptype:
+        if isinstance(proptype, JsonRecord):
+            return json_val
+        elif hasattr(proptype, "from_json"):
+            return proptype.from_json(json_val)
+        elif isinstance(proptype, Record) and isinstance(json_val, dict):
+            return from_json(proptype, json_val)
+
+    return json_val
+
+
 def json_to_initkwargs(record_type, json_struct, kwargs=None):
     """This function converts a JSON dict (json_struct) to a set of init
     keyword arguments for the passed Record (or JsonRecord).
@@ -45,8 +57,11 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
             if json_name is not None:
                 if json_name in json_struct:
                     if propname not in kwargs:
-                        kwargs[propname] = prop.from_json(
-                            json_struct[json_name]
+                        kwargs[propname] = _json_to_value_initializer(
+                            prop.from_json(
+                                json_struct[json_name]
+                            ),
+                            prop.valuetype,
                         )
                     unknown_keys.remove(json_name)
         elif prop.name in json_struct:
@@ -54,14 +69,9 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
             unknown_keys.remove(prop.name)
             if prop.name not in kwargs:
                 proptype = prop.valuetype
-                if proptype:
-                    if hasattr(proptype, "from_json"):
-                        kwargs[propname] = proptype.from_json(json_val)
-                    elif isinstance(proptype, Record):
-                        kwargs[propname] = from_json(proptype, json_val)
-                    else:
-                        # let the property's 'check' etc figure it out.
-                        kwargs[propname] = json_val
+                kwargs[propname] = _json_to_value_initializer(
+                    json_val, proptype,
+                )
     if unknown_keys:
         kwargs["unknown_json_keys"] = dict(
             (k, deepcopy(json_struct[k])) for k in unknown_keys
