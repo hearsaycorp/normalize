@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import collections
+import sys
 import types
 
 import normalize.exc as exc
@@ -315,4 +316,7 @@ def _make_generic(of, coll):
         GENERIC_TYPES[key] = type(
             generic_name, (coll, _Generic), dict(itemtype=of, generic_key=key)
         )
+        mod = sys.modules[of.__module__]
+        if not hasattr(mod, generic_name):
+            setattr(mod, generic_name, GENERIC_TYPES[key])
     return GENERIC_TYPES[key]
