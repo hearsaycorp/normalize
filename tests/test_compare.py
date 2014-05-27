@@ -175,6 +175,20 @@ class TestRecordComparison(unittest.TestCase):
             {"REMOVED .age", "MODIFIED .name", "ADDED .interests"},
         )
 
+        self.assertDifferences(
+            compare_record_iter(
+                Person(id=123, name=""), Person(id=123),
+            ),
+            {"REMOVED .name"},
+        )
+        self.assertDifferences(
+            compare_record_iter(
+                Person(id=123, name=""), Person(id=123),
+                options=DiffOptions(ignore_empty_slots=True),
+            ),
+            {},
+        )
+
     def test_diff_unicode(self):
         """Test behavior of unicode string comparisons"""
         ubert = Person(id=123, name=u"Bert")

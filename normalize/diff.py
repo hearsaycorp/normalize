@@ -128,7 +128,7 @@ class DiffOptions(object):
                 value = self.normalize_case(value)
             if self.unicode_normal:
                 value = self.normalize_unf(value)
-        elif self.ignore_empty_slots and self.value_is_empty(value):
+        if self.ignore_empty_slots and self.value_is_empty(value):
             value = _nothing
         return value
 
