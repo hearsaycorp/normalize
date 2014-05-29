@@ -94,7 +94,7 @@ class DiffOptions(object):
         self.extraneous = extraneous
 
     def items_equal(self, a, b):
-        return self.normalize_val(a) == self.normalize_val(b)
+        return a == b
 
     def normalize_whitespace(self, value):
         if isinstance(value, unicode):
@@ -120,17 +120,31 @@ class DiffOptions(object):
     def value_is_empty(self, value):
         return (not value and isinstance(value, (basestring, types.NoneType)))
 
+    def normalize_text(self, value):
+        if self.ignore_ws:
+            value = self.normalize_whitespace(value)
+        if self.ignore_case:
+            value = self.normalize_case(value)
+        if self.unicode_normal:
+            value = self.normalize_unf(value)
+        return value
+
     def normalize_val(self, value=_nothing):
         if isinstance(value, basestring):
-            if self.ignore_ws:
-                value = self.normalize_whitespace(value)
-            if self.ignore_case:
-                value = self.normalize_case(value)
-            if self.unicode_normal:
-                value = self.normalize_unf(value)
+            value = self.normalize_text(value)
         if self.ignore_empty_slots and self.value_is_empty(value):
             value = _nothing
         return value
+
+    def normalize_slot(self, value=_nothing, prop=None):
+        if value is not _nothing and hasattr(prop, "compare_as"):
+            value = prop.compare_as(value)
+        return self.normalize_val(value)
+
+    def normalize_item(self, value=_nothing, coll=None):
+        if value is not _nothing and hasattr(coll, "compare_item_as"):
+            value = coll.compare_item_as(value)
+        return self.normalize_val(value)
 
     def record_id(self, record, type_=None):
         """Retrieve an object identifier from the given record; if it is an
@@ -160,8 +174,12 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         if prop.extraneous and not options.extraneous:
             continue
 
-        propval_a = options.normalize_val(getattr(a, propname, _nothing))
-        propval_b = options.normalize_val(getattr(b, propname, _nothing))
+        propval_a = options.normalize_slot(
+            getattr(a, propname, _nothing), prop,
+        )
+        propval_b = options.normalize_slot(
+            getattr(b, propname, _nothing), prop,
+        )
 
         if propval_a is _nothing and propval_b is _nothing:
             continue
@@ -322,7 +340,9 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         seen = collections.Counter()
         i = 0
         for v in propval_x:
-            v = options.normalize_val(v)
+            v = options.normalize_item(
+                v, propval_a if options.duck_type else propval_x
+            )
             if v is not _nothing or not options.ignore_empty_slots:
                 vals.add((v, seen[v]))
                 rev_key[(v, seen[v])] = i
@@ -378,7 +398,9 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         rev_key = rev_keys[x] = dict()
         seen = collections.Counter()
         for k, v in propval_x.iteritems():
-            v = options.normalize_val(v)
+            v = options.normalize_item(
+                v, propval_a if options.duck_type else propval_x
+            )
             if v is not _nothing or not options.ignore_empty_slots:
                 vals.add((v, seen[v]))
                 rev_key[(v, seen[v])] = k
