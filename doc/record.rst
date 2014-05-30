@@ -1,6 +1,6 @@
 
-``normalize.record`` reference
-==============================
+Defining Records - ``normalize.record``
+=======================================
 
 .. automodule:: normalize.record
    :special-members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__
@@ -22,12 +22,14 @@ Collections are types of records, with a single property ``values``
 which contains the underlying collection object.
 
 .. automodule:: normalize.coll
+   :members:
    :special-members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__, __reduce__
 
 ``JsonRecord``
 ^^^^^^^^^^^^^^
 
 .. automodule:: normalize.record.json
+   :members:
    :special-members: __init__
 
 Customizing JsonRecord Marshalling
@@ -58,5 +60,6 @@ Record MetaClass
 ----------------
 
 .. automodule:: normalize.record.meta
+   :members:
    :undoc-members:
    :special-members: __new__

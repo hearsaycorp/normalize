@@ -1,6 +1,6 @@
 
-``normalize.property`` reference
-================================
+Defining Properties - ``normalize.property``
+============================================
 
 .. WARNING::
 
@@ -45,6 +45,7 @@ the slot is empty.
    :special-members:
 
 .. autoclass:: normalize.property.LazySafeProperty
+   :members:
    :show-inheritance:
    :special-members: __get__
 
@@ -57,9 +58,11 @@ function which provides the initial value on first access; this
 function is called at most once for each instance.
 
 .. autoclass:: normalize.property.ROProperty
+   :members:
    :special-members: __init__
 
 .. autoclass:: normalize.property.ROLazyProperty
+   :members:
    :show-inheritance:
    :special-members: __get__
 
@@ -75,6 +78,7 @@ Bundled Typed Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: normalize.property.types
+   :members:
    :undoc-members:
 
 Rolling your own typed properties
@@ -97,10 +101,12 @@ making new collection types and hooking them up correctly.
    :special-members: __get__, __init__
 
 .. autoclass:: normalize.property.coll.SafeCollectionProperty
+   :members:
    :show-inheritance:
    :special-members: __set__
 
 .. autoclass:: normalize.property.coll.ListProperty
+   :members:
    :show-inheritance:
    :special-members: __init__
 
@@ -123,9 +129,11 @@ Once it does, the trivial, undocumented mixes here may be deprecated
 or removed.
 
 .. autoclass:: normalize.property.json.SafeJsonProperty
+   :members:
    :show-inheritance:
 
 .. autoclass:: normalize.property.json.JsonListProperty
+   :members:
    :show-inheritance:
 
 There are also two deprecated aliases: ``JsonCollectionProperty`` is
@@ -137,6 +145,7 @@ Addendum: Property MetaClass
 ----------------------------
 
 .. automodule:: normalize.property.meta
+   :members:
    :undoc-members:
    :special-members: __new__
 

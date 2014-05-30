@@ -34,7 +34,7 @@ class Property(object):
 
     def __init__(self, isa=None,  coerce=None, check=None,
                  required=False, default=_none, traits=None,
-                 extraneous=False):
+                 extraneous=False, doc=None):
         """Declares a new standard Property.  Note: if you pass arguments which
         are not understood by this constructor, or pass extra property traits
         to ``traits``, then the call will be redirected to a sub-class; see
@@ -81,9 +81,13 @@ class Property(object):
                 the ``Record`` equality operator.  Visitor functions typically
                 ignore extraneous properties or require an extra option to
                 process them.
+
+            ``doc=``\ *STR*
+                Specify a docstring for the property.
         """
         self.name = None
         self.class_ = None
+        self.__doc__ = doc
         super(Property, self).__init__()
         self.default = default
         if callable(default):
@@ -185,6 +189,8 @@ class Property(object):
     def __get__(self, obj, type_=None):
         """Default getter; does NOT fall back to regular descriptor behavior
         """
+        if obj is None:
+            return self
         if self.name not in obj.__dict__:
             raise AttributeError(self.fullname)
         return obj.__dict__[self.name]
@@ -232,6 +238,8 @@ class LazyProperty(Property):
         """This getter is called when there is no value set, and calls the
         default method/function.
         """
+        if obj is None:
+            return self
         value = self.get_default(obj)
 
         obj.__dict__[self.name] = self.type_safe_value(value)
@@ -256,6 +264,8 @@ class ROLazyProperty(LazyProperty, ROProperty):
     def __get__(self, obj, type_=None):
         """This getter checks to see if the slot is already set in the object
         and if so, returns it."""
+        if obj is None:
+            return self
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
         return super(ROLazyProperty, self).__get__(obj, type_)
@@ -288,6 +298,8 @@ class LazySafeProperty(SafeProperty, LazyProperty):
     def __get__(self, obj, type_=None):
         """This getter checks to see if the slot is already set in the object
         and if so, returns it."""
+        if obj is None:
+            return self
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
         return super(LazySafeProperty, self).__get__(obj, type_)

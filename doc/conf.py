@@ -22,8 +22,8 @@ master_doc = 'index'
 project = u'normalize'
 copyright = u'2014, Sam Vilain, Hearsay Social'
 
-version = '0.2'
-release = '0.2.0'
+version = '0.3'
+release = '0.3.0'
 
 exclude_patterns = ['sphinx-build']
 pygments_style = 'sphinx'
@@ -53,4 +53,4 @@ texinfo_documents = [
 autoclass_content = "class"
 
 autodoc_member_order = "bysource"
-autodoc_default_flags = ['members']
+autodoc_default_flags = []
