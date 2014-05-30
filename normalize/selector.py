@@ -17,28 +17,34 @@ class FieldSelector(object):
     """
     A way to refer to fields/record/properties within a data structure.
 
-    Properties/Indicies are tracked as elements in a list:
-    * A string specifies an attribute of an object.
+    This is modeled as a list of either attribute names or collection indices,
+    where:
+
+    * A string specifies an attribute of an object (or a dictionary key)
     * An integer specifies an index into a collection.
     * 'None' specifies the full collection.
     """
-    def __init__(self, other=None):
-        """
-        @param other Provides a way to copy an existing FieldSelector or
-                     instantiate one from an iterable.
+    def __init__(self, expr=None):
+        """Initializer for FieldSelector instances.
+
+        args:
+
+            ``expr=``\ *FieldSelector*\ \|\ *<iterable>*
+                Starting expression for the selector; can copy an existing
+                FieldSelector or instantiate one from an iterable list of
+                attribute names/indices
         """
         self.selectors = []
 
-        if other:
-            other_selectors = []
-            if hasattr(other, "selectors"):
-                other_selectors = other.selectors
+        if expr:
+            if hasattr(expr, "selectors"):
+                expr_selectors = expr.selectors
             else:
-                other_selectors = list(other)
+                expr_selectors = list(expr)
 
             # Validate the selector
             if any(
-                e for e in other_selectors if not (
+                e for e in expr_selectors if not (
                     isinstance(e, basestring) or
                     isinstance(e, (int, long)) or e is None
                 )
@@ -48,9 +54,11 @@ class FieldSelector(object):
                     "strings, and None"
                 )
             # shallow copying via slice is faster than copy.copy()
-            self.selectors = other_selectors[:]
+            self.selectors = expr_selectors[:]
 
     def add_property(self, prop):
+        """Extends the selector, adding a new attribute property lookup at the
+        end, specified by name."""
         if not isinstance(prop, basestring):
             raise ValueError(
                 "properties must be specified by their string name"
@@ -58,30 +66,45 @@ class FieldSelector(object):
         self.selectors.append(prop)
 
     def add_index(self, index):
+        """Extends the selector, adding a new indexed collection lookup at the
+        end."""
         if not isinstance(index, (int, long)):
             raise ValueError("index must be an int or a long")
         self.selectors.append(index)
 
     def add_full_collection(self):
+        """Extends the selector, making it refer to *all* items in the
+        collection at this point."""
         self.selectors.append(None)
 
     def extend(self, other):
         """
-        Extends this field selector with another FieldSelector
+        Extends this field selector with another FieldSelector, combining them
+        to one longer field selector.
         """
         self.selectors.extend(other.selectors)
         return self  # Useful for chaining
 
     def __getnewargs__(self):
         """
-        Serialize as a list.
+        The pickle protocol is supported on this type.
         """
         return (tuple(self.selectors),)
 
     def get(self, record):
         """
-        Applies this FieldSelector to the specified Record to get the
-        field/property/record specified by this FieldSelector
+        Evaluate the FieldSelector's path to get a specific attribute (or
+        collection of attributes, if there is a ``None`` in the selector
+        expression) from the passed record.
+
+        If there is a problem, this method will typically raise
+        :py:class:`FieldSelectorException`.
+
+        ::
+
+           record.foo = "bar"
+           field_selector = FieldSelector(["foo"])
+           print field_selector.get(record)  # "bar"
         """
         i = 0
         for selector in self.selectors:
@@ -91,7 +114,7 @@ class FieldSelector(object):
             elif isinstance(selector, (int, long)):
                 try:
                     record = record[selector]
-                except LookupError:
+                except IndexError:
                     raise FieldSelectorKeyError(key=selector)
             else:
                 if not hasattr(record, selector):
@@ -105,9 +128,10 @@ class FieldSelector(object):
         Sets the field referenced by this field selector for the given Record
         with the given value.
 
-        If put() is going to be called on the same Record from
-        multiple/different FieldSelectors, then put() needs to called in
-        the sorted order of the FieldSelectors.
+        ::
+
+           field_selector.put(record, "baz")
+           print record.foo  # "baz"
         """
         if len(self.selectors) == 1:
             selector = self.selectors[0]
@@ -160,6 +184,13 @@ class FieldSelector(object):
 
         Returns the number of values set; may be 0 if there is 'None' in the
         selector and there were no existing items in that collection.
+
+        ::
+
+           field_selector = FieldSelector(["stuff", 0, "name"])
+           obj = SomeObject()
+           field_selector.post(obj, "Bob")
+           print obj.stuff[0].name  # "Bob"
         """
         i = 0
         for selector in self.selectors[:-1]:
@@ -192,6 +223,8 @@ class FieldSelector(object):
         return 1
 
     def __eq__(self, other):
+        """Implemented; field selectors must have identical paths to compare
+        equal."""
         if not isinstance(other, FieldSelector):
             raise TypeError(
                 "Cannot compare FieldSelector with %s" % type(other).__name__
@@ -207,6 +240,10 @@ class FieldSelector(object):
         return self.selectors != other.selectors
 
     def __lt__(self, other):
+        """Ordering field selectors makes sure that all integer-indexed
+        selectors are incrementing.  This is mainly needed for
+        :py:meth:`FieldSelector.post`, which will only auto-extend collections
+        items at the end."""
         end = len(self.selectors)
         if len(self.selectors) > len(other.selectors):
             end = len(other.selectors)
@@ -230,12 +267,27 @@ class FieldSelector(object):
         return len(self.selectors) < len(other.selectors)
 
     def __str__(self):
+        """Returns a compact representation of the field selector, shown as a
+        python expression."""
         return "<%s: %s>" % (self.__class__.__name__, self.path)
 
     def __repr__(self):
-        return "FieldSelector(%r)" % self.selectors
+        """Returns a evaluable representation of a field selector."""
+        return "%s(%r)" % (self.__class__.__name__, self.selectors)
 
     def __add__(self, other):
+        """Creates a new FieldSelector, with the two attribute/index expression
+        lists concatenated.  Like :py:meth:`extend` but creates a new
+        ``FieldSelector``.
+
+        ::
+
+            fs = FieldSelector(["foo"])
+            bar = FieldSelector(["bar"])
+
+            print fs + bar  # <FieldSelector: .foo.bar>
+            print fs + [0]  # <FieldSelector: .foo[0]>
+        """
         if isinstance(other, (basestring, int, long)):
             return type(self)(self.selectors + [other])
         elif isinstance(other, collections.Iterable):
@@ -248,16 +300,39 @@ class FieldSelector(object):
             )
 
     def __len__(self):
+        """Returns the number of elements in the field selector expression."""
         return len(self.selectors)
 
     def __getitem__(self, key):
+        """Indexing can be used to return a particular item from the selector
+        expression, and slicing can be used to make a new FieldSelector which
+        has a shorter expression.  For instance, to trim the last:
+
+        ::
+
+           trimmed_fs = field_selector[:-1]
+        """
         if isinstance(key, slice):
             return type(self)(self.selectors[key])
         else:
             return self.selectors[key]
 
     def startswith(self, key_or_fs):
-        if isinstance(key_or_fs, FieldSelector):
+        """Can be used to assert how the field selector begins.
+
+        args:
+
+            ``key_or_fs=``\ *FieldSelector*\ \|\ *<attribute-or-index>*
+
+                If the argument is another FieldSelector (or a tuple/list), it
+                checks that the invocant's first selector expression components
+                match that passed.
+
+                If the argument is a valid index/key or attribute name, it will
+                check that the first member in the expression is the same as
+                that passed.
+        """
+        if isinstance(key_or_fs, (FieldSelector, list, tuple)):
             return all(
                 key_or_fs[i] == self.selectors[i] for i in range(
                     0, len(key_or_fs),
@@ -268,6 +343,14 @@ class FieldSelector(object):
 
     @property
     def path(self):
+        """This property returns something that looks a bit like a python
+        representation of the implied expression.
+
+        ::
+
+            foo = FieldSelector(["foo", 2, "b ar", None, "baz"])
+            print foo.path  # foo[2]['b ar'][*].baz
+        """
         selector_parts = []
         for selector in self.selectors:
             if isinstance(selector, (int, long)):
@@ -283,10 +366,15 @@ class FieldSelector(object):
 
 
 class MultiFieldSelector(object):
+    """Version of a FieldSelector which stores multiple FieldSelectors combined
+    into a single tree structure."""
+
     FieldSelector = FieldSelector
 
-    """Version of a FieldSelector which stores 'selectors' as a tree"""
     def __init__(self, *others):
+        """Returns a MultiFieldSelector based on combining the passed-in
+        FieldSelector and MultiFieldSelector objects.
+        """
         selectors = list()
         heads = collections.defaultdict(set)
         for other in others:
@@ -331,7 +419,8 @@ class MultiFieldSelector(object):
         )
 
     def __iter__(self):
-        """Generates FieldSelectors from this MultiFieldSelector"""
+        """Generator for all FieldSelectors this MultiFieldSelector
+        contains."""
         for head, tail in self.heads.iteritems():
             head_selector = self.FieldSelector((head,))
             if tail is all:
@@ -352,6 +441,11 @@ class MultiFieldSelector(object):
             return tail.get(obj)
 
     def get(self, obj):
+        """Creates a copy of the passed object which only contains the parts
+        which are pointed to by one of the FieldSelectors that were used to
+        construct the MultiFieldSelector.  Can be used to produce 'filtered'
+        versions of objects.
+        """
         ctor = type(obj)
         if isinstance(obj, (list, ListCollection)):
             if self.has_string:

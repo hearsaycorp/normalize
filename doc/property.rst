@@ -1,6 +1,6 @@
 
-``normalize.property`` reference
-================================
+Defining Properties - ``normalize.property``
+============================================
 
 .. WARNING::
 

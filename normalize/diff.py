@@ -21,7 +21,8 @@ from normalize.selector import FieldSelector
 
 class DiffTypes(OrderedRichEnum):
     """
-    An "enum" to represent types of diffs
+    A :py:class:`richenum.OrderedRichEnum` type to denote the type of an
+    individual difference.
     """
     class EnumValue(OrderedRichEnumValue):
         pass
@@ -50,7 +51,8 @@ class DiffInfo(Record):
         coerce=_coerce_diff,
         isa=DiffTypes.EnumValue,
         required=True,
-    )
+        doc="Enumeration describing the type of difference; a "
+            ":py:class:`DiffType` value.")
     base = SafeProperty(isa=FieldSelector, required=True)
     other = SafeProperty(isa=FieldSelector, required=True)
 
@@ -80,11 +82,51 @@ _nothing = _Nothing()
 
 
 class DiffOptions(object):
-    """Optional data structure to pass diff options down"""
+    """Optional data structure to pass diff options down.  Some functions are
+    delegated to this object, allowing for further customization of operation,
+    using a sub-class API.
+    """
+    _nothing = _nothing
+
     def __init__(self, ignore_ws=True, ignore_case=False,
                  unicode_normal=True, unchanged=False,
                  ignore_empty_slots=False,
                  duck_type=False, extraneous=False):
+        """Create a new ``DiffOptions`` instance.
+
+        args:
+
+            ``ignore_ws=``\ *BOOL*
+                Ignore whitespace in strings (beginning, end and middle).
+                True by default.
+
+            ``ignore_case=``\ *BOOL*
+                Ignore case differences in strings.  False by default.
+
+            ``unicode_normal=``\ *BOOL*
+                Ignore unicode normal form differences in strings by
+                normalizing to NFC before comparison.  True by default.
+
+            ``unchanged=``\ *BOOL*
+                Yields ``DiffInfo`` objects for every comparison, not just
+                those which found a difference.  Defaults to False.  Useful for
+                testing.
+
+            ``ignore_empty_slots=``\ *BOOL*
+                If true, slots containing typical 'empty' values (by default,
+                just ``''`` and ``None``) are treated as if they were not set.
+                False by default.
+
+            ``duck_type=``\ *BOOL*
+                Normally, types must match or the result will always be
+                :py:attr:`normalize.diff.DiffTypes.MODIFIED` and the comparison
+                will not descend further.
+
+                However, setting this option bypasses this check, and just
+                checks that the 'other' object has all of the properties
+                defined on the 'base' type.  This can be used to check progress
+                when porting from other object systems to normalize.
+        """
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
         self.ignore_empty_slots = ignore_empty_slots
@@ -94,9 +136,12 @@ class DiffOptions(object):
         self.extraneous = extraneous
 
     def items_equal(self, a, b):
+        """Sub-class hook which performs value comparison.  Only called for
+        comparisons which are not Records."""
         return a == b
 
     def normalize_whitespace(self, value):
+        """Normalizes whitespace; called if ``ignore_ws`` is true."""
         if isinstance(value, unicode):
             return u" ".join(
                 x for x in re.split(r'\s+', value, flags=re.UNICODE) if
@@ -106,21 +151,33 @@ class DiffOptions(object):
             return " ".join(value.split())
 
     def normalize_unf(self, value):
+        """Normalizes Unicode Normal Form (to NFC); called if
+        ``unicode_normal`` is true."""
         if isinstance(value, unicode):
             return unicodedata.normalize('NFC', value)
         else:
             return value
 
     def normalize_case(self, value):
+        """Normalizes Case (to upper case); called if ``ignore_case`` is
+        true."""
         # FIXME: this will do the wrong thing for letters in some languages, eg
         # Greek, Turkish.  Correct, locale-dependent unicode case folding is
         # left as an exercise for a subclass.
         return value.upper()
 
     def value_is_empty(self, value):
+        """This method decides whether the value is 'empty', and hence the same
+        as not specified.  Called if ``ignore_empty_slots`` is true.  Checking
+        the value for emptiness happens *after* all other normalization.
+        """
         return (not value and isinstance(value, (basestring, types.NoneType)))
 
     def normalize_text(self, value):
+        """This hook is called by :py:meth:`DiffOptions.normalize_val` if the
+        value (after slot/item normalization) is a string, and is responsible
+        for calling the various ``normalize_``\ foo methods which act on text.
+        """
         if self.ignore_ws:
             value = self.normalize_whitespace(value)
         if self.ignore_case:
@@ -130,6 +187,10 @@ class DiffOptions(object):
         return value
 
     def normalize_val(self, value=_nothing):
+        """Hook which is called on every value before comparison, and should
+        return the scrubbed value or ``self._nothing`` to indicate that the
+        value is not set.
+        """
         if isinstance(value, basestring):
             value = self.normalize_text(value)
         if self.ignore_empty_slots and self.value_is_empty(value):
@@ -137,11 +198,44 @@ class DiffOptions(object):
         return value
 
     def normalize_slot(self, value=_nothing, prop=None):
+        """Hook which is called on every *record slot*; this is a way to
+        perform context-aware clean-ups.
+
+        args:
+
+            ``value=``\ *nothing*\ |\ *anything*
+                The value in the slot.  *nothing* can be detected in sub-class
+                methods as ``self._nothing``.
+
+            ``prop=``\ *PROPERTY*
+                The slot's :py:class:`normalize.property.Property` instance.
+                If this instance has a ``compare_as`` method, then that method
+                is called to perform a clean-up before the value is passed to
+                ``normalize_val``
+        """
         if value is not _nothing and hasattr(prop, "compare_as"):
             value = prop.compare_as(value)
         return self.normalize_val(value)
 
-    def normalize_item(self, value=_nothing, coll=None):
+    def normalize_item(self, value=_nothing, coll=None, index=None):
+        """Hook which is called on every *collection item*; this is a way to
+        perform context-aware clean-ups.
+
+        args:
+
+            ``value=``\ *nothing*\ |\ *anything*
+                The value in the collection slot.  *nothing* can be detected in
+                sub-class methods as ``self._nothing``.
+
+            ``coll=``\ *COLLECTION*
+                The parent :py:class:`normalize.coll.Collection` instance.  If
+                this instance has a ``compare_item_as`` method, then that
+                method is called to perform a clean-up before the value is
+                passed to ``normalize_val``
+
+            ``index=``\ *HASHABLE*
+                The key of the item in the collection.
+        """
         if value is not _nothing and hasattr(coll, "compare_item_as"):
             value = coll.compare_item_as(value)
         return self.normalize_val(value)
@@ -182,6 +276,7 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         )
 
         if propval_a is _nothing and propval_b is _nothing:
+            # don't yield NO_CHANGE for fields missing on both sides
             continue
         elif propval_a is _nothing and propval_b is not _nothing:
             yield DiffInfo(
@@ -452,7 +547,27 @@ COMPARABLE = tuple(COMPARE_FUNCTIONS)
 
 
 def diff_iter(base, other, options=None, **kwargs):
-    """Simplified interface to 'compare_*_iter'"""
+    """Compare a Record with another object (usually a record of the same
+    type), and yield differences as :py:class:`DiffInfo` instances.
+
+    args:
+        ``base=``\ *Record*
+            The 'base' object to compare against.  The enumeration in
+            :py:class:`DiffTypes` is relative to this object.
+
+        ``other=``\ *Record*\ \|\ *<object>*
+            The 'other' object to compare against.  If ``duck_type`` is not
+            true, then it must be of the same type as the ``base``.
+
+        ``**kwargs``
+            Specify comparison options: ``duck_type``, ``ignore_ws``, etc.  See
+            :py:meth:`normalize.diff.DiffOptions.__init__` for the complete
+            list.
+
+        ``options=``\ *DiffOptions instance*
+            Pass in a pre-constructed :py:class:`DiffOptions` instance.  This
+            may not be specified along with ``**kwargs``.
+    """
     if options is None:
         options = DiffOptions(**kwargs)
     elif len(kwargs):
@@ -471,9 +586,13 @@ def diff_iter(base, other, options=None, **kwargs):
 
 
 class Diff(ListCollection):
-    """Container for a list of differences"""
-    base_type_name = SafeProperty(isa=str, extraneous=True)
-    other_type_name = SafeProperty(isa=str, extraneous=True)
+    """Container for a list of differences."""
+    base_type_name = SafeProperty(isa=str, extraneous=True,
+                                  doc="Type name of the source object")
+    other_type_name = SafeProperty(
+        isa=str, extraneous=True,
+        doc="Type name of the compared object; normally the same, unless "
+            "the ``duck_type`` option was specified.")
     itemtype = DiffInfo
 
     def __str__(self):
@@ -489,7 +608,8 @@ class Diff(ListCollection):
 
 
 def diff(base, other, **kwargs):
-    """Eager version of diff_iter"""
+    """Eager version of :py:func:`diff_iter`, which takes all the same options
+    and returns a :py:class:`Diff` instance."""
     return Diff(diff_iter(base, other, **kwargs),
                 base_type_name=type(base).__name__,
                 other_type_name=type(other).__name__)

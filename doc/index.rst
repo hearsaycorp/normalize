@@ -44,7 +44,7 @@ It's safest to stick with importing directly from the ``normalize``
 top-level namespace.  Useful classes and functions not being here may
 be a bug!
 
-.. autosummary:: exports
+.. autosummary::
    :nosignatures:
 
    normalize.DictCollection
@@ -52,16 +52,11 @@ be a bug!
    normalize.FieldSelector
    normalize.FieldSelectorException
    normalize.from_json
-   normalize.JsonCollection
-   normalize.JsonCollectionProperty
    normalize.JsonListProperty
    normalize.JsonProperty
    normalize.JsonRecord
    normalize.JsonRecordList
-   normalize.LazyJsonProperty
    normalize.LazyProperty
-   normalize.LazySafeJsonProperty
-   normalize.LazySafeProperty
    normalize.ListCollection
    normalize.ListProperty
    normalize.make_property_type
@@ -71,8 +66,6 @@ be a bug!
    normalize.Record
    normalize.RecordList
    normalize.RecordMeta
-   normalize.SafeJsonListProperty
-   normalize.SafeJsonProperty
    normalize.SafeProperty
    normalize.to_json
 

@@ -1,6 +1,6 @@
 
-``normalize.record`` reference
-==============================
+Defining Records - ``normalize.record``
+=======================================
 
 .. automodule:: normalize.record
    :special-members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__
