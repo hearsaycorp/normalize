@@ -269,7 +269,7 @@ class JsonRecord(Record):
 
     def diff_iter(self, other, **kwargs):
         """Generator method which returns the differences from the invocant to
-        the argument.  This specializes :py:method:`Record.diff_iter` by
+        the argument.  This specializes :py:meth:`Record.diff_iter` by
         returning :py:class:`JsonDiffInfo` objects.
         """
         for diff in super(JsonRecord, self).diff_iter(other, **kwargs):
@@ -279,7 +279,7 @@ class JsonRecord(Record):
 
     def diff(self, other, **kwargs):
         """Compare an object with another.  This specializes
-        :py:method:`Record.diff` by returning a :py:class:`JsonDiff` object.
+        :py:meth:`Record.diff` by returning a :py:class:`JsonDiff` object.
         """
         return JsonDiff(
             base_type_name=type(self).__name__,
