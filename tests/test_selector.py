@@ -312,6 +312,12 @@ class TestStructableFieldSelector(unittest.TestCase):
         mfs = MultiFieldSelector(*selectors)
         emitted = set(tuple(x.selectors) for x in mfs)
         self.assertEqual(emitted, selectors)
+        self.assertRegexpMatches(
+            str(mfs), r'<MultiFieldSelector: (foo/\.\.\.,bar|bar,foo/\.\.\.)>'
+        )
+        mfs_dupe = eval(repr(mfs))
+        emitted = set(tuple(x.selectors) for x in mfs_dupe)
+        self.assertEqual(emitted, selectors)
 
         # if you add a higher level selector, then more specific paths
         # disappear from the MFS

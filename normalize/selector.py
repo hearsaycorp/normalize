@@ -414,8 +414,8 @@ class MultiFieldSelector(object):
 
     def __str__(self):
         return "<MultiFieldSelector: %s>" % (
-            ",".join(head if self.heads[tail] is all else "%s/..." % head for
-                     head, tail in self.heads.iteritems)
+            ",".join(head if tail is all else "%s/..." % head for
+                     head, tail in self.heads.iteritems())
         )
 
     def __iter__(self):
@@ -432,7 +432,7 @@ class MultiFieldSelector(object):
                     yield head_selector + x
 
     def __repr__(self):
-        return "MultiFieldSelector%r" % tuple(x.selectors for x in self)
+        return "MultiFieldSelector%r" % (tuple(x.selectors for x in self),)
 
     def _get(self, obj, tail):
         if tail is all:
