@@ -319,6 +319,17 @@ class TestStructableFieldSelector(unittest.TestCase):
         emitted = set(tuple(x.selectors) for x in mfs_dupe)
         self.assertEqual(emitted, selectors)
 
+        # test various dict-like functions
+        self.assertIn("foo", mfs)
+        self.assertIn("bar", mfs)
+        self.assertNotIn("baz", mfs)
+        self.assertIn('bar', mfs['foo'])
+        self.assertIn(0, mfs['foo']['bar'])
+        self.assertIn('hiss', mfs['foo']['bar'][0])
+        self.assertNotIn('miss', mfs['foo']['bar'][0])
+        self.assertIn('baz', mfs['bar'])
+        self.assertIn('baz', mfs['bar']['frop']['quux']['fred'])
+
         # if you add a higher level selector, then more specific paths
         # disappear from the MFS
         mfs2 = MultiFieldSelector(mfs, ["foo", "bar"])

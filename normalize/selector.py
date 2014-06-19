@@ -431,6 +431,15 @@ class MultiFieldSelector(object):
                 for x in tail:
                     yield head_selector + x
 
+    def __getitem__(self, index):
+        """Returns the MultiFieldSelector that applies to the specified
+        field/key/index"""
+        tail = self.heads[None] if self.has_none else self.heads[index]
+        return type(self)([None]) if tail == all else tail
+
+    def __contains__(self, index):
+        return self.has_none or index in self.heads
+
     def __repr__(self):
         return "MultiFieldSelector%r" % (tuple(x.selectors for x in self),)
 
