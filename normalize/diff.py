@@ -128,7 +128,7 @@ class DiffOptions(object):
                 defined on the 'base' type.  This can be used to check progress
                 when porting from other object systems to normalize.
 
-            ``compare_filter=``\ *MULTIFIELDSELECTOR*\ |\ *LIST_OF_LISTS*
+            ``compare_filter=``\ *MULTIFIELDSELECTOR*\ \|\ *LIST_OF_LISTS*
                 Restrict comparison to the fields described by the passed
                 :py:class:`MultiFieldSelector` (or list of FieldSelector
                 lists/objects)
@@ -213,7 +213,7 @@ class DiffOptions(object):
 
         args:
 
-            ``value=``\ *nothing*\ |\ *anything*
+            ``value=``\ *nothing*\ \|\ *anything*
                 The value in the slot.  *nothing* can be detected in sub-class
                 methods as ``self._nothing``.
 
@@ -233,7 +233,7 @@ class DiffOptions(object):
 
         args:
 
-            ``value=``\ *nothing*\ |\ *anything*
+            ``value=``\ *nothing*\ \|\ *anything*
                 The value in the collection slot.  *nothing* can be detected in
                 sub-class methods as ``self._nothing``.
 
