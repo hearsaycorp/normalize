@@ -23,7 +23,7 @@ project = u'normalize'
 copyright = u'2014, Sam Vilain, Hearsay Social'
 
 version = '0.4'
-release = '0.4.0'
+release = '0.4.1'
 
 exclude_patterns = ['sphinx-build']
 pygments_style = 'sphinx'
