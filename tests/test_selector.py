@@ -413,3 +413,41 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         mfs = MultiFieldSelector([None, "flintstone"], [None, "element"])
         self.assertEqual(mfs.get(all_the_things), all_the_things)
+
+    def test_multi_selector_in(self):
+        """Test FieldSelectors can be checked against MultiFieldSelectors"""
+        mfs = MultiFieldSelector(
+            ["rakkk", None, "awkkkkkk"],
+            ["rakkk", None, "zgruppp"],
+            ["cr_r_a_a_ck", "rip"],
+            ["cr_r_a_a_ck", "aiieee"],
+        )
+
+        self.assertIn("rakkk", mfs)
+        self.assertNotIn("ouch", mfs)
+
+        fs_in = tuple(
+            FieldSelector(x) for x in (
+                ("rakkk",),
+                ("rakkk", 0),
+                ("rakkk", 1, "zgruppp"),
+                ("rakkk", 2, "awkkkkkk", "bap"),
+                ("cr_r_a_a_ck",),
+                ("cr_r_a_a_ck", "rip"),
+                ("cr_r_a_a_ck", "rip", "spla_a_t"),
+            )
+        )
+
+        for fs in fs_in:
+            self.assertIn(fs, mfs)
+
+        fs_not_in = tuple(
+            FieldSelector(x) for x in (
+                ("ouch",),
+                ("cr_r_a_a_ck", "zlopp"),
+                ("rakkk", 1, "pow"),
+            )
+        )
+
+        for fs in fs_not_in:
+            self.assertNotIn(fs, mfs)

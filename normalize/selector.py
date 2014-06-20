@@ -434,10 +434,32 @@ class MultiFieldSelector(object):
     def __getitem__(self, index):
         """Returns the MultiFieldSelector that applies to the specified
         field/key/index"""
+        if isinstance(index, FieldSelector):
+            if self.has_none:
+                pass
+            elif len(index) == 1:
+                index = index[0]
+            else:
+                assert len(index) > 0, "FieldSelector cannot be empty"
+                return self.heads[index[0]][index[1:]]
+        if index is any:
+            assert len(self.heads) == 1, "can't compare filtered collection"
+            index = self.heads.keys()[0]
+
         tail = self.heads[None] if self.has_none else self.heads[index]
         return type(self)([None]) if tail == all else tail
 
     def __contains__(self, index):
+        if isinstance(index, FieldSelector):
+            if len(index) == 1:
+                index = index[0]
+            else:
+                assert len(index) > 0, "FieldSelector cannot be empty"
+                head_key = None if self.has_none else index[0]
+                return (
+                    head_key in self.heads and
+                    index[1:] in self[head_key]
+                )
         return self.has_none or index in self.heads
 
     def __repr__(self):
