@@ -16,7 +16,7 @@ def record_id(object_, type_=None, selector=None):
 
     key_vals = list()
     pk_cols = type_.primary_key
-    if selector and pk_cols and not all(pk_cols.name in selector):
+    if selector and pk_cols and not all(x.name in selector for x in pk_cols):
         pk_cols = None
 
     if not pk_cols and issubclass(
