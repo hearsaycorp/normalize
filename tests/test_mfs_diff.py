@@ -120,3 +120,18 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
                 "REMOVED .friends[3]", "ADDED .friends[3]",
             },
         )
+
+        # however, pass the filter into diff, and it gets it right!
+        self.assertDifferences(
+            person.diff_iter(filtered_person,
+                             compare_filter=strip_ids_mfs), {},
+        )
+
+        filtered_person.friends.append(get_person(1))
+        del filtered_person.friends.values[0]  # FIXME :)
+
+        self.assertDifferences(
+            person.diff_iter(filtered_person,
+                             compare_filter=strip_ids_mfs),
+            {"ADDED .friends[3]", "REMOVED .friends[0]"},
+        )
