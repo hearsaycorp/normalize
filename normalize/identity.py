@@ -3,7 +3,7 @@ import normalize.exc as exc
 import normalize.record
 
 
-def record_id(object_, type_=None):
+def record_id(object_, type_=None, selector=None):
     """Implementation of id() which is overridable and knows about record's
     primary_key property.  Returns if the two objects may be the "same";
     returns None for other types, meaning all bets about identity are off.
@@ -15,7 +15,11 @@ def record_id(object_, type_=None):
         type_ = type(object_)
 
     key_vals = list()
-    if not type_.primary_key and issubclass(
+    pk_cols = type_.primary_key
+    if selector and pk_cols and not all(x.name in selector for x in pk_cols):
+        pk_cols = None
+
+    if not pk_cols and issubclass(
         type_, normalize.coll.Collection
     ):
         # FIXME: unordered collections will rarely match each other
@@ -24,10 +28,20 @@ def record_id(object_, type_=None):
             type_.coll_to_tuples(object_)
         )
         return tuple(
+            record_id(v, type_.itemtype, selector[k]) for k, v in gen
+            if k in selector
+        ) if selector else tuple(
             record_id(v, type_.itemtype) for k, v in gen
         )
 
-    for prop in type_.primary_key or type_._sorted_properties:
+    if not pk_cols:
+        all_properties = type_._sorted_properties
+        if selector:
+            all_properties = tuple(
+                x for x in all_properties if x.name in selector
+            )
+
+    for prop in pk_cols or all_properties:
         val = getattr(object_, prop.name, None)
         if val is not None and prop.valuetype:
             value_type_list = (
@@ -38,7 +52,8 @@ def record_id(object_, type_=None):
             set_elements = 0
             for value_type in value_type_list:
                 if issubclass(value_type, normalize.record.Record):
-                    pk = record_id(val, value_type)
+                    pk = record_id(val, value_type,
+                                   selector[prop.name] if selector else None)
                     pk_elements = len([x for x in pk if x is not None])
                     if not val_pk or pk_elements > set_elements:
                         val_pk = pk

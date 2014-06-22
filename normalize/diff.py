@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 
 import collections
@@ -17,6 +16,7 @@ import normalize.exc as exc
 from normalize.record import Record
 from normalize.record import record_id
 from normalize.selector import FieldSelector
+from normalize.selector import MultiFieldSelector
 
 
 class DiffTypes(OrderedRichEnum):
@@ -91,7 +91,8 @@ class DiffOptions(object):
     def __init__(self, ignore_ws=True, ignore_case=False,
                  unicode_normal=True, unchanged=False,
                  ignore_empty_slots=False,
-                 duck_type=False, extraneous=False):
+                 duck_type=False, extraneous=False,
+                 compare_filter=None):
         """Create a new ``DiffOptions`` instance.
 
         args:
@@ -126,6 +127,11 @@ class DiffOptions(object):
                 checks that the 'other' object has all of the properties
                 defined on the 'base' type.  This can be used to check progress
                 when porting from other object systems to normalize.
+
+            ``compare_filter=``\ *MULTIFIELDSELECTOR*\ \|\ *LIST_OF_LISTS*
+                Restrict comparison to the fields described by the passed
+                :py:class:`MultiFieldSelector` (or list of FieldSelector
+                lists/objects)
         """
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
@@ -134,6 +140,10 @@ class DiffOptions(object):
         self.unchanged = unchanged
         self.duck_type = duck_type
         self.extraneous = extraneous
+        if isinstance(compare_filter, (MultiFieldSelector, types.NoneType)):
+            self.compare_filter = compare_filter
+        else:
+            self.compare_filter = MultiFieldSelector(*compare_filter)
 
     def items_equal(self, a, b):
         """Sub-class hook which performs value comparison.  Only called for
@@ -203,7 +213,7 @@ class DiffOptions(object):
 
         args:
 
-            ``value=``\ *nothing*\ |\ *anything*
+            ``value=``\ *nothing*\ \|\ *anything*
                 The value in the slot.  *nothing* can be detected in sub-class
                 methods as ``self._nothing``.
 
@@ -223,7 +233,7 @@ class DiffOptions(object):
 
         args:
 
-            ``value=``\ *nothing*\ |\ *anything*
+            ``value=``\ *nothing*\ \|\ *anything*
                 The value in the collection slot.  *nothing* can be detected in
                 sub-class methods as ``self._nothing``.
 
@@ -240,12 +250,25 @@ class DiffOptions(object):
             value = coll.compare_item_as(value)
         return self.normalize_val(value)
 
-    def record_id(self, record, type_=None):
+    def record_id(self, record, type_=None, selector=None):
         """Retrieve an object identifier from the given record; if it is an
         alien class, and the type is provided, then use duck typing to get the
         corresponding fields of the alien class."""
-        pk = getattr(record, "__pk__", None)
-        return pk if pk is not None else record_id(record, type_)
+        pk = None
+        if not selector:
+            pk = getattr(record, "__pk__", None)
+        return pk if pk is not None else record_id(record, type_, selector)
+
+    def id_args(self, type_, fs):
+        options = dict()
+        if self.duck_type:
+            options['type_'] = type_
+        if self.compare_filter:
+            options['selector'] = self.compare_filter[fs][any]
+        return options
+
+    def is_filtered(self, fs):
+        return self.compare_filter and fs not in self.compare_filter
 
 
 def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
@@ -263,6 +286,9 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
 
     properties = type(a).properties
     for propname in sorted(properties):
+
+        if options.is_filtered(fs_a + propname):
+            continue
 
         prop = properties[propname]
         if prop.extraneous and not options.extraneous:
@@ -356,7 +382,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
     values = dict()
     rev_keys = dict()
     compare_values = None
-    typeargs = (type(propval_a).itemtype,) if options.duck_type else ()
+    id_args = options.id_args(type(propval_a).itemtype, fs_a)
 
     for x in "a", "b":
         propval_x = propvals[x]
@@ -366,7 +392,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         seen = collections.Counter()
 
         for k, v in collection_generator(propval_x):
-            pk = options.record_id(v, *typeargs)
+            pk = options.record_id(v, **id_args)
             if compare_values is None:
                 compare_values = isinstance(pk, tuple)
             vals.add((pk, seen[pk]))

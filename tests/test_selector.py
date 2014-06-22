@@ -312,6 +312,23 @@ class TestStructableFieldSelector(unittest.TestCase):
         mfs = MultiFieldSelector(*selectors)
         emitted = set(tuple(x.selectors) for x in mfs)
         self.assertEqual(emitted, selectors)
+        self.assertRegexpMatches(
+            str(mfs), r'<MultiFieldSelector: (foo/\.\.\.,bar|bar,foo/\.\.\.)>'
+        )
+        mfs_dupe = eval(repr(mfs))
+        emitted = set(tuple(x.selectors) for x in mfs_dupe)
+        self.assertEqual(emitted, selectors)
+
+        # test various dict-like functions
+        self.assertIn("foo", mfs)
+        self.assertIn("bar", mfs)
+        self.assertNotIn("baz", mfs)
+        self.assertIn('bar', mfs['foo'])
+        self.assertIn(0, mfs['foo']['bar'])
+        self.assertIn('hiss', mfs['foo']['bar'][0])
+        self.assertNotIn('miss', mfs['foo']['bar'][0])
+        self.assertIn('baz', mfs['bar'])
+        self.assertIn('baz', mfs['bar']['frop']['quux']['fred'])
 
         # if you add a higher level selector, then more specific paths
         # disappear from the MFS
@@ -396,3 +413,41 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         mfs = MultiFieldSelector([None, "flintstone"], [None, "element"])
         self.assertEqual(mfs.get(all_the_things), all_the_things)
+
+    def test_multi_selector_in(self):
+        """Test FieldSelectors can be checked against MultiFieldSelectors"""
+        mfs = MultiFieldSelector(
+            ["rakkk", None, "awkkkkkk"],
+            ["rakkk", None, "zgruppp"],
+            ["cr_r_a_a_ck", "rip"],
+            ["cr_r_a_a_ck", "aiieee"],
+        )
+
+        self.assertIn("rakkk", mfs)
+        self.assertNotIn("ouch", mfs)
+
+        fs_in = tuple(
+            FieldSelector(x) for x in (
+                ("rakkk",),
+                ("rakkk", 0),
+                ("rakkk", 1, "zgruppp"),
+                ("rakkk", 2, "awkkkkkk", "bap"),
+                ("cr_r_a_a_ck",),
+                ("cr_r_a_a_ck", "rip"),
+                ("cr_r_a_a_ck", "rip", "spla_a_t"),
+            )
+        )
+
+        for fs in fs_in:
+            self.assertIn(fs, mfs)
+
+        fs_not_in = tuple(
+            FieldSelector(x) for x in (
+                ("ouch",),
+                ("cr_r_a_a_ck", "zlopp"),
+                ("rakkk", 1, "pow"),
+            )
+        )
+
+        for fs in fs_not_in:
+            self.assertNotIn(fs, mfs)
