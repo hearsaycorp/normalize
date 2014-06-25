@@ -254,10 +254,8 @@ class DiffOptions(object):
         """Retrieve an object identifier from the given record; if it is an
         alien class, and the type is provided, then use duck typing to get the
         corresponding fields of the alien class."""
-        pk = None
-        if not selector:
-            pk = getattr(record, "__pk__", None)
-        return pk if pk is not None else record_id(record, type_, selector)
+        pk = record_id(record, type_, selector, self.normalize_slot)
+        return pk
 
     def id_args(self, type_, fs):
         options = dict()
