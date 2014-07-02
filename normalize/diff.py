@@ -265,7 +265,9 @@ class DiffOptions(object):
             options['selector'] = self.compare_filter[fs][any]
         return options
 
-    def is_filtered(self, fs):
+    def is_filtered(self, prop, fs):
+        if not self.extraneous and prop.extraneous:
+            return True
         return self.compare_filter and fs not in self.compare_filter
 
 
@@ -285,11 +287,9 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
     properties = type(a).properties
     for propname in sorted(properties):
 
-        if options.is_filtered(fs_a + propname):
-            continue
-
         prop = properties[propname]
-        if prop.extraneous and not options.extraneous:
+
+        if options.is_filtered(prop, fs_a + propname):
             continue
 
         propval_a = options.normalize_slot(
