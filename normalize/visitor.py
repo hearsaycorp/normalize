@@ -91,11 +91,11 @@ class Visitor(object):
         if issubclass(value_type, Record):
             record_mapped = self.map_record(value, fs, value_type)
 
-        if record_mapped == self.StopVisiting or isinstance(
-            record_mapped, self.StopVisiting
-        ):
-            record_mapped = record_mapped.return_value
-            prune = True
+            if record_mapped == self.StopVisiting or isinstance(
+                record_mapped, self.StopVisiting
+            ):
+                record_mapped = record_mapped.return_value
+                prune = True
 
         if not prune and issubclass(value_type, Collection):
             coll_mapped = self.reduce_collection(
@@ -152,7 +152,7 @@ class Visitor(object):
             fs = fs + [prop.name]
             value_type = prop.valuetype or type(value)
             if issubclass(value_type, Record):
-                mapped = self.map(value, fs, prop.valuetype)
+                mapped = self.map(value, fs, value_type)
             else:
                 mapped = self.apply(value, fs, prop, record)
 
