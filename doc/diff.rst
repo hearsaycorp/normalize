@@ -18,6 +18,9 @@ result is passed recursively to itself to compare deeply.  The
 exception to this is the keyword argument ``options=``, which
 specifies a pre-constructed, perhaps derived ``DiffOptions`` instance.
 
+There are some examples of this in :ref:`intro-to-diff`, and more in
+the normalize test suite.
+
 Class reference
 ---------------
 

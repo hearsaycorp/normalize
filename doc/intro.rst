@@ -466,6 +466,8 @@ properties:
 This class can take multiple paths, and will return the intersection
 of all of the fields listed.
 
+.. _intro-to-diff:
+
 Comparing object structures
 ---------------------------
 

@@ -69,8 +69,24 @@ class DiffInfo(Record):
         required=True,
         doc="Enumeration describing the type of difference; a "
             ":py:class:`DiffType` value.")
-    base = SafeProperty(isa=FieldSelector, required=True)
-    other = SafeProperty(isa=FieldSelector, required=True)
+    base = SafeProperty(
+        isa=FieldSelector,
+        required=True,
+        doc="A FieldSelector object referring to the location within the "
+            "base object that the changed field was found.  If the "
+            "``diff_type`` is ``DiffTypes.ADDED``, then this will be the "
+            "location of the record the field was added in, not the "
+            "(non-existant) field itself.",
+    )
+    other = SafeProperty(
+        isa=FieldSelector,
+        required=True,
+        doc="A FieldSelector object referring to the location within the "
+            "'other' object that the changed field was found.  If the "
+            "``diff_type`` is ``DiffTypes.REMOVED``, then this will be "
+            "location of the record the field was removed from, not the "
+            "(non-existant) field itself.",
+    )
 
     def __str__(self):
         if self.base.path != self.other.path:
@@ -100,7 +116,7 @@ _nothing = _Nothing()
 class DiffOptions(object):
     """Optional data structure to pass diff options down.  Some functions are
     delegated to this object, allowing for further customization of operation,
-    using a sub-class API.
+    forming the *DiffOptions sub-class API*.
     """
     _nothing = _nothing
 

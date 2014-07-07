@@ -16,6 +16,11 @@ by selectors to be updated (see :py:meth:`FieldSelector.put`), perhaps
 even with auto-vivification of intermediate records and collection
 items (:py:meth:`FieldSelector.post`).
 
+Multple ``FieldSelector`` objects can be combined, to make a
+``MultiFieldSelector``.  This can be used to create a "filtered"
+object, and also can be passed to :py:func:`normalize.diff.diff` to
+compare only a selection of fields in a data structure.
+
 Class reference
 ---------------
 
