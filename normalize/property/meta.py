@@ -1,3 +1,19 @@
+#
+# This file is a part of the normalize python library
+#
+# normalize is free software: you can redistribute it and/or modify
+# it under the terms of the MIT License.
+#
+# normalize is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MIT License for more details.
+#
+# You should have received a copy of the MIT license along with
+# normalize.  If not, refer to the upstream repository at
+# http://github.com/hearsaycorp/normalize
+#
+
 from collections import defaultdict
 import inspect
 
