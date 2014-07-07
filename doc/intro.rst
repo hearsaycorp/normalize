@@ -676,13 +676,6 @@ constructor.  Instead of ``Property`` failing, it looked to see what
 property types it knew of which supported that constructor argument,
 and created one of those instead.
 
-Currently the precise mechanics of this Property sub-class
-auto-selection are a little fiddly, and require users to ensure that
-precise combinations of Property classes are available so that
-``normalize.property.meta.PropertyMeta.__new__()`` can find them.
-Future versions may automatically mix these property types together if
-they were not already found.
-
 Custom Visitor Classes
 ----------------------
 
