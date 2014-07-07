@@ -706,7 +706,10 @@ ignores all the ``json_*`` options that were passed to the
   ::
 
       >>> SimpleDumper().map(acent)
-      {'name': 'Alpha Centauri', 'components': [(0, {'hip_id': 71683, 'name': 'Alpha Centauri A'}), (1, {'hip_id': 71681, 'name': 'Alpha Centauri B'}), (2, {'hip_id': 70890, 'name': 'Alpha Centauri C'})]}
+      {'name': 'Alpha Centauri',
+             'components': [{'hip_id': 71683, 'name': 'Alpha Centauri A'},
+                            {'hip_id': 71681, 'name': 'Alpha Centauri B'},
+                            {'hip_id': 70890, 'name': 'Alpha Centauri C'}]}
       >>>
 
 I'd like to now proudly state that all of the visitor pattern

@@ -16,6 +16,7 @@
 import copy
 from datetime import datetime
 
+from normalize import RecordList
 from normalize.record import Record
 from normalize.property import Property
 from normalize.property import SafeProperty
@@ -131,4 +132,45 @@ wall_two = Wall(
             "wall_id": 123,
         }
     ]
+)
+
+
+def fix_id(val):
+    if isinstance(val, basestring) and val.upper().startswith("HIP"):
+        return int(val.upper().lstrip("HIP "))
+    else:
+        return int(val)
+
+
+class Star(Record):
+    hip_id = Property(isa=int, required=True,
+                      coerce=fix_id,
+                      check=lambda i: 0 < i < 120000)
+    name = Property(isa=str)
+    spectral_type = Property(isa=str)
+
+
+class Binary(Record):
+    name = Property(isa=str)
+    primary = Property(isa=Star)
+    secondary = Property(isa=Star)
+
+
+class StarList(RecordList):
+    itemtype = Star
+
+
+class StarSystem(Record):
+    name = Property(isa=str)
+    components = Property(isa=StarList)
+
+
+maia = Star(hip_id=17573, name="maia")
+acent = StarSystem(
+    name="Alpha Centauri",
+    components=(
+        {"name": "Alpha Centauri A", "hip_id": 71683},
+        {"name": "Alpha Centauri B", "hip_id": 71681},
+        {"name": "Alpha Centauri C", "hip_id": 70890},
+    ),
 )

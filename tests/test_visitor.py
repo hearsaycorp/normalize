@@ -21,7 +21,7 @@ import json
 import unittest
 
 from normalize.visitor import Visitor
-from testclasses import wall_one
+from testclasses import wall_one, acent
 
 
 JSON_CAN_DUMP = (basestring, int, long, dict, list)
@@ -45,3 +45,12 @@ class TestVisitor(unittest.TestCase):
         self.assertIsInstance(dumpable['posts'][0], dict)
         self.assertEqual(dumpable['posts'][0]['edited'], "2001-09-09T01:46:40")
         json.dumps(dumpable)
+
+    def test_intro_example(self):
+        self.assertEqual(
+            SimpleDumper().map(acent),
+            {'name': 'Alpha Centauri',
+             'components': [{'hip_id': 71683, 'name': 'Alpha Centauri A'},
+                            {'hip_id': 71681, 'name': 'Alpha Centauri B'},
+                            {'hip_id': 70890, 'name': 'Alpha Centauri C'}]},
+        )
