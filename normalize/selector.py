@@ -342,7 +342,7 @@ class FieldSelector(object):
 
                 If the argument is another FieldSelector (or a tuple/list), it
                 checks that the invocant's first selector expression components
-                match that passed.
+                match the components in the selector passed.
 
                 If the argument is a valid index/key or attribute name, it will
                 check that the first member in the expression is the same as
@@ -390,6 +390,13 @@ class MultiFieldSelector(object):
     def __init__(self, *others):
         """Returns a MultiFieldSelector based on combining the passed-in
         FieldSelector and MultiFieldSelector objects.
+
+        args:
+
+            ``*others=``\ *FieldSelector*\ \|\ *iterable*
+
+                Each argument is interpreted as either a FieldSelector, or a
+                FieldSelector constructor.
         """
         selectors = list()
         heads = collections.defaultdict(set)
@@ -429,6 +436,16 @@ class MultiFieldSelector(object):
             )
 
     def __str__(self):
+        """Stringification of a MultiFieldSelector shows just the keys in the
+        top level, and an indication of whether a sub-key is filtered.
+
+        ::
+
+           >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
+           >>> str(mfs)
+           '<MultiFieldSelector: a/...,c>'
+           >>>
+        """
         return "<MultiFieldSelector: %s>" % (
             ",".join(head if tail is all else "%s/..." % head for
                      head, tail in self.heads.iteritems())
@@ -436,7 +453,19 @@ class MultiFieldSelector(object):
 
     def __iter__(self):
         """Generator for all FieldSelectors this MultiFieldSelector
-        contains."""
+        implicitly contains.
+
+        ::
+
+            >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
+            >>> for x in mfs:
+            ...     print x
+            ...
+            <FieldSelector: .a.b>
+            <FieldSelector: .a.d>
+            <FieldSelector: .c>
+            >>>
+        """
         for head, tail in self.heads.iteritems():
             head_selector = self.FieldSelector((head,))
             if tail is all:
@@ -449,7 +478,15 @@ class MultiFieldSelector(object):
 
     def __getitem__(self, index):
         """Returns the MultiFieldSelector that applies to the specified
-        field/key/index"""
+        field/key/index.
+
+        ::
+
+            >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
+            >>> mfs["a"]
+            MultiFieldSelector(['b'], ['d'])
+            >>>
+        """
         if isinstance(index, FieldSelector):
             if self.has_none:
                 pass
@@ -466,6 +503,23 @@ class MultiFieldSelector(object):
         return type(self)([None]) if tail == all else tail
 
     def __contains__(self, index):
+        """Checks to see whether the given item matches the MultiFieldSelector.
+
+        ::
+
+            >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
+            >>> "a" in mfs
+            True
+            >>> "b" in mfs
+            False
+            >>> FieldSelector(["a"]) in mfs
+            True
+            >>> FieldSelector(["a", "d"]) in mfs
+            True
+            >>> FieldSelector(["a", "e"]) in mfs
+            False
+            >>>
+        """
         if isinstance(index, FieldSelector):
             if len(index) == 1:
                 index = index[0]
@@ -479,6 +533,16 @@ class MultiFieldSelector(object):
         return self.has_none or index in self.heads
 
     def __repr__(self):
+        """Implemented as per SPECIALMETHODS recommendation to return a full
+        python source to reconstruct:
+
+        ::
+
+            >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
+            >>> mfs
+            MultiFieldSelector(['a', 'b'], ['a', 'd'], ['c'])
+            >>>
+        """
         return "MultiFieldSelector%r" % (tuple(x.selectors for x in self),)
 
     def _get(self, obj, tail):

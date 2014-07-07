@@ -14,7 +14,7 @@ There are two main purposes of ``normalize.selector``:
 Other functions exist, such as the ability for the fields referred to
 by selectors to be updated (see :py:meth:`FieldSelector.put`), perhaps
 even with auto-vivification of intermediate records and collection
-items (:py:meth:`FieldSelector.put`).
+items (:py:meth:`FieldSelector.post`).
 
 Class reference
 ---------------
@@ -24,5 +24,5 @@ Class reference
    :special-members: __init__, __getnewargs__, __eq__, __ne__, __lt__, __str__, __repr__, __add__, __len__, __getitem__
 
 .. autoclass:: normalize.selector.MultiFieldSelector
-   :members: get, __init__, __iter__, __repr__
+   :members: get, __init__, __iter__, __repr__, __str__, __getitem__, __contains__
 

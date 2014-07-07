@@ -53,9 +53,8 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
     class constructor.  Any keys in the input dictionary which are not known
     are passed as a single ``unknown_json_keys`` value as a dict.
 
-    It is called by the JsonRecord constructor.  This function should generally
-    not be called directly, except as a part of a ``__init__`` or specialized
-    visitor application.
+    This function should generally not be called directly, except as a part of
+    a ``__init__`` or specialized visitor application.
     """
     if kwargs is None:
         kwargs = {}
