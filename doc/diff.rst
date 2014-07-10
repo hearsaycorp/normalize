@@ -45,3 +45,21 @@ Class reference
    :members: items_equal, normalize_whitespace, normalize_unf, normalize_case, value_is_empty, normalize_text, normalize_val, normalize_slot, normalize_item, record_id, __init__
    :special-members:
 
+Comparison functions
+--------------------
+
+These functions call each other recursively, depending on the value
+encountered during walking the base object.  They are documented here
+to give insight into the workings of more user-facing APIs such as
+``diff``, but should be considered to be implementation details.
+
+.. autofunction:: normalize.diff.compare_record_iter
+
+.. autofunction:: normalize.diff.compare_collection_iter
+
+.. autofunction:: normalize.diff.compare_list_iter
+
+.. autofunction:: normalize.diff.compare_dict_iter
+
+
+.. autofunction:: normalize.diff.collection_generator

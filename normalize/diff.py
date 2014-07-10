@@ -304,6 +304,32 @@ class DiffOptions(object):
 
 
 def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
+    """This generator function compares a record, slot by slot, and yields
+    differences found as ``DiffInfo`` objects.
+
+    args:
+
+        ``a=``\ *Record*
+            The base object
+
+        ``b=``\ *Record*\ \|\ *object*
+            The 'other' object, which must be the same type as ``a``, unless
+            ``options.duck_type`` is set.
+
+        ``fs_a=``\ *FieldSelector\*
+            The current diff context, prefixed to any returned ``base`` field
+            in yielded ``DiffInfo`` objects.  Defaults to an empty
+            FieldSelector.
+
+        ``fs_b=``\ *FieldSelector\*
+            The ``other`` object context.  This will differ from ``fs_a`` in
+            the case of collections, where a value has moved slots.  Defaults
+            to an empty FieldSelector.
+
+        ``options=``\ *DiffOptions\*
+            A constructed ``DiffOptions`` object; a default one is created if
+            not passed in.
+    """
     if not options:
         options = DiffOptions()
 
@@ -373,8 +399,12 @@ def collection_generator(collection):
     """This function returns a generator which iterates over the collection,
     similar to Collection.itertuples().  Collections are viewed by this module,
     regardless of type, as a mapping from an index to the value.  For sets, the
-    "index" is always None.  For dicts, it's a string, and for lists, it's an
-    int.
+    "index" is the value itself (ie, (V, V)).  For dicts, it's a string, and
+    for lists, it's an int.
+
+    In general, this function defers to ``itertuples`` and/or ``iteritems``
+    methods defined on the instances; however, when duck typing, this function
+    typically provides the generator.
     """
     if hasattr(collection, "itertuples"):
         return collection.itertuples()
@@ -392,7 +422,7 @@ def collection_generator(collection):
 
         def generator():
             for item in collection:
-                yield (None, item)
+                yield (item, item)
 
     return generator()
 
@@ -402,6 +432,18 @@ def collection_generator(collection):
 # it would probably also be more than 3 times as difficult to debug.
 def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                             options=None):
+    """Generator function to compare two collections, and yield differences.
+    This function does not currently report moved items in collections, and
+    uses the :py:meth:`DiffOptions.record_id` method to decide if objects are
+    to be considered the same, and differences within returned.
+
+    Arguments are the same as :py:func:`compare_record_iter`.
+
+    Note that ``diff_iter`` and ``compare_record_iter`` will call *both* this
+    function and ``compare_record_iter`` on ``RecordList`` types.  However, as
+    most ``RecordList`` types have no extra properties, no differences are
+    yielded by the ``compare_record_iter`` method.
+    """
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
@@ -476,6 +518,10 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
 def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                       options=None):
+    """Generator for comparing 'simple' lists when they are encountered.  This
+    does not currently recurse further.  Arguments are as per other
+    ``compare_``\ *X* functions.
+    """
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
@@ -535,6 +581,10 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
 def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                       options=None):
+    """Generator for comparing 'simple' dicts when they are encountered.  This
+    does not currently recurse further.  Arguments are as per other
+    ``compare_``\ *X* functions.
+    """
     if fs_a is None:
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())

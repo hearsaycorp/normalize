@@ -220,8 +220,7 @@ class DictCollection(KeyedCollection):
 
 class ListCollection(KeyedCollection):
     """An implementation of sequences which obey the `Record` property protocol
-    and the tuple collection protocol.  *Warning*: largely untested, patches
-    welcome.
+    and the tuple collection protocol.
     """
     suffix = "List"
     colltype = list

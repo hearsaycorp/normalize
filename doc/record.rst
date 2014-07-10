@@ -2,9 +2,6 @@
 Defining Records - ``normalize.record``
 =======================================
 
-.. automodule:: normalize.record
-   :special-members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__
-
 Record Flavors
 --------------
 
@@ -92,6 +89,13 @@ Here's a guide to choosing a class:
 
 That's a summary overview; apologies if I end up repeating myself over
 the rest of this page!
+
+``Record``
+^^^^^^^^^^
+
+.. autoclass:: normalize.record.Record
+   :members: __init__, __getnewargs__, __getstate__, __setstate__, __str__, __repr__, __eq__, __ne__, __pk__, __hash__
+
 
 Collection Types
 ^^^^^^^^^^^^^^^^

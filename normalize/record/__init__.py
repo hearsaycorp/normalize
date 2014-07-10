@@ -138,8 +138,9 @@ class Record(object):
     @property
     def __pk__(self):
         """This property returns the "primary key" for this object.  This is
-        used when comparing Collections via :py:mod:`normalize.diff`, for
-        stringification and for the ``id()`` built-in.
+        similar to what is used when comparing Collections via
+        :py:mod:`normalize.diff`, and is used for stringification and for the
+        ``id()`` built-in.
         """
         return record_id(self, type(self))
 
