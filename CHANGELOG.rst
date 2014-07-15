@@ -15,6 +15,9 @@ Normalize changelog and errata
 * ``extraneous`` diff option now customizable via the ``DiffOptions``
   sub-class API.
 
+* ``Diff``, ``JsonDiff`` and ``MultiFieldSelector`` now have more
+  useful default stringification.
+
 0.3.0, 30th May 2014
 --------------------
 * enhancement to diff to allow custom, per-field normalization of
