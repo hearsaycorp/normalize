@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 
 from datetime import datetime
+import re
 import unittest
 
 from normalize import FieldSelector
@@ -328,9 +329,24 @@ class TestStructableFieldSelector(unittest.TestCase):
         mfs = MultiFieldSelector(*selectors)
         emitted = set(tuple(x.selectors) for x in mfs)
         self.assertEqual(emitted, selectors)
-        self.assertRegexpMatches(
-            str(mfs), r'<MultiFieldSelector: (foo/\.\.\.,bar|bar,foo/\.\.\.)>'
+        # match, eg <MultiFieldSelector: (.foo.bar([0](.hiss|.boo)|[1])|.bar)>
+        #  but also <MultiFieldSelector: (.bar|.foo.bar([1]|[0](.boo|.hiss)))>
+        regexp = re.compile(
+            r"""<MultiFieldSelector:\s+\(
+                (?:
+                  (?: .foo.bar \(
+                      (?:
+                          (?: \[0\] \(
+                              (?:
+                                  (?: .hiss | .boo ) \|?
+                              ){2} \)
+                            | \[1\] ) \|?
+                      ){2} \)
+                    | .bar ) \|?
+                ){2}
+            \)>""", re.X,
         )
+        self.assertRegexpMatches(str(mfs), regexp)
         mfs_dupe = eval(repr(mfs))
         emitted = set(tuple(x.selectors) for x in mfs_dupe)
         self.assertEqual(emitted, selectors)

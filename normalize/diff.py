@@ -707,9 +707,41 @@ class Diff(ListCollection):
             self.base_type_name != self.other_type_name else
             self.base_type_name
         )
-        return "<Diff [{what}]; {n} item(s)>".format(
+        diffstate = collections.defaultdict(list)
+        for diff in self:
+            if diff.diff_type == DiffTypes.ADDED:
+                diffstate["+NEW"].append(diff.other)
+            elif diff.diff_type == DiffTypes.REMOVED:
+                diffstate["-OLD"].append(diff.base)
+            elif diff.diff_type == DiffTypes.MODIFIED:
+                if diff.base.path == diff.other.path:
+                    diffstate['<>X'].append(diff.base)
+                else:
+                    diffstate['<->OLD'].append(diff.base)
+                    diffstate['<+>NEW'].append(diff.other)
+            elif diff.diff_type == DiffTypes.NO_CHANGE:
+                diffstate['==X'].append(diff.base)
+
+        prefix_paths = []
+        for k, v in diffstate.items():
+            prefix_paths.append(
+                "{prefix}({paths})".format(
+                    prefix=k,
+                    paths=MultiFieldSelector(*v).path,
+                )
+            )
+
+        return "<Diff [{what}]; {n} diff(s){summary}>".format(
             n=len(self),
             what=what,
+            summary=(
+                ": " + "; ".join(
+                    "{prefix}({paths})".format(
+                        prefix=k,
+                        paths=MultiFieldSelector(*v).path,
+                    ) for (k, v) in diffstate.items()
+                ) if diffstate else ""
+            ),
         )
 
 

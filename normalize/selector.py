@@ -367,18 +367,26 @@ class FieldSelector(object):
             foo = FieldSelector(["foo", 2, "b ar", None, "baz"])
             print foo.path  # foo[2]['b ar'][*].baz
         """
-        selector_parts = []
-        for selector in self.selectors:
-            if isinstance(selector, (int, long)):
-                selector_parts.append("[%d]" % selector)
-            elif selector is None:
-                selector_parts.append("[*]")
-            elif re.search(r'[^a-z_]', selector):
-                selector_parts.append("['%s']" % selector.replace("'", "\\'"))
-            else:
-                selector_parts.append(".%s" % selector)
+        return "".join(_fmt_selector_path(x) for x in self.selectors)
 
-        return "".join(selector_parts)
+
+def _fmt_selector_path(selector):
+    if isinstance(selector, (int, long)):
+        return "[%d]" % selector
+    elif selector is None:
+        return "[*]"
+    elif re.search(r'[^a-z_]', selector):
+        return "['%s']" % selector.replace("'", "\\'")
+    else:
+        return ".%s" % selector
+
+
+def _fmt_mfs_path(head, tail):
+    return (
+        "%s%s" % (_fmt_selector_path(head), tail.path) if
+        isinstance(tail, MultiFieldSelector) else
+        _fmt_selector_path(head)
+    )
 
 
 class MultiFieldSelector(object):
@@ -443,13 +451,19 @@ class MultiFieldSelector(object):
 
            >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
            >>> str(mfs)
-           '<MultiFieldSelector: a/...,c>'
+           '<MultiFieldSelector: a.b|a.d|c>
            >>>
         """
-        return "<MultiFieldSelector: %s>" % (
-            ",".join(head if tail is all else "%s/..." % head for
-                     head, tail in self.heads.iteritems())
-        )
+        return "<MultiFieldSelector: %s>" % self.path
+
+    @property
+    def path(self):
+        if len(self.heads) == 1:
+            return _fmt_mfs_path(self.heads.keys()[0], self.heads.values()[0])
+        else:
+            return "(" + "|".join(
+                _fmt_mfs_path(k, v) for (k, v) in self.heads.items()
+            ) + ")"
 
     def __iter__(self):
         """Generator for all FieldSelectors this MultiFieldSelector
@@ -520,17 +534,19 @@ class MultiFieldSelector(object):
             False
             >>>
         """
-        if isinstance(index, FieldSelector):
-            if len(index) == 1:
-                index = index[0]
-            else:
-                assert len(index) > 0, "FieldSelector cannot be empty"
-                head_key = None if self.has_none else index[0]
-                return (
-                    head_key in self.heads and
-                    index[1:] in self[head_key]
-                )
-        return self.has_none or index in self.heads
+        if isinstance(index, (FieldSelector, collections.Sequence)) and \
+                len(index) == 1:
+            index = index[0]
+
+        if isinstance(index, (basestring, types.IntType, types.NoneType)):
+            return self.has_none or index in self.heads
+        else:
+            assert len(index) > 0, "FieldSelector cannot be empty"
+            head_key = None if self.has_none else index[0]
+            return (
+                head_key in self.heads and
+                index[1:] in self[head_key]
+            )
 
     def __repr__(self):
         """Implemented as per SPECIALMETHODS recommendation to return a full
