@@ -241,3 +241,21 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         self.assertDifferences(
             person.diff_iter(filtered_person, options=my_options), {},
         )
+
+        friendless = get_person(3)
+
+        self.assertDifferences(
+            person.diff_iter(friendless, options=my_options),
+            {"REMOVED .friends"},
+        )
+
+        ignore_friends = MyDiffOptions(
+            ignore_empty_slots=True,
+            compare_filter=MultiFieldSelector(
+                ["given_name"], ["family_name"], ["phone_number"],
+            )
+        )
+
+        self.assertDifferences(
+            person.diff_iter(friendless, options=ignore_friends), {},
+        )

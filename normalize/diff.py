@@ -333,7 +333,9 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
     if not options:
         options = DiffOptions()
 
-    if not options.duck_type and type(a) != type(b):
+    if not options.duck_type and type(a) != type(b) and not (
+        a is _nothing or b is _nothing
+    ):
         raise TypeError(
             "cannot compare %s with %s" % (type(a).__name__, type(b).__name__)
         )
@@ -342,7 +344,9 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         fs_a = FieldSelector(tuple())
         fs_b = FieldSelector(tuple())
 
-    properties = type(a).properties
+    properties = (
+        type(a).properties if a is not _nothing else type(b).properties
+    )
     for propname in sorted(properties):
 
         prop = properties[propname]
@@ -360,33 +364,69 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         if propval_a is _nothing and propval_b is _nothing:
             # don't yield NO_CHANGE for fields missing on both sides
             continue
-        elif propval_a is _nothing and propval_b is not _nothing:
-            yield DiffInfo(
-                diff_type=DiffTypes.ADDED,
-                base=fs_a + [propname],
-                other=fs_b + [propname],
+
+        one_side_nothing = (propval_a is _nothing) != (propval_b is _nothing)
+        types_match = type(propval_a) == type(propval_b)
+        comparable = (
+            isinstance(propval_a, COMPARABLE) or
+            isinstance(propval_b, COMPARABLE)
+        )
+        prop_fs_a = fs_a + [propname]
+        prop_fs_b = fs_b + [propname]
+
+        if comparable and (
+            types_match or options.duck_type or (
+                options.ignore_empty_slots and one_side_nothing
             )
-        elif propval_b is _nothing and propval_a is not _nothing:
-            yield DiffInfo(
-                diff_type=DiffTypes.REMOVED,
-                base=fs_a + [propname],
-                other=fs_b + [propname],
-            )
-        elif (options.duck_type or type(propval_a) == type(propval_b)) \
-                and isinstance(propval_a, COMPARABLE):
+        ):
+            if one_side_nothing:
+                diff_types_found = set()
+
             for type_union, func in COMPARE_FUNCTIONS.iteritems():
-                if isinstance(propval_a, type_union):
+                if isinstance(propval_a, type_union) or one_side_nothing and (
+                    isinstance(propval_b, type_union)
+                ):
                     for diff in func(
-                        propval_a, propval_b, fs_a + [propname],
-                        fs_b + [propname], options,
+                        propval_a, propval_b, prop_fs_a,
+                        prop_fs_b, options,
                     ):
-                        yield diff
+                        if one_side_nothing:
+                            if diff.diff_type != DiffTypes.NO_CHANGE:
+                                diff_types_found.add(diff.diff_type)
+                        else:
+                            yield diff
+
+            if one_side_nothing:
+                net_diff = None
+                if diff_types_found:
+                    assert(len(diff_types_found) == 1)
+                    net_diff = tuple(diff_types_found)[0]
+                elif options.unchanged:
+                    net_diff = DiffTypes.NO_CHANGE
+                if net_diff:
+                    yield DiffInfo(
+                        diff_type=net_diff,
+                        base=prop_fs_a,
+                        other=prop_fs_b,
+                    )
+
+        elif one_side_nothing:
+            yield DiffInfo(
+                diff_type=(
+                    DiffTypes.ADDED if propval_a is _nothing else
+                    DiffTypes.REMOVED
+                ),
+                base=fs_a + [propname],
+                other=fs_b + [propname],
+            )
+
         elif not options.items_equal(propval_a, propval_b):
             yield DiffInfo(
                 diff_type=DiffTypes.MODIFIED,
                 base=fs_a + [propname],
                 other=fs_b + [propname],
             )
+
         elif options.unchanged:
             yield DiffInfo(
                 diff_type=DiffTypes.NO_CHANGE,
@@ -406,7 +446,13 @@ def collection_generator(collection):
     methods defined on the instances; however, when duck typing, this function
     typically provides the generator.
     """
-    if hasattr(collection, "itertuples"):
+    if collection is _nothing:
+
+        def generator():
+            if False:
+                yield any
+
+    elif hasattr(collection, "itertuples"):
         return collection.itertuples()
     elif hasattr(collection, "iteritems"):
         return collection.iteritems()
@@ -454,7 +500,11 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
     values = dict()
     rev_keys = dict()
     compare_values = None
-    id_args = options.id_args(type(propval_a).itemtype, fs_a)
+    coll_type = (
+        type(propval_a) if propval_a is not _nothing else type(propval_b)
+    )
+    force_descent = (propval_a is _nothing) or (propval_b is _nothing)
+    id_args = options.id_args(coll_type.itemtype, fs_a)
 
     for x in "a", "b":
         propval_x = propvals[x]
@@ -466,6 +516,9 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         for k, v in collection_generator(propval_x):
             pk = options.record_id(v, **id_args)
             if compare_values is None:
+                # the primary key being a tuple is taken to imply that
+                # the value type is a Record, and hence descent is
+                # possible.
                 compare_values = isinstance(pk, tuple)
             vals.add((pk, seen[pk]))
             rev_key[(pk, seen[pk])] = k
@@ -473,6 +526,31 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
+
+    if compare_values or force_descent:
+        descendable = (removed | added) if force_descent else (
+            values['a'].intersection(values['b'])
+        )
+        for pk, seq in descendable:
+            if not force_descent or propval_a is not _nothing:
+                a_key = rev_keys['a'][pk, seq]
+                a_val = propval_a[a_key]
+            if not force_descent or propval_b is not _nothing:
+                b_key = rev_keys['b'][pk, seq]
+                b_val = propval_b[b_key]
+            if force_descent:
+                if propval_a is _nothing:
+                    a_key = b_key
+                    a_val = _nothing
+                else:
+                    b_key = a_key
+                    b_val = _nothing
+            selector_a = fs_a + a_key
+            selector_b = fs_b + b_key
+            for diff in compare_record_iter(
+                a_val, b_val, selector_a, selector_b, options,
+            ):
+                yield diff
 
     if options.unchanged:
         unchanged = values['a'] & values['b']
@@ -485,35 +563,24 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                 other=fs_b + [b_key],
             )
 
-    for pk, seq in removed:
-        a_key = rev_keys['a'][pk, seq]
-        selector = fs_a + [a_key]
-        yield DiffInfo(
-            diff_type=DiffTypes.REMOVED,
-            base=selector,
-            other=fs_b,
-        )
-
-    for pk, seq in added:
-        b_key = rev_keys['b'][pk, seq]
-        selector = fs_b + [b_key]
-        yield DiffInfo(
-            diff_type=DiffTypes.ADDED,
-            base=fs_a,
-            other=selector,
-        )
-
-    if compare_values:
-        for pk, seq in values['a'].intersection(values['b']):
+    if not force_descent:
+        for pk, seq in removed:
             a_key = rev_keys['a'][pk, seq]
+            selector = fs_a + [a_key]
+            yield DiffInfo(
+                diff_type=DiffTypes.REMOVED,
+                base=selector,
+                other=fs_b,
+            )
+
+        for pk, seq in added:
             b_key = rev_keys['b'][pk, seq]
-            selector_a = fs_a + a_key
-            selector_b = fs_b + b_key
-            for diff in compare_record_iter(
-                propval_a[a_key], propval_b[b_key],
-                selector_a, selector_b, options,
-            ):
-                yield diff
+            selector = fs_b + [b_key]
+            yield DiffInfo(
+                diff_type=DiffTypes.ADDED,
+                base=fs_a,
+                other=selector,
+            )
 
 
 def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,

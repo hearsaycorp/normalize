@@ -276,6 +276,35 @@ class TestRecordComparison(unittest.TestCase):
             expected_a_to_b
         )
 
+    def test_empty_slots_empty_records(self):
+
+        class Nullable(Record):
+            data = Property()
+
+        class Container(Record):
+            name = Property()
+            things = ListProperty(of=Nullable)
+
+        container_a = Container(name="", things=[Nullable(), Nullable()])
+        container_b = Container()
+
+        self.assertDifferences(
+            compare_record_iter(container_a, container_b),
+            {"REMOVED .name", "REMOVED .things"},
+        )
+
+        self.assertDifferences(
+            compare_record_iter(container_a, container_b,
+                                options=DiffOptions(ignore_empty_slots=True)),
+            {},
+        )
+
+        self.assertDifferences(
+            compare_record_iter(container_b, container_a,
+                                options=DiffOptions(ignore_empty_slots=True)),
+            {},
+        )
+
     def test_complex_objects(self):
         """Test that all the pieces work together"""
         expected_differences = (

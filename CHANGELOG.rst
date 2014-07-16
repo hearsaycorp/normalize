@@ -18,6 +18,11 @@ Normalize changelog and errata
 * ``Diff``, ``JsonDiff`` and ``MultiFieldSelector`` now have more
   useful default stringification.
 
+* The 'ignore_empty_slots' diff option is now capable of ignoring empty
+  records as well as None-y values.  This even works if the records
+  are not actually None but all of the fields that have values are
+  filtered by the DiffOptions compare_filter parameter.
+
 0.3.0, 30th May 2014
 --------------------
 * enhancement to diff to allow custom, per-field normalization of
