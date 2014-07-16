@@ -23,6 +23,7 @@ import unittest
 from normalize.coll import Collection
 from normalize.diff import *
 from normalize.record import Record
+from normalize.record.json import JsonRecord
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
@@ -303,6 +304,70 @@ class TestRecordComparison(unittest.TestCase):
             compare_record_iter(container_b, container_a,
                                 options=DiffOptions(ignore_empty_slots=True)),
             {},
+        )
+
+    def test_compare_typical_json_nonsense(self):
+
+        class Document(JsonRecord):
+            pass
+
+        foo = Document(
+            {
+                "shrubbery": "bacon",
+                "spam": ["pate", "aubergine", {"herring": "spam"}],
+                "tomato": "tomato",
+            }
+        )
+
+        bar = Document(
+            {
+                "shrubbery": "toast",
+                "spam": ["toast", "lobster", {"herring": "pate"}],
+                "shallots": ["pate", "aubergine", {"herring": "spam"}],
+                "tomato": "blancmange",
+            }
+        )
+
+        all_diffs = {
+            'ADDED .unknown_json_keys.shrubbery',
+            'ADDED .unknown_json_keys.spam',
+            'ADDED .unknown_json_keys.tomato',
+            'REMOVED .unknown_json_keys.shrubbery',
+            'REMOVED .unknown_json_keys.tomato',
+        }
+
+        # no differences, because 'unknown_json_keys' is extraneous
+        self.assertDifferences(compare_record_iter(foo, Document()), {})
+        self.assertDifferences(compare_record_iter(foo, bar), {})
+
+        # check all keys and we see differences
+        self.assertDifferences(
+            compare_record_iter(
+                foo, bar, options=DiffOptions(extraneous=True)
+            ), all_diffs)
+        self.assertDifferences(
+            compare_record_iter(
+                foo, Document(), options=DiffOptions(extraneous=True)
+            ), {"REMOVED .unknown_json_keys"})
+
+        # 'ignore empty slots' should not affect this
+        IES = DiffOptions(extraneous=True, ignore_empty_slots=True)
+        self.assertDifferences(
+            compare_record_iter(foo, bar, options=IES),
+            all_diffs,
+        )
+        self.assertDifferences(
+            compare_record_iter(foo, Document(), options=IES),
+            {"REMOVED .unknown_json_keys"},
+        )
+
+        # this shows up as 'spam' being removed, because it got renamed and
+        # the diff in general disregards keys when comparing.
+        all_diffs.add("REMOVED .unknown_json_keys.spam")
+        del bar.unknown_json_keys['shallots']
+        self.assertDifferences(
+            compare_record_iter(foo, bar, options=IES),
+            all_diffs,
         )
 
     def test_complex_objects(self):

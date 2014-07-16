@@ -602,16 +602,16 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         vals = values[x] = set()
         rev_key = indices[x] = dict()
         seen = collections.Counter()
-        i = 0
-        for v in propval_x:
+        for i, v in collection_generator(propval_x):
             v = options.normalize_item(
                 v, propval_a if options.duck_type else propval_x
             )
+            if not v.__hash__:
+                v = repr(v)
             if v is not _nothing or not options.ignore_empty_slots:
                 vals.add((v, seen[v]))
                 rev_key[(v, seen[v])] = i
                 seen[v] += 1
-            i += 1
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
@@ -665,10 +665,12 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         vals = values[x] = set()
         rev_key = rev_keys[x] = dict()
         seen = collections.Counter()
-        for k, v in propval_x.iteritems():
+        for k, v in collection_generator(propval_x):
             v = options.normalize_item(
                 v, propval_a if options.duck_type else propval_x
             )
+            if not v.__hash__:
+                v = repr(v)
             if v is not _nothing or not options.ignore_empty_slots:
                 vals.add((v, seen[v]))
                 rev_key[(v, seen[v])] = k
