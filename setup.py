@@ -17,4 +17,5 @@ structures, and refer to fields within a structure using a 'selector'.
     requires=['richenum (>=1.0.0)'],
     test_suite="run_tests",
     version='0.4.6',
+    url="http://hearsaycorp.github.io/normalize",
 )
