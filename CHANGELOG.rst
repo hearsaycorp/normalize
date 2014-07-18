@@ -2,8 +2,8 @@
 Normalize changelog and errata
 ==============================
 
-0.4.x Series, 19th June - 2nd July 2014
----------------------------------------
+0.4.x Series, 19th June - 18th July 2014
+----------------------------------------
 * added support for comparing filtered objects; ``__pk__()`` object
   method no longer honored.  See ``tests/test_mfs_diff.py`` for
   examples
