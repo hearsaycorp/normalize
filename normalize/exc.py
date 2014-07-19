@@ -108,6 +108,13 @@ class AmbiguousConstruction(UsageException):
     message = "only init_dict or kwargs may be specified"
 
 
+class CoerceError(CoercionError):
+    message = (
+        "coerce to {valuetype} for {prop} failed with value {value}: "
+        "{func} raised: {exc}"
+    )
+
+
 class CoerceWithoutType(PropertyDefinitionError):
     message = (
         "In order to coerce types, the intended type must be known; "

@@ -153,7 +153,24 @@ class Property(object):
         if value is None and self.required and not self.valuetype:
             raise ValueError("%s is required" % self.fullname)
         if self.valuetype and not isinstance(value, self.valuetype):
-            new_value = self.coerce(value)
+            try:
+                new_value = self.coerce(value)
+            except Exception as e:
+                raise exc.CoerceError(
+                    prop=self.fullname,
+                    value=repr(value),
+                    exc=e,
+                    func=(
+                        "%s constructor" % self.coerce.__name__ if
+                        isinstance(self.coerce, type) else self.coerce
+                    ),
+                    valuetype=(
+                        "(" + ", ".join(
+                            x.__name__ for x in self.valuetype
+                        ) + ")" if isinstance(self.valuetype, tuple) else
+                        self.valuetype.__name__
+                    ),
+                )
             if not isinstance(new_value, self.valuetype):
                 if _none_ok and new_value is None and not self.required:
                     # allow coerce functions to return 'None' to silently

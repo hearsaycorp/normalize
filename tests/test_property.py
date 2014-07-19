@@ -434,7 +434,7 @@ class TestProperties(unittest2.TestCase):
             mixer.num = "-4"
 
         mixer.what = -5
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             mixer.hmm
         with self.assertRaises(ValueError):
             mixer.huh
