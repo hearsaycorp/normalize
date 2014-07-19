@@ -103,6 +103,10 @@ class UsageException(StringFormatException):
     pass
 
 
+class VisitorException(StringFormatException):
+    pass
+
+
 # concrete exception types
 class AmbiguousConstruction(UsageException):
     message = "only init_dict or kwargs may be specified"
@@ -285,10 +289,19 @@ class ValueCoercionError(CoercionError):
     )
 
 
-class VisitorTooSimple(SubclassError):
+class VisitorOptionsException(UsageException):
     message = (
-        "{visitor} mapped over a RecordList ({value_type_name}) with "
-        "properties but had no reduce method defined; override "
-        "mroreduce_complex in your visitor (or map the properties to "
-        "nothing)"
+        "pass options= or Visitor.Options constructor arguments; not both"
+    )
+
+
+class VisitorPropError(VisitorException):
+    message = (
+        "failed to get '{prop_name}' from {value} at {fs}"
+    )
+
+
+class VisitorUnpackError(VisitorException, TypeError):
+    message = (
+        "Can't unpack collection at {fs}; expected {colltype}, got {value}"
     )

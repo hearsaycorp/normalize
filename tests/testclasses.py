@@ -21,6 +21,7 @@ from normalize.record import Record
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
+from normalize.property.types import DatetimeProperty
 
 
 class LegalPerson(Record):
@@ -42,7 +43,7 @@ class Circle(Record):
 
 class Comment(Record):
     content = Property()
-    edited = SafeProperty(required=True, isa=datetime)
+    edited = DatetimeProperty(required=True)
     id = Property(required=True, isa=int)
     primary_key = [id]
     poster = Property(isa=Person)
@@ -51,7 +52,7 @@ class Comment(Record):
 class Post(Record):
     comments = ListProperty(of=Comment)
     content = Property()
-    edited = SafeProperty(required=True, isa=datetime)
+    edited = DatetimeProperty(required=True)
     post_id = Property(required=True, isa=int)
     wall_id = Property(required=True, isa=int)
     primary_key = [wall_id, post_id]
@@ -158,6 +159,10 @@ class Binary(Record):
 
 class StarList(RecordList):
     itemtype = Star
+
+
+class NamedStarList(StarList):
+    name = Property()
 
 
 class StarSystem(Record):

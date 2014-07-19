@@ -2,6 +2,21 @@
 Normalize changelog and errata
 ==============================
 
+0.5.0, Xth July 2014 where X>18
+-------------------------------
+* normalize.visitor overhaul.  Visitor got split into a sub-class API,
+  VisitorPattern, which is all class methods, and Visitor, the instance
+  which travels with the operation to provide context.  Hugely backwards
+  incompatible, but the old API was undocumented and sucked anyway.
+
+* errors thrown from property coerce functions are now wrapped in
+  another exception to supply the extra context.  For instance, the
+  example in the intro will now print an error like:
+
+      CoerceError: coerce to datetime for Comment.edited failed with
+                   value '2001-09-09T01:47:22': datetime constructor
+                   raised: an integer is required
+
 0.4.x Series, 19th June - 18th July 2014
 ----------------------------------------
 * added support for comparing filtered objects; ``__pk__()`` object
