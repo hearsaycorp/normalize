@@ -174,19 +174,6 @@ class Record(object):
         from normalize.diff import diff
         return diff(self, other, **kwargs)
 
-    def walk(self, fs=None):
-        if fs is None:
-            from normalize.selector import FieldSelector
-            fs = FieldSelector([])
-        for name, prop in type(self).properties.iteritems():
-            if hasattr(self, name):
-                val = getattr(self, name)
-                prop_fs = fs + [name]
-                yield (prop_fs, prop, self, val)
-                if isinstance(val, Record):
-                    for x in val.walk(prop_fs):
-                        yield x
-
 
 class OhPickle(object):
     """Sentinel type for Un-Pickling.  ``pickle`` does not allow a
