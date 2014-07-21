@@ -338,6 +338,14 @@ class LazySafeProperty(SafeProperty, LazyProperty):
         return super(LazySafeProperty, self).__get__(obj, type_)
 
 
+class DiffasProperty(Property):
+    __trait__ = "diffas"
+
+    def __init__(self, compare_as=None, **kwargs):
+        super(DiffasProperty, self).__init__(**kwargs)
+        self.compare_as = compare_as
+
+
 trait_num = 0
 
 

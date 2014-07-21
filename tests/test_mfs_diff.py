@@ -63,14 +63,34 @@ PEOPLE = (
     ("Ruben", "Haynes", date(1975, 4, 8), '(808) 643-7409'),
 )
 
+# simplified NANP regex
+phone = re.compile(
+    r"^(?:\+?1\s*(?:[.-]\s*)?)?(\d{3})\s*"
+    r"(?:[.-]\s*)?(\d{3})\s*(?:[.-]\s*)?"
+    r"(\d{4})"
+)
+
+
+def normalize_phone(phoney):
+    m = re.match(phone, phoney)
+    if m:
+        return "(%s) %s-%s" % m.groups()
+    else:
+        return phoney
+
 
 def get_person(i, *friends, **kwargs):
     x = PEOPLE[i]
     kwargs = dict(kwargs)
     if friends:
         kwargs["friends"] = list(get_person(x) for x in friends)
+    if 'cls' in kwargs:
+        cls = kwargs['cls']
+        del kwargs['cls']
+    else:
+        cls = PersonWithFriends
 
-    return PersonWithFriends(
+    return cls(
         given_name=x[0],
         family_name=x[1],
         date_of_birth=x[2],
@@ -198,26 +218,10 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         )
         filtered_person = strip_ids_mfs.get(person)
 
-        # simplified NANP regex
-        phone = re.compile(
-            r"^(?:\+?1\s*(?:[.-]\s*)?)?(\d{3})\s*"
-            r"(?:[.-]\s*)?(\d{3})\s*(?:[.-]\s*)?"
-            r"(\d{4})"
-        )
-
         class MyDiffOptions(DiffOptions):
-            def normalize_phone(self, phoney):
-                m = re.match(phone, phoney)
-                if m:
-                    return "(%s) %s-%s" % m.groups()
-                else:
-                    return phoney
-
             def normalize_slot(self, val, prop):
                 if "phone" in prop.name and isinstance(val, basestring):
-                    newval = self.normalize_phone(val)
-                    if val != newval:
-                        val = newval
+                    val = normalize_phone(val)
                 return super(MyDiffOptions, self).normalize_slot(val, prop)
 
         person.phone_number = '5309225668'
@@ -259,3 +263,15 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         self.assertDifferences(
             person.diff_iter(friendless, options=ignore_friends), {},
         )
+
+    def test_compare_as(self):
+
+        class PersonEasilyComparable(SurrogatePerson):
+            primary_key = ['ssn']
+            phone_number = StringProperty(compare_as=normalize_phone)
+
+        base = get_person(4, cls=PersonEasilyComparable)
+        other = get_person(4, cls=PersonEasilyComparable)
+        other.phone_number = '+16146082940'
+
+        self.assertDifferences(base.diff_iter(other), {})
