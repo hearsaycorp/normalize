@@ -96,7 +96,7 @@ UnicodeProperty = make_property_type(
 def coerce_datetime(not_a_datetime):
     if isinstance(not_a_datetime, date):
         tt = not_a_datetime.timetuple()
-        return datetime(tt[0:6])
+        return datetime(*(tt[0:6]))
     elif isinstance(not_a_datetime, basestring):
         return parse_datetime(not_a_datetime)
     else:
@@ -118,8 +118,11 @@ DateProperty = make_property_type(
     "DateProperty",
     trait_name="date", isa=date, coerce=coerce_date,
     attrs={
-        "__doc__": "A property which must holds a python date; coercion "
-                   "from string is provided via ``dateutil.parse``",
+        "__doc__": "A property which must hold a python date (or "
+                   "datetime); coercion from string is provided via "
+                   "``dateutil.parse``.  Note that datetime is a date "
+                   "subclass, and supports all its methods, so a "
+                   "DateProperty might contain a datetime instance.",
     },
 )
 DatetimeProperty = make_property_type(
