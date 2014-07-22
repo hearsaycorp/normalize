@@ -13,7 +13,7 @@ objects to see if they have changed in meaningful ways.
 """,
     name='normalize',
     packages=find_packages(),
-    requires=['richenum (>=1.0.0)'],
+    install_requires=('richenum>=1.0.0',),
     test_suite="run_tests",
     version='0.4.6',
     url="http://hearsaycorp.github.io/normalize",
