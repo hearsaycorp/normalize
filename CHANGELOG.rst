@@ -9,15 +9,7 @@ Normalize changelog and errata
   which travels with the operation to provide context.  Hugely backwards
   incompatible, but the old API was undocumented and sucked anyway.
 
-* errors thrown from property coerce functions are now wrapped in
-  another exception to supply the extra context.  For instance, the
-  example in the intro will now print an error like:
-
-      CoerceError: coerce to datetime for Comment.edited failed with
-                   value '2001-09-09T01:47:22': datetime constructor
-                   raised: an integer is required
-
-0.4.x Series, 19th June - 18th July 2014
+0.4.x Series, 19th June - 23rd July 2014
 ----------------------------------------
 * added support for comparing filtered objects; ``__pk__()`` object
   method no longer honored.  See ``tests/test_mfs_diff.py`` for
@@ -37,6 +29,18 @@ Normalize changelog and errata
   records as well as None-y values.  This even works if the records
   are not actually None but all of the fields that have values are
   filtered by the DiffOptions compare_filter parameter.
+
+* added Diffas property trait, so you can easily add
+  'compare_as=lambda x: scrub(x)' for field-specific clean-ups specific
+  to comparison.
+
+* errors thrown from property coerce functions are now wrapped in
+  another exception to supply the extra context.  For instance, the
+  example in the intro will now print an error like:
+
+      CoerceError: coerce to datetime for Comment.edited failed with
+                   value '2001-09-09T01:47:22': datetime constructor
+                   raised: an integer is required
 
 0.3.0, 30th May 2014
 --------------------
