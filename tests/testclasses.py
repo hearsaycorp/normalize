@@ -15,6 +15,8 @@
 
 import copy
 from datetime import datetime
+from time import time
+import types
 
 from normalize import RecordList
 from normalize.record import Record
@@ -179,3 +181,10 @@ acent = StarSystem(
         {"name": "Alpha Centauri C", "hip_id": 70890},
     ),
 )
+
+
+# for those APIs that use 'None' to signify meaning.
+class PullRequest(Record):
+    number = Property()
+    created_at = DatetimeProperty(default=lambda: datetime.now())
+    merged_at = DatetimeProperty(isa=(datetime, types.NoneType))

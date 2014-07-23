@@ -16,8 +16,6 @@
 
 from __future__ import absolute_import
 
-import types
-
 from normalize.coll import Collection
 import normalize.exc as exc
 from normalize.record import Record
@@ -366,6 +364,10 @@ class VisitorPattern(object):
         Reverses the transform performed in
         :py:meth:`normalize.visitor.VisitorPattern.reduce` for collections with
         properties.
+
+        If you pass tuples to ``isa`` of your Properties, then you might need
+        to override this function and throw ``TypeError`` if the passed
+        ``value_type`` is not appropriate for ``value``.
         """
         values = value
         is_coll = issubclass(value_type, Collection)
@@ -418,6 +420,8 @@ class VisitorPattern(object):
         framework, an avro schema definition, etc.
 
         X can be a type or an instance.
+
+        This API should be considered **experimental**
         """
         if isinstance(X, type):
             value = None
@@ -475,10 +479,10 @@ class VisitorPattern(object):
     @classmethod
     def itemtypes(cls, mapped_types, coll_type, visitor):
         """Like :py:meth:`normalize.visitor.VisitorPattern.aggregate`, but
-        returns just a list of the converted types.  This will normally only
-        get called with a single type.
+        returns .  This will normally only get called with a single type.
         """
-        return list(v for k, v in mapped_types)
+        rv = list(v for k, v in mapped_types)
+        return rv[0] if len(rv) == 1 else rv
 
     @classmethod
     def typeinfo(cls, propinfo, type_parameters, value_type, visitor):
@@ -582,7 +586,7 @@ class VisitorPattern(object):
                 )
 
             if visitor.apply_empty_slots or not isinstance(
-                value, (KeyError, AttributeError, types.NoneType)
+                value, (KeyError, AttributeError),
             ):
                 mapped = cls.map_prop(rv, value, prop)
                 if mapped is None and rv.ignore_none:
@@ -633,26 +637,43 @@ class VisitorPattern(object):
         #
         # this code has the same problem that record_id does; that is, it
         # doesn't know which of the type union the value is.
+        #
+        # the solution this function uses is to try all of them, until one of
+        # them returns something logically true.  Handlers (ie, unpack/grok)
+        # can also protest by raising TypeError, and the next one will be
+        # tried.
         record_types = []
         matching_record_types = []
 
         for value_type in type_tuple:
             if issubclass(value_type, Record):
                 record_types.append(value_type)
-            if isinstance(value, value_type):
-                matching_record_types.append(value_type)
+                # XXX - this test here should probably be a per-visitor
+                # hook, as it only really applies to 'visit', not 'grok'
+                if isinstance(value, value_type):
+                    matching_record_types.append(value_type)
 
         mapped = None
         if matching_record_types:
             for value_type in matching_record_types:
-                mapped = cls.map(visitor, value, value_type)
-                if mapped:
-                    break
+                try:
+                    mapped = cls.map(visitor, value, value_type)
+                except TypeError:
+                    pass
+                else:
+                    if mapped:
+                        break
         else:
             for value_type in record_types:
-                mapped = cls.map(visitor, value, value_type)
-                if mapped:
-                    break
+                try:
+                    mapped = cls.map(visitor, value, value_type)
+                except TypeError:
+                    pass
+                else:
+                    # this could also be the wrong thing when mapping
+                    # over types.
+                    if mapped:
+                        break
 
             if not mapped:
                 mapped = visitor.apply(value, prop, visitor)

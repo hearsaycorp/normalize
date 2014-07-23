@@ -16,20 +16,25 @@
 
 from __future__ import absolute_import
 
+from datetime import date
 from datetime import datetime
 import json
+from time import time
+import types
 import unittest
 
+from normalize.property.types import DateProperty
 from normalize.visitor import VisitorPattern
 from testclasses import acent
 from testclasses import NamedStarList
+from testclasses import PullRequest
 from testclasses import StarList
 from testclasses import StarSystem
 from testclasses import Wall
 from testclasses import wall_one
 
 
-JSON_CAN_DUMP = (basestring, int, long, dict, list)
+JSON_CAN_DUMP = (basestring, int, long, dict, list, types.NoneType)
 
 
 class SimpleDumper(VisitorPattern):
@@ -45,7 +50,16 @@ class SimpleDumper(VisitorPattern):
         return dumpable
 
 
-class TestVisitor(unittest.TestCase):
+class AssertDiffTest(unittest.TestCase):
+    def assertDiffs(self, a, b, expected, **kwargs):
+        differences = set(str(x) for x in a.diff(b, **kwargs))
+        self.assertEqual(
+            differences,
+            set("<DiffInfo: %s>" % x for x in expected)
+        )
+
+
+class TestVisitor(AssertDiffTest):
     def setUp(self):
         self.acent_json_data = {
             'name': 'Alpha Centauri',
@@ -57,13 +71,6 @@ class TestVisitor(unittest.TestCase):
             'name': 'Alpha Centauri',
             'values': self.acent_json_data['components']
         }
-
-    def assertDiffs(self, a, b, expected, **kwargs):
-        differences = set(str(x) for x in a.diff(b, **kwargs))
-        self.assertEqual(
-            differences,
-            set("<DiffInfo: %s>" % x for x in expected)
-        )
 
     def test_simple_dumper(self):
         dumpable = SimpleDumper.visit(wall_one)
@@ -99,6 +106,46 @@ class TestVisitor(unittest.TestCase):
         )
 
     def test_dump_types(self):
-        # for now, don't test anything other than it doesn't throw an exception.
         typeinfo = SimpleDumper.reflect(NamedStarList)
+        self.assertEqual(typeinfo['itemtype']['properties']['hip_id']['type'], 'int')
         typeinfo = SimpleDumper.reflect(Wall)
+        self.assertEqual(typeinfo['properties']['owner']['name'], 'Person')
+        self.assertEqual(
+            typeinfo['properties']['owner']['properties']['interests']['type'],
+            'list',
+        )
+
+
+class TestTypeUnionCases(AssertDiffTest):
+    def setUp(self):
+        self.open_pr = PullRequest(number=123, merged_at=None)
+        self.closed_pr = PullRequest(
+            number=456,
+            merged_at=datetime.fromtimestamp(time() - 20 * 86400),
+        )
+
+    def test_type_union_dump(self):
+        dumped = SimpleDumper.visit(self.open_pr, ignore_none=False)
+        self.assertIn("created_at", dumped)
+        self.assertRegexpMatches(dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*')
+        self.assertEqual(dumped['merged_at'], None)
+
+        dumped = SimpleDumper.visit(self.closed_pr)
+        self.assertRegexpMatches(dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*')
+        self.assertIn("created_at", dumped)
+        self.assertIn('merged_at', dumped)
+
+    def test_type_union_load(self):
+        pr_dict = {
+            "number": "5125",
+            "created_at": "2014-07-23T12:34:56Z",
+            "merged_at": None,
+        }
+        my_pr = PullRequest(pr_dict)
+        pr_2 = SimpleDumper.cast(PullRequest, pr_dict, ignore_none=False)
+        self.assertDiffs(my_pr, pr_2, {})
+
+    def test_type_union_typeinfo(self):
+        schema = SimpleDumper.reflect(PullRequest)
+        self.assertEqual(schema['properties']['merged_at']['type'],
+                         ["datetime", "NoneType"])
