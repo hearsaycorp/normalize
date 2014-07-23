@@ -84,6 +84,10 @@ Features
 * conversion to primitive python types via the pickle API
   (``__getnewargs__``)
 
+* **New in 0.5**: generic mechanism for marshalling to and from other
+  other forms.  See the documentation for the new
+  ``normalize.visitor.VisitorPattern`` API.
+
 * typed collections API with item coercion (currently, only lists are
   implemented):
 
