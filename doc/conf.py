@@ -22,8 +22,8 @@ master_doc = 'index'
 project = u'normalize'
 copyright = u'2014, Sam Vilain, Hearsay Social'
 
-version = '0.4'
-release = '0.4.4'
+version = '0.5'
+release = '0.5.0'
 
 exclude_patterns = ['sphinx-build']
 pygments_style = 'sphinx'

@@ -2,7 +2,7 @@
 Normalize changelog and errata
 ==============================
 
-0.5.0, Xth July 2014 where X>18
+0.5.0, Xth July 2014 where X>22
 -------------------------------
 * normalize.visitor overhaul.  Visitor got split into a sub-class API,
   VisitorPattern, which is all class methods, and Visitor, the instance
