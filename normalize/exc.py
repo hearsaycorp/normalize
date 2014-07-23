@@ -301,6 +301,14 @@ class VisitorPropError(VisitorException):
     )
 
 
+class VisitorTooSimple(VisitorException):
+    message = (
+        "{visitor} mapped over a Collection ({value_type_name}) with "
+        "properties but the default reduce method clashed with a property; "
+        "override reduce in your VisitorPattern class to resolve."
+    )
+
+
 class VisitorUnpackError(VisitorException, TypeError):
     message = (
         "Can't unpack collection at {fs}; expected {colltype}, got {value}"

@@ -20,6 +20,7 @@ import types
 
 from normalize import RecordList
 from normalize.record import Record
+from normalize.record.json import JsonRecordList
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
@@ -160,6 +161,10 @@ class Binary(Record):
 
 
 class StarList(RecordList):
+    itemtype = Star
+
+
+class JsonStarList(JsonRecordList):
     itemtype = Star
 
 

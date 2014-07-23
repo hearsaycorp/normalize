@@ -293,9 +293,14 @@ class VisitorPattern(object):
         """This reduction is called to combine the mapped slot and collection
         item values into a single value for return.
 
-        The default implementation throws ``aggregated`` into
-        ``mapped_props['values']``, and throws an exception if it was already
-        present.
+        The default implementation tries to behave naturally; you'll almost
+        always get a dict back when mapping over a record, and list or some
+        other collection when mapping over collections.
+
+        If the collection has additional properties which are not ignored (eg,
+        not extraneous, not filtered), then the result will be a dictionary
+        with the results of mapping the properties, and a 'values' key will be
+        added with the result of mapping the items in the collection.
 
         args:
 
@@ -313,22 +318,25 @@ class VisitorPattern(object):
             ``visitor=``\ *Visitor*
                 Contenxt/options object.
         """
-        if mapped_props and value_type.properties:
+        reduced = None
+        if mapped_props:
             reduced = dict((k.name, v) for k, v in mapped_props)
-            if issubclass(value_type, Collection):
+
+        if issubclass(value_type, Collection) and aggregated is not None:
+            if all(visitor.is_filtered(prop) for prop in
+                   value_type.properties.values()):
+                reduced = aggregated
+            else:
                 if reduced.get("values", False):
                     raise exc.VisitorTooSimple(
                         fs=visitor.field_selector,
                         value_type_name=value_type.__name__,
                         visitor=type(self).__name__,
                     )
-                if aggregated is not None:
+                else:
                     reduced['values'] = aggregated
-                    #import ipdb; ipdb.set_trace()
-            return reduced
-        elif issubclass(value_type, Collection):
-            return aggregated
-        return None
+
+        return reduced
 
     # CAST versions
     @classmethod

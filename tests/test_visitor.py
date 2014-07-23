@@ -26,6 +26,7 @@ import unittest
 from normalize.property.types import DateProperty
 from normalize.visitor import VisitorPattern
 from testclasses import acent
+from testclasses import JsonStarList
 from testclasses import NamedStarList
 from testclasses import PullRequest
 from testclasses import StarList
@@ -114,6 +115,13 @@ class TestVisitor(AssertDiffTest):
             typeinfo['properties']['owner']['properties']['interests']['type'],
             'list',
         )
+
+    def test_json_dump(self):
+        plain_list = StarList(self.acent_json_data['components'])
+        json_list = JsonStarList(self.acent_json_data['components'])
+        plain_dumped = SimpleDumper.visit(plain_list)
+        json_dumped = SimpleDumper.visit(json_list)
+        self.assertEqual(plain_dumped, json_dumped)
 
 
 class TestTypeUnionCases(AssertDiffTest):
