@@ -2,7 +2,7 @@
 Normalize changelog and errata
 ==============================
 
-0.4.x Series, 19th June - 18th July 2014
+0.4.x Series, 19th June - 23rd July 2014
 ----------------------------------------
 * added support for comparing filtered objects; ``__pk__()`` object
   method no longer honored.  See ``tests/test_mfs_diff.py`` for
@@ -22,6 +22,10 @@ Normalize changelog and errata
   records as well as None-y values.  This even works if the records
   are not actually None but all of the fields that have values are
   filtered by the DiffOptions compare_filter parameter.
+
+* added Diffas property trait, so you can easily add
+  'compare_as=lambda x: scrub(x)' for field-specific clean-ups specific
+  to comparison.
 
 0.3.0, 30th May 2014
 --------------------

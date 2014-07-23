@@ -15,6 +15,6 @@ objects to see if they have changed in meaningful ways.
     packages=find_packages(),
     install_requires=('richenum>=1.0.0',),
     test_suite="run_tests",
-    version='0.4.6',
+    version='0.4.7',
     url="http://hearsaycorp.github.io/normalize",
 )
