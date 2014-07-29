@@ -418,6 +418,13 @@ class TestStructableFieldSelector(unittest.TestCase):
         )
         self.assertEqual(filtered, expected)
 
+    def test_mfs_subscript_identity(self):
+        """MultiFieldSelector subscript has an identity value"""
+        mfs = MultiFieldSelector([None, "foo"])
+        self.assertEqual(mfs.path, "[*].foo")
+        self.assertEqual(mfs[FieldSelector(())].path, mfs.path)
+        self.assertEqual(mfs[()].path, mfs.path)
+
     def test_mfs_json(self):
         """MultiFieldSelector can work on JsonRecordList objects"""
 

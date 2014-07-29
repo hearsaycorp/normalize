@@ -501,13 +501,14 @@ class MultiFieldSelector(object):
             MultiFieldSelector(['b'], ['d'])
             >>>
         """
-        if isinstance(index, FieldSelector):
+        if isinstance(index, (FieldSelector, tuple, list)):
+            if len(index) == 0:
+                return self
             if self.has_none:
                 pass
             elif len(index) == 1:
                 index = index[0]
             else:
-                assert len(index) > 0, "FieldSelector cannot be empty"
                 return self.heads[index[0]][index[1:]]
         if index is any:
             assert len(self.heads) == 1, "can't compare filtered collection"
@@ -534,14 +535,15 @@ class MultiFieldSelector(object):
             False
             >>>
         """
-        if isinstance(index, (FieldSelector, collections.Sequence)) and \
+        if isinstance(index, (FieldSelector, tuple, list)) and \
                 len(index) == 1:
             index = index[0]
 
         if isinstance(index, (basestring, types.IntType, types.NoneType)):
             return self.has_none or index in self.heads
+        elif len(index) == 0:
+            return True
         else:
-            assert len(index) > 0, "FieldSelector cannot be empty"
             head_key = None if self.has_none else index[0]
             return (
                 head_key in self.heads and
