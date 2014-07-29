@@ -277,6 +277,19 @@ class TestRecordComparison(unittest.TestCase):
             expected_a_to_b
         )
 
+        sparta = list()
+        for member in circle_b.members:
+            sparta.append(Spartan(dict(name=member.name)))
+        self.assertDifferences(
+            compare_collection_iter(
+                circle_b.members, sparta,
+                options=DiffOptions(
+                    compare_filter=MultiFieldSelector([None, 'name']),
+                    duck_type=True,
+                ),
+            ), {},
+        )
+
     def test_empty_slots_empty_records(self):
 
         class Nullable(Record):

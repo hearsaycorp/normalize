@@ -294,7 +294,10 @@ class DiffOptions(object):
         if self.duck_type:
             options['type_'] = type_
         if self.compare_filter:
-            options['selector'] = self.compare_filter[fs][any]
+            if len(fs):
+                options['selector'] = self.compare_filter[fs][any]
+            else:
+                options['selector'] = self.compare_filter[any]
         return options
 
     def is_filtered(self, prop, fs):
