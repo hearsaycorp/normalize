@@ -2,6 +2,13 @@
 Normalize changelog and errata
 ==============================
 
+0.5.1 29th July 2014
+--------------------
+* Subscripting a MultiFieldSelector with an empty (zero-length)
+  FieldSelector now works, and returns the original field selector.
+  This fixed a bug in the diff code when the top level object was a
+  collection.
+
 0.5.0 23rd July 2014
 --------------------
 * normalize.visitor overhaul.  Visitor got split into a sub-class API,
