@@ -33,6 +33,7 @@ from normalize import RecordList
 from normalize.diff import DiffOptions
 from normalize.property.coll import ListProperty
 from normalize.property.types import DateProperty
+from normalize.property.types import IntProperty
 from normalize.property.types import StringProperty
 from normalize.property.types import UnicodeProperty
 from normalize.selector import MultiFieldSelector
@@ -264,7 +265,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
             person.diff_iter(friendless, options=ignore_friends), {},
         )
 
-    def test_compare_as(self):
+    def test_compare_as_func(self):
 
         class PersonEasilyComparable(SurrogatePerson):
             primary_key = ['ssn']
@@ -275,3 +276,57 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         other.phone_number = '+16146082940'
 
         self.assertDifferences(base.diff_iter(other), {})
+
+    def test_compare_as_method_with_arg(self):
+
+        class DangerousComparisons(SurrogatePerson):
+
+            def add_area_code(self, number):
+                number = normalize_phone(number)
+                m = re.match(
+                    r"(\d{3})\s*(?:[.-]\s*)?(\d{4})",
+                    number,
+                )
+                if m:
+                    return "(%.3d) %s-%s" % (
+                        self.area_code, m.group(1), m.group(2),
+                    )
+                else:
+                    return number
+
+            area_code = IntProperty(check=lambda n: 0 < n < 1000)
+            phone_number = StringProperty(compare_as=add_area_code)
+
+        base = get_person(4, cls=DangerousComparisons)
+        other = get_person(4, cls=DangerousComparisons)
+        other.phone_number = '6082940'
+        other.area_code = '614'
+
+        self.assertDifferences(base.diff_iter(other), {"ADDED .area_code"})
+
+    def test_compare_as_method(self):
+
+        class CompareThisOrz(SurrogatePerson):
+
+            def full_number(self):
+                number = normalize_phone(self.phone_number)
+                m = re.match(
+                    r"(\d{3})\s*(?:[.-]\s*)?(\d{4})",
+                    number,
+                )
+                if m:
+                    return "(%.3d) %s-%s" % (
+                        self.area_code, m.group(1), m.group(2),
+                    )
+                else:
+                    return number
+
+            area_code = IntProperty(check=lambda n: 0 < n < 1000)
+            phone_number = StringProperty(compare_as=full_number)
+
+        base = get_person(4, cls=CompareThisOrz)
+        other = get_person(4, cls=CompareThisOrz)
+        other.phone_number = '6082940'
+        other.area_code = '614'
+
+        self.assertDifferences(base.diff_iter(other), {"ADDED .area_code"})

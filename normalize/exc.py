@@ -147,10 +147,17 @@ class CollTypeMismatch(PropertyDefinitionError):
     )
 
 
+class CompareAsSignatureError(PropertyDefinitionError):
+    message = (
+        "compare_as functions may take 0 or 1 arguments; {module}.{func} "
+        "wants {nargs}"
+    )
+
+
 class DefaultSignatureError(PropertyDefinitionError):
     message = (
-        "default functions may take 0 or 1 arguments; {module}.{func} "
-        "wants {nargs}"
+        "default functions must have no required arguments (except "
+        "'self'); {module}.{func} wants {nargs}"
     )
 
 

@@ -27,6 +27,7 @@ documentation.
 from __future__ import absolute_import
 
 import inspect
+import warnings
 import weakref
 
 import normalize.exc as exc
@@ -107,20 +108,33 @@ class Property(object):
         super(Property, self).__init__()
         self.default = default
         if callable(default):
-            args = inspect.getargspec(default)
-            if not args.args:
-                required_args = 0
-            else:
-                required_args = len(args.args)
-                if args.defaults:
-                    required_args -= len(args.defaults)
-                if required_args > 1:
+            is_method, nargs = self.func_info(default)
+            if nargs:
+                if not is_method and nargs == 1:
+                    # backwards compatibility; default=lambda x: x.foo was
+                    # permitted previously.
+                    stacklevel = 1
+
+                    # walk stack back to the actual caller of the original
+                    # constructor
+                    stack = inspect.stack()
+                    while stacklevel <= len(stack):
+                        loc = stack[stacklevel - 1][0].f_locals
+                        if 'self' not in loc or loc['self'] != self:
+                            break
+                        stacklevel += 1
+                    warnings.warn(
+                        "'default' first argument should be called 'self'",
+                        stacklevel=stacklevel,
+                    )
+                    is_method = True
+                else:
                     raise exc.DefaultSignatureError(
                         func=default,
                         module=default.__module__,
-                        nargs=required_args,
+                        nargs=nargs,
                     )
-            self.default_wants_arg = bool(required_args)
+            self.default_is_method = is_method
         self.required = required
         self.check = check
         self.valuetype = isa
@@ -128,6 +142,20 @@ class Property(object):
         if self.coerce and not self.valuetype:
             raise exc.CoerceWithoutType()
         self.extraneous = extraneous
+
+    def func_info(self, func):
+        args = inspect.getargspec(func)
+        is_method = False
+        if not args.args:
+            required_args = 0
+        else:
+            required_args = len(args.args)
+            if args.defaults:
+                required_args -= len(args.defaults)
+            if required_args and args.args[0] == "self":
+                is_method = True
+                required_args -= 1
+        return is_method, required_args
 
     @property
     def bound(self):
@@ -192,7 +220,7 @@ class Property(object):
 
     def get_default(self, obj):
         if callable(self.default):
-            if self.default_wants_arg:
+            if self.default_is_method:
                 # XXX - only 'lazy' properties should be allowed to do this.
                 rv = self.default(obj)
             else:
@@ -342,8 +370,21 @@ class DiffasProperty(Property):
     __trait__ = "diffas"
 
     def __init__(self, compare_as=None, **kwargs):
+        """Specify ``compare_as=`` to pass a clean-up function which is applied
+        to the value in the slot, but only during comparison.
+        The function can be a method, and can choose to either accept or not
+        accept an argument.
+        """
         super(DiffasProperty, self).__init__(**kwargs)
         self.compare_as = compare_as
+        is_method, nargs = self.func_info(compare_as)
+        self.compare_as_info = is_method, nargs
+        if nargs > 1:
+            raise exc.CompareAsSignatureError(
+                func=compare_as,
+                module=compare_as.__module__,
+                nargs=nargs,
+            )
 
 
 trait_num = 0

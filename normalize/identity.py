@@ -19,7 +19,7 @@ import normalize.exc as exc
 import normalize.record
 
 
-def record_id(object_, type_=None, selector=None, normalize_slot=None):
+def record_id(object_, type_=None, selector=None, normalize_object_slot=None):
     """Implementation of id() which is overridable and knows about record's
     primary_key property.  Returns if the two objects may be the "same";
     returns None for other types, meaning all bets about identity are off.
@@ -44,10 +44,11 @@ def record_id(object_, type_=None, selector=None, normalize_slot=None):
             type_.coll_to_tuples(object_)
         )
         return tuple(
-            record_id(v, type_.itemtype, selector[k], normalize_slot) for
-            k, v in gen if k in selector
+            record_id(
+                v, type_.itemtype, selector[k], normalize_object_slot,
+            ) for k, v in gen if k in selector
         ) if selector else tuple(
-            record_id(v, type_.itemtype, None, normalize_slot) for
+            record_id(v, type_.itemtype, None, normalize_object_slot) for
             k, v in gen
         )
 
@@ -60,9 +61,12 @@ def record_id(object_, type_=None, selector=None, normalize_slot=None):
 
     for prop in pk_cols or all_properties:
         val = getattr(object_, prop.name, None)
-        if normalize_slot:
-            val = normalize_slot(val, prop)
-        _none = normalize_slot(None, prop) if normalize_slot else None
+        if normalize_object_slot:
+            val = normalize_object_slot(val, prop, object_)
+        _none = (
+            normalize_object_slot(None, prop, object_) if
+            normalize_object_slot else None
+        )
         if val is not _none and prop.valuetype:
             value_type_list = (
                 prop.valuetype if isinstance(prop.valuetype, tuple) else
@@ -74,7 +78,7 @@ def record_id(object_, type_=None, selector=None, normalize_slot=None):
                 if issubclass(value_type, normalize.record.Record):
                     pk = record_id(val, value_type,
                                    selector[prop.name] if selector else None,
-                                   normalize_slot)
+                                   normalize_object_slot)
                     pk_elements = len([x for x in pk if x is not None])
                     if not val_pk or pk_elements > set_elements:
                         val_pk = pk

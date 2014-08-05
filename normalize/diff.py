@@ -254,10 +254,23 @@ class DiffOptions(object):
                 If this instance has a ``compare_as`` method, then that method
                 is called to perform a clean-up before the value is passed to
                 ``normalize_val``
+
+        """
+        return self.normalize_val(value)
+
+    def normalize_object_slot(self, value=_nothing, prop=None, obj=None):
+        """This hook wraps ``normalize_slot``, and performs clean-ups which
+        require access to the object the slot is in as well as the value.
         """
         if value is not _nothing and hasattr(prop, "compare_as"):
-            value = prop.compare_as(value)
-        return self.normalize_val(value)
+            method, nargs = getattr(prop, "compare_as_info", (False, 1))
+            args = []
+            if method:
+                args.append(obj)
+            if nargs:
+                args.append(value)
+            value = prop.compare_as(*args)
+        return self.normalize_slot(value, prop)
 
     def normalize_item(self, value=_nothing, coll=None, index=None):
         """Hook which is called on every *collection item*; this is a way to
@@ -286,7 +299,7 @@ class DiffOptions(object):
         """Retrieve an object identifier from the given record; if it is an
         alien class, and the type is provided, then use duck typing to get the
         corresponding fields of the alien class."""
-        pk = record_id(record, type_, selector, self.normalize_slot)
+        pk = record_id(record, type_, selector, self.normalize_object_slot)
         return pk
 
     def id_args(self, type_, fs):
@@ -357,11 +370,11 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         if options.is_filtered(prop, fs_a + propname):
             continue
 
-        propval_a = options.normalize_slot(
-            getattr(a, propname, _nothing), prop,
+        propval_a = options.normalize_object_slot(
+            getattr(a, propname, _nothing), prop, a,
         )
-        propval_b = options.normalize_slot(
-            getattr(b, propname, _nothing), prop,
+        propval_b = options.normalize_object_slot(
+            getattr(b, propname, _nothing), prop, b,
         )
 
         if propval_a is _nothing and propval_b is _nothing:

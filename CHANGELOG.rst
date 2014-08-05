@@ -1,6 +1,17 @@
-
 Normalize changelog and errata
 ==============================
+
+0.5.2 5th August 2014
+---------------------
+* You can now pass an object method to ``compare_as=`` on a property
+  definition.
+
+* New sub-class API hook in ``DiffOptions``:
+  ``normalize_object_slot``, which receives the object as well as the
+  value.
+
+* passing methods to ``default=`` which do not call their first
+  argument 'self' is now a warning.
 
 0.5.1 29th July 2014
 --------------------
