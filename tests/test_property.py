@@ -370,7 +370,8 @@ class TestProperties(unittest2.TestCase):
                 super(SuperProperty, self).__init__(**kwargs)
 
         with self.assertRaises(exc.PropertyTypeMixinNotPossible):
-            sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
+            # BUG!
+            sp = Property(hero_name="Bruce Wayne")
 
         with self.assertRaises(exc.PropertyTypeMixinNotPossible):
             sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
