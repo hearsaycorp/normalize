@@ -369,9 +369,7 @@ class TestProperties(unittest2.TestCase):
             def __init__(self, hero_name=None, **kwargs):
                 super(SuperProperty, self).__init__(**kwargs)
 
-        with self.assertRaises(exc.PropertyTypeMixinNotPossible):
-            # BUG!
-            sp = Property(hero_name="Bruce Wayne")
+        sp = Property(hero_name="Bruce Wayne")
 
         with self.assertRaises(exc.PropertyTypeMixinNotPossible):
             sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
@@ -443,3 +441,20 @@ class TestProperties(unittest2.TestCase):
         mixer.what = 4
         self.assertEqual(mixer.hmm, 4)
         self.assertEqual(mixer.huh, 4)
+
+    def test_list_of(self):
+
+        class Person(Record):
+            name = Property()
+
+        class Warfare(Record):
+            proleteriat = Property(list_of=Person)
+            bourgeois = ListProperty(of=Person)
+
+        society = Warfare(
+            proleteriat=[{"name": "Joe Bloggs"}],
+            bourgeois=[{"name": "Richard B'stard"}],
+        )
+
+        self.assertIsInstance(society.proleteriat[0], Person)
+        self.assertIsInstance(society.bourgeois[0], Person)

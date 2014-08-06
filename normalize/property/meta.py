@@ -53,9 +53,9 @@ def has(selfie, self, args, kwargs):
         if argname not in self.all_duckwargs:
             # initializer does not support this arg.  Do any subclasses?
             implies_traits = set()
-            for trait, proptype in DUCKWARGS[argname]:
+            for traits, proptype in DUCKWARGS[argname]:
                 if isinstance(proptype, type(self)):
-                    implies_traits.add(trait)
+                    implies_traits.add(traits)
             if len(implies_traits) > 1:  # if it's 0, it'll fail later
                 raise exc.AmbiguousPropertyTraitArg(
                     trait_arg=argname,
@@ -65,11 +65,11 @@ def has(selfie, self, args, kwargs):
                     matched_traits=implies_traits,
                 )
             else:
-                extra_traits.update(implies_traits)
+                extra_traits.update(list(implies_traits)[0])
 
     all_traits = set(self.traits) | extra_traits
 
-    if "unsafe" in all_traits:
+    if "unsafe" in all_traits and "safe" not in all_traits:
         all_traits.remove("unsafe")
     elif "ro" not in all_traits:
         if any(x in kwargs for x in ("required", "isa", "check")):
@@ -238,5 +238,5 @@ class MetaProperty(type):
         selfie[0] = self
         if trait:
             for kwarg in duckwargs:
-                DUCKWARGS[kwarg].add((trait, self))
+                DUCKWARGS[kwarg].add((traits, self))
         return self
