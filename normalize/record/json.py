@@ -189,7 +189,7 @@ def to_json(record, extraneous=True):
         return rv_dict
 
     elif isinstance(record, long):
-        return str(record) if abs(record) > 2**50 else record
+        return str(record) if abs(record) > 2 ** 50 else record
 
     elif isinstance(record, dict):
         return dict(
@@ -368,4 +368,3 @@ class JsonDiffInfo(DiffInfo, JsonRecord):
 class JsonDiff(Diff, JsonRecordList):
     """Version of 'Diff' that supports ``.json_data()``"""
     itemtype = JsonDiffInfo
-
