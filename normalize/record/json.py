@@ -196,7 +196,7 @@ def to_json(record, extraneous=True):
             (k, _json_data(v, extraneous)) for k, v in record.iteritems()
         )
 
-    elif isinstance(record, (list, tuple)):
+    elif isinstance(record, (list, tuple, set, frozenset)):
         return list(_json_data(x, extraneous) for x in record)
 
     elif isinstance(record, (basestring, int, float, types.NoneType)):

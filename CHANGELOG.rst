@@ -1,6 +1,19 @@
 Normalize changelog and errata
 ==============================
 
+0.5.4 20th August 2014
+----------------------
+* values in attributes of type 'set' get serialized to JSON as lists
+  by default now (Dale Hui)
+
+0.5.3 20th August 2014
+----------------------
+* fixed a corner case with collection diff & filters (github issue #45)
+
+* fixed ``Property(list_of=SomeRecordType)``, which should have worked
+  like ``ListProperty(of=SomeRecordType)``, but didn't due to a bug in
+  the metaclass.
+
 0.5.2 5th August 2014
 ---------------------
 * You can now pass an object method to ``compare_as=`` on a property
