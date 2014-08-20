@@ -465,6 +465,9 @@ class MultiFieldSelector(object):
                 _fmt_mfs_path(k, v) for (k, v) in self.heads.items()
             ) + ")"
 
+    def __nonzero__(self):
+        return bool(len(self.heads))
+
     def __iter__(self):
         """Generator for all FieldSelectors this MultiFieldSelector
         implicitly contains.
@@ -511,8 +514,11 @@ class MultiFieldSelector(object):
             else:
                 return self.heads[index[0]][index[1:]]
         if index is any:
-            assert len(self.heads) == 1, "can't compare filtered collection"
-            index = self.heads.keys()[0]
+            assert len(self.heads) <= 1, "ambigious fetch of 'any'"
+            if len(self.heads) == 1:
+                index = self.heads.keys()[0]
+            else:
+                return self
 
         tail = self.heads[None] if self.has_none else self.heads[index]
         return type(self)([None]) if tail == all else tail
@@ -541,6 +547,8 @@ class MultiFieldSelector(object):
 
         if isinstance(index, (basestring, types.IntType, types.NoneType)):
             return self.has_none or index in self.heads
+        elif index is any:
+            return True if len(self.heads) else False
         elif len(index) == 0:
             return True
         else:
