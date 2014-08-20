@@ -69,6 +69,16 @@ class MockComplexJsonRecord(MockJsonRecord):
     nested = MockJsonRecord()
 
 
+class MockEmptyPropertiesRecord(JsonRecord):
+    placeholder = JsonProperty()
+    aux_placeholder = JsonProperty(empty='')
+    name = JsonProperty(empty=[21])
+    age = JsonProperty(empty=None)
+    birthday = JsonProperty(empty=datetime(2014, 12, 1, 8, 20, 33))
+    bio = JsonProperty(empty=ValueError('fooo bar'))
+    about = JsonProperty(empty=IOError)
+
+
 class TestStructableFieldSelector(unittest.TestCase):
 
     def test_init(self):
@@ -497,3 +507,15 @@ class TestStructableFieldSelector(unittest.TestCase):
         self.assertNotIn(any, null_mfs)
         self.assertFalse(null_mfs)
         self.assertFalse(null_mfs[any])
+
+    def test_empty_attribute(self):
+        data = MockEmptyPropertiesRecord({'placeholder': 9, 'aux_placeholder': 'this is a string'})
+        self.assertEqual(data.placeholder, 9)
+        self.assertEqual(data.aux_placeholder, 'this is a string')
+        self.assertEqual(data.name, [21])
+        self.assertIsNone(data.age)
+        self.assertEqual(data.birthday, datetime(2014, 12, 1, 8, 20, 33))
+        with self.assertRaises(ValueError) as err:
+            data.bio
+        self.assertEqual(str(err), 'fooo bar')
+        self.assertRaises(IOError, data.about)
