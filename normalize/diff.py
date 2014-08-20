@@ -18,6 +18,7 @@ from __future__ import absolute_import
 
 import collections
 from itertools import chain
+from itertools import product
 import re
 import types
 import unicodedata
@@ -124,7 +125,7 @@ class DiffOptions(object):
                  unicode_normal=True, unchanged=False,
                  ignore_empty_slots=False,
                  duck_type=False, extraneous=False,
-                 compare_filter=None):
+                 compare_filter=None, fuzzy_match=True):
         """Create a new ``DiffOptions`` instance.
 
         args:
@@ -160,6 +161,10 @@ class DiffOptions(object):
                 defined on the 'base' type.  This can be used to check progress
                 when porting from other object systems to normalize.
 
+            ``fuzzy_match=``\ *BOOL*
+                Enable approximate matching of items in collections, so that
+                finer granularity of changes are available.
+
             ``compare_filter=``\ *MULTIFIELDSELECTOR*\ \|\ *LIST_OF_LISTS*
                 Restrict comparison to the fields described by the passed
                 :py:class:`MultiFieldSelector` (or list of FieldSelector
@@ -169,6 +174,7 @@ class DiffOptions(object):
         self.ignore_case = ignore_case
         self.ignore_empty_slots = ignore_empty_slots
         self.unicode_normal = unicode_normal
+        self.fuzzy_match = fuzzy_match
         self.unchanged = unchanged
         self.duck_type = duck_type
         self.extraneous = extraneous
@@ -489,6 +495,51 @@ def collection_generator(collection):
     return generator()
 
 
+def _fuzzy_match(set_a, set_b):
+
+    seen = dict()
+    scores = list()
+
+    # Yes, this is O(n.m), but python's equality operator is
+    # fast for hashable types.
+    for a_pk_seq, b_pk_seq in product(set_a, set_b):
+        a_pk, a_seq = a_pk_seq
+        b_pk, b_seq = b_pk_seq
+        if (a_pk, b_pk) in seen:
+            if seen[a_pk, b_pk][0]:
+                score = list(seen[a_pk, b_pk])
+                scores.append(score + [a_pk_seq, b_pk_seq])
+        else:
+            match = 0
+            common = min((len(a_pk), len(b_pk)))
+            no_match = max((len(a_pk), len(b_pk))) - common
+            for i in range(0, common):
+                if a_pk[i] == b_pk[i]:
+                    if a_pk[i] is not None:
+                        match += 1
+                else:
+                    no_match += 1
+            seen[a_pk, b_pk] = (match, no_match)
+            if match:
+                scores.append([match, no_match, a_pk_seq, b_pk_seq])
+
+    remaining_a = set(set_a)
+    remaining_b = set(set_b)
+
+    for match, no_match, a_pk_seq, b_pk_seq in sorted(
+        scores,
+        key=lambda x: x[0] - x[1],
+        reverse=True,
+    ):
+        if a_pk_seq in remaining_a and b_pk_seq in remaining_b:
+            remaining_a.remove(a_pk_seq)
+            remaining_b.remove(b_pk_seq)
+            yield a_pk_seq, b_pk_seq
+
+        if not remaining_a or not remaining_b:
+            break
+
+
 # There's a lot of repetition in the following code.  It could be served by one
 # function instead of 3, which would be 3 times fewer places to have bugs, but
 # it would probably also be more than 3 times as difficult to debug.
@@ -545,11 +596,11 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
+    common = values['a'].intersection(values['b'])
 
     if compare_values or force_descent:
-        descendable = (removed | added) if force_descent else (
-            values['a'].intersection(values['b'])
-        )
+        descendable = (removed | added) if force_descent else common
+
         for pk, seq in descendable:
             if not force_descent or propval_a is not _nothing:
                 a_key = rev_keys['a'][pk, seq]
@@ -566,10 +617,26 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                     b_val = _nothing
             selector_a = fs_a + a_key
             selector_b = fs_b + b_key
+            # FIXME: collections of collections!
             for diff in compare_record_iter(
                 a_val, b_val, selector_a, selector_b, options,
             ):
                 yield diff
+
+        if not force_descent and options.fuzzy_match:
+            for a_pk_seq, b_pk_seq in _fuzzy_match(removed, added):
+                removed.remove(a_pk_seq)
+                added.remove(b_pk_seq)
+                a_key = rev_keys['a'][a_pk_seq]
+                a_val = propval_a[a_key]
+                b_key = rev_keys['b'][b_pk_seq]
+                b_val = propval_b[b_key]
+                selector_a = fs_a + a_key
+                selector_b = fs_b + b_key
+                for diff in compare_record_iter(
+                    a_val, b_val, selector_a, selector_b, options,
+                ):
+                    yield diff
 
     if options.unchanged:
         unchanged = values['a'] & values['b']

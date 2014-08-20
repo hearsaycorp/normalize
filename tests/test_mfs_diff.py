@@ -196,10 +196,20 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
 
         self.assertDifferences(
             person.diff_iter(filtered_person,
-                             compare_filter=strip_ids_mfs),
+                             compare_filter=strip_ids_mfs,
+                             fuzzy_match=False),
             {
                 "REMOVED .description",
                 "REMOVED .friends[0]", "ADDED .friends[0]",
+            },
+        )
+
+        self.assertDifferences(
+            person.diff_iter(filtered_person,
+                             compare_filter=strip_ids_mfs),
+            {
+                "REMOVED .description",
+                "REMOVED .friends[0].description",
             },
         )
 
@@ -228,13 +238,26 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         person.phone_number = '5309225668'
         person.friends[0].phone_number = '+1 239.978.5912'
 
+        # old, non-fuzzy match:
+        self.assertDifferences(
+            person.diff_iter(filtered_person,
+                             compare_filter=strip_ids_mfs,
+                             ignore_empty_slots=True,
+                             fuzzy_match=False),
+            {
+                "MODIFIED .phone_number",
+                "REMOVED .friends[0]", "ADDED .friends[0]",
+            },
+        )
+
+        # fuzzy match:
         self.assertDifferences(
             person.diff_iter(filtered_person,
                              compare_filter=strip_ids_mfs,
                              ignore_empty_slots=True),
             {
                 "MODIFIED .phone_number",
-                "REMOVED .friends[0]", "ADDED .friends[0]",
+                "MODIFIED .friends[0].phone_number"
             },
         )
 
@@ -342,4 +365,45 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         self.assertDifferences(
             Foos().diff_iter(Foos(), compare_filter=MultiFieldSelector()),
             {},
+        )
+
+    def test_fuzzy_compare(self):
+
+        person = get_person(3, 0, 2, 4, 6, 4, 1)
+        person2 = get_person(3, 0, 1, 2, 3, 4, 5, 6)
+
+        strip_ssn_mfs = MultiFieldSelector(
+            ["given_name"], ["family_name"], ["description"],
+            ["phone_number"],
+            ["friends", None, "given_name"],
+            ["friends", None, "family_name"],
+            ["friends", None, "description"],
+            ["friends", None, "phone_number"],
+        )
+
+        basic_differences = {
+            "REMOVED .friends[4]",
+            "ADDED .friends[5]",
+            "ADDED .friends[3]",
+        }
+        self.assertDifferences(
+            person.diff_iter(person2, compare_filter=strip_ssn_mfs),
+            basic_differences,
+        )
+
+        person2.friends[0].given_name = "Jim"
+        del person2.friends[1].phone_number
+        person2.friends[2].family_name = "Woolf"
+        person2.friends[4].given_name = "Stephie"
+        person2.friends[6].family_name = "Haines"
+
+        self.assertDifferences(
+            person.diff_iter(person2, compare_filter=strip_ssn_mfs),
+            basic_differences | {
+                'MODIFIED .friends[0].given_name',
+                'MODIFIED (.friends[2].given_name/.friends[4].given_name)',
+                'MODIFIED (.friends[3].family_name/.friends[6].family_name)',
+                'REMOVED (.friends[5].phone_number/.friends[1].phone_number)',
+                'MODIFIED (.friends[1].family_name/.friends[2].family_name)',
+            }
         )
