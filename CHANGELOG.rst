@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.5.4 20th August 2014
+----------------------
+* values in attributes of type 'set' get serialized to JSON as lists
+  by default now (Dale Hui)
+
 0.5.3 20th August 2014
 ----------------------
 * fixed a corner case with collection diff & filters (github issue #45)
