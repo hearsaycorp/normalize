@@ -330,3 +330,16 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         other.area_code = '614'
 
         self.assertDifferences(base.diff_iter(other), {"ADDED .area_code"})
+
+    def test_filtered_collection_compare(self):
+
+        class Foo(Record):
+            bar = Property()
+
+        class Foos(RecordList):
+            itemtype = Foo
+
+        self.assertDifferences(
+            Foos().diff_iter(Foos(), compare_filter=MultiFieldSelector()),
+            {},
+        )

@@ -521,6 +521,9 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
     )
     force_descent = (propval_a is _nothing) or (propval_b is _nothing)
     id_args = options.id_args(coll_type.itemtype, fs_a)
+    if 'selector' in id_args and not id_args['selector']:
+        # early exit shortcut
+        return
 
     for x in "a", "b":
         propval_x = propvals[x]
