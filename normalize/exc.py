@@ -304,7 +304,7 @@ class VisitorOptionsException(UsageException):
 
 class VisitorPropError(VisitorException):
     message = (
-        "failed to get '{prop_name}' from {value} at {fs}"
+        "failed to get '{prop_name}' from {record_type_name} instance at {fs}"
     )
 
 

@@ -590,6 +590,7 @@ class VisitorPattern(object):
                     exception=e,
                     prop=prop,
                     prop_name=name,
+                    record_type_name=record_type.__name__,
                     fs=rv.field_selector,
                 )
 
