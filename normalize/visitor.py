@@ -620,7 +620,7 @@ class VisitorPattern(object):
         rv = visitor.copy()
         for key, value in coll_generator:
             rv.push(key)
-            mapped = cls.map(visitor, value, coll_type.itemtype)
+            mapped = cls.map(rv, value, coll_type.itemtype)
             rv.pop(key)
             if mapped is None and visitor.ignore_none:
                 pass
