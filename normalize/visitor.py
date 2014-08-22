@@ -387,6 +387,8 @@ class VisitorPattern(object):
                 field_selector=visitor.field_selector,
             )
         if value_type.properties and is_coll:
+            # FIXME - needs to not do this in the same places the default
+            # 'reduce' doesn't; checking properties for being filtered.
             if "values" in value:
                 values = value['values']
         generator = None
