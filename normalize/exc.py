@@ -309,6 +309,13 @@ class VisitorPropError(VisitorException):
     )
 
 
+class VisitorGrokRecordError(VisitorException):
+    message = (
+        u"{val} found where I'm expecting to unpack a "
+        u"{record_type_name} record at {field_selector}"
+    )
+
+
 class VisitorTooSimple(VisitorException):
     message = (
         "{visitor} mapped over a Collection ({value_type_name}) with "

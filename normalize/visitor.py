@@ -379,6 +379,13 @@ class VisitorPattern(object):
         """
         values = value
         is_coll = issubclass(value_type, Collection)
+        if isinstance(value, basestring):
+            raise exc.VisitorGrokRecordError(
+                val=repr(value),
+                record_type=value_type,
+                record_type_name=value_type.__name__,
+                field_selector=visitor.field_selector,
+            )
         if value_type.properties and is_coll:
             if "values" in value:
                 values = value['values']
