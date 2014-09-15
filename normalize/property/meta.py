@@ -47,6 +47,10 @@ def has(selfie, self, args, kwargs):
     if args:
         raise exc.PositionalArgumentsProhibited()
     extra_traits = set(kwargs.pop('traits', tuple()))
+
+    safe_unless_ro = self.__safe_unless_ro__ or any(
+        x in kwargs for x in ("required", "isa", "check")
+    )
     # detect initializer arguments only supported by a subclass and add
     # them to extra_traits
     for argname in kwargs:
@@ -56,6 +60,8 @@ def has(selfie, self, args, kwargs):
             for traits, proptype in DUCKWARGS[argname]:
                 if isinstance(proptype, type(self)):
                     implies_traits.add(traits)
+                    if proptype.__safe_unless_ro__:
+                        safe_unless_ro = True
             if len(implies_traits) > 1:  # if it's 0, it'll fail later
                 raise exc.AmbiguousPropertyTraitArg(
                     trait_arg=argname,
@@ -71,9 +77,8 @@ def has(selfie, self, args, kwargs):
 
     if "unsafe" in all_traits and "safe" not in all_traits:
         all_traits.remove("unsafe")
-    elif "ro" not in all_traits:
-        if any(x in kwargs for x in ("required", "isa", "check")):
-            all_traits.add("safe")
+    elif "ro" not in all_traits and safe_unless_ro:
+        all_traits.add("safe")
 
     trait_set_key = tuple(sorted(all_traits))
 
