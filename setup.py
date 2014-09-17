@@ -27,6 +27,6 @@ setup(
     packages=find_packages(),
     install_requires=('richenum>=1.0.0',),
     test_suite="run_tests",
-    version='0.5.5',
+    version='0.6.0',
     url="http://hearsaycorp.github.io/normalize",
 )
