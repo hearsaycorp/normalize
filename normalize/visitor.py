@@ -30,7 +30,7 @@ class Visitor(object):
     def __init__(self, unpack_func, apply_func, collect_func, reduce_func,
                  apply_empty_slots=False, extraneous=False,
                  ignore_empty_string=False, ignore_none=True,
-                 visit_filter=None):
+                 visit_filter=None, filter=None):
         """Create a new Visitor object.  Generally called by a front-end class
         method of :py:class:`VisitorPattern`
 
@@ -70,6 +70,8 @@ class Visitor(object):
         self.ignore_empty_string = ignore_empty_string
         self.ignore_none = ignore_none
 
+        if visit_filter is None:
+            visit_filter = filter
         self.visit_filter = visit_filter
 
         self.seen = set()  # TODO
