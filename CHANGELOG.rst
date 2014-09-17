@@ -1,6 +1,17 @@
 Normalize changelog and errata
 ==============================
 
+0.5.5 17th September 2014
+-------------------------
+* Lots of improvements to exceptions with the Visitor
+
+* More records should now round-trip ('visit' and 'cast') cleanly with
+  the default Visitor mappings; particularly ``RecordList`` types with
+  extra, extraneous properties.
+
+* ListProperties were allowing unsafe assignment; now all collections
+  will always be safe (unless marked 'unsafe' or read-only)
+
 0.5.4 20th August 2014
 ----------------------
 * values in attributes of type 'set' get serialized to JSON as lists
