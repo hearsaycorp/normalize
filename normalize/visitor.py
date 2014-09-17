@@ -16,10 +16,14 @@
 
 from __future__ import absolute_import
 
+import collections
+import types
+
 from normalize.coll import Collection
 import normalize.exc as exc
 from normalize.record import Record
 from normalize.selector import FieldSelector
+from normalize.selector import MultiFieldSelector
 
 
 class Visitor(object):
@@ -369,6 +373,15 @@ class VisitorPattern(object):
 
         return cls.map(visitor, value, value_type)
 
+    # hooks for types which define what is considered acceptable input for
+    # given contexts during 'cast'
+    #
+    # note: Collection.coll_to_tuples will generally allow you to pass
+    # collections as a list or a dict with the *values* being the members of
+    # the set, so this code allows this.
+    grok_mapping_types = collections.Mapping
+    grok_coll_types = (collections.Sequence, collections.Mapping)
+
     @classmethod
     def grok(cls, value, value_type, visitor):
         """Like :py:meth:`normalize.visitor.VisitorPattern.unpack` but called
@@ -383,22 +396,35 @@ class VisitorPattern(object):
         to override this function and throw ``TypeError`` if the passed
         ``value_type`` is not appropriate for ``value``.
         """
-        values = value
         is_coll = issubclass(value_type, Collection)
-        if isinstance(value, basestring):
+        is_record = any(not visitor.is_filtered(prop) for prop in
+                        value_type.properties.values())
+
+        if is_record and not isinstance(value, cls.grok_mapping_types):
             raise exc.VisitorGrokRecordError(
                 val=repr(value),
                 record_type=value_type,
                 record_type_name=value_type.__name__,
                 field_selector=visitor.field_selector,
             )
-        if value_type.properties and is_coll:
-            # FIXME - needs to not do this in the same places the default
-            # 'reduce' doesn't; checking properties for being filtered.
-            if "values" in value:
-                values = value['values']
+
+        values = value
+        if is_coll and is_record:
+            try:
+                if "values" in value:
+                    values = value['values']
+            except TypeError:
+                pass
+
         generator = None
         if is_coll:
+            if not isinstance(values, cls.grok_coll_types):
+                raise exc.VisitorGrokCollectionError(
+                    val=repr(values),
+                    record_type=value_type,
+                    record_type_name=value_type.__name__,
+                    field_selector=visitor.field_selector,
+                )
             generator = value_type.coll_to_tuples(values)
 
         return (lambda prop: value[prop.name]), generator

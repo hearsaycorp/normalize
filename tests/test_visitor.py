@@ -23,6 +23,7 @@ from time import time
 import types
 import unittest
 
+import normalize.exc as exc
 from normalize.property.types import DateProperty
 from normalize.visitor import VisitorPattern
 from testclasses import acent
@@ -122,6 +123,40 @@ class TestVisitor(AssertDiffTest):
         plain_dumped = SimpleDumper.visit(plain_list)
         json_dumped = SimpleDumper.visit(json_list)
         self.assertEqual(plain_dumped, json_dumped)
+
+    def test_cast_garbage(self):
+        for garbage in (
+            "green cheese", [], (),
+            {'values': {"foo": "bar"}},
+            self.acent_json_data['components'],
+        ):
+            with self.assertRaises(exc.VisitorGrokRecordError):
+                SimpleDumper.cast(NamedStarList, garbage)
+
+    def test_cast_complex_filtered(self):
+        # this works because the properties are filtered out; normally this
+        # filtering would be due to 'extraneous' property settings.
+        # MultiFieldSelector doesn't currently distinguish between 'None' =>
+        # all items in collection vs 'None' => all, so use a filter which
+        # mentions each of the items in the set.
+        nsl = SimpleDumper.cast(
+            NamedStarList,
+            self.acent_json_data['components'],
+            visit_filter=tuple([x, 'hip_id'] for x in range(0, 3)),
+        )
+        self.assertEqual(len(nsl), 3)
+
+    def test_visit_complex_filtered(self):
+        nsl = NamedStarList(**(self.nsl_json_data))
+        visited = SimpleDumper.visit(
+            nsl, filter=tuple([x, 'hip_id'] for x in range(0, 3)),
+        )
+        self.assertEqual(
+            visited, list(
+                {'hip_id': x['hip_id']} for x in
+                self.acent_json_data['components']
+            ),
+        )
 
 
 class TestTypeUnionCases(AssertDiffTest):
