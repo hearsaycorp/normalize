@@ -1,6 +1,14 @@
 Normalize changelog and errata
 ==============================
 
+0.6.0 17th September 2014
+-------------------------
+* Diff will now attempt to do fuzzy matching when comparing
+  collections.  This should result in more fine-grained differences
+  when comparing data where the values have to be matched by content.
+  This implmentation in this version can be slow (O(N²)), if comparing
+  very large sets with few identical items.
+
 0.5.5 17th September 2014
 -------------------------
 * Lots of improvements to exceptions with the Visitor
