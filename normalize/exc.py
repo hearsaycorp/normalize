@@ -304,7 +304,22 @@ class VisitorOptionsException(UsageException):
 
 class VisitorPropError(VisitorException):
     message = (
-        "failed to get '{prop_name}' from {value} at {fs}"
+        "failed to get '{prop_name}' from {record_type_name} instance at "
+        "{fs}; {exception}"
+    )
+
+
+class VisitorGrokRecordError(VisitorException):
+    message = (
+        u"{val} found where I'm expecting to unpack a "
+        u"{record_type_name} record at {field_selector}"
+    )
+
+
+class VisitorGrokCollectionError(VisitorGrokRecordError):
+    message = (
+        u"{val} found where I'm expecting to unpack a "
+        u"{record_type_name} collection at {field_selector}"
     )
 
 

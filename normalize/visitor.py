@@ -16,10 +16,14 @@
 
 from __future__ import absolute_import
 
+import collections
+import types
+
 from normalize.coll import Collection
 import normalize.exc as exc
 from normalize.record import Record
 from normalize.selector import FieldSelector
+from normalize.selector import MultiFieldSelector
 
 
 class Visitor(object):
@@ -30,7 +34,7 @@ class Visitor(object):
     def __init__(self, unpack_func, apply_func, collect_func, reduce_func,
                  apply_empty_slots=False, extraneous=False,
                  ignore_empty_string=False, ignore_none=True,
-                 visit_filter=None):
+                 visit_filter=None, filter=None):
         """Create a new Visitor object.  Generally called by a front-end class
         method of :py:class:`VisitorPattern`
 
@@ -58,7 +62,8 @@ class Visitor(object):
             ``visit_filter=``\ *MultiFieldSelector*
                 This supplies an instance of
                 :py:class:`normalize.selector.MultiFieldSelector`, and
-                restricts the operation to the matched object fields.
+                restricts the operation to the matched object fields.  Can also
+                be specified as just ``filter=``
         """
         self.unpack = unpack_func
         self.apply = apply_func
@@ -70,7 +75,12 @@ class Visitor(object):
         self.ignore_empty_string = ignore_empty_string
         self.ignore_none = ignore_none
 
-        self.visit_filter = visit_filter
+        if visit_filter is None:
+            visit_filter = filter
+        if isinstance(visit_filter, (MultiFieldSelector, types.NoneType)):
+            self.visit_filter = visit_filter
+        else:
+            self.visit_filter = MultiFieldSelector(*visit_filter)
 
         self.seen = set()  # TODO
         self.cue = list()
@@ -363,6 +373,15 @@ class VisitorPattern(object):
 
         return cls.map(visitor, value, value_type)
 
+    # hooks for types which define what is considered acceptable input for
+    # given contexts during 'cast'
+    #
+    # note: Collection.coll_to_tuples will generally allow you to pass
+    # collections as a list or a dict with the *values* being the members of
+    # the set, so this code allows this.
+    grok_mapping_types = collections.Mapping
+    grok_coll_types = (collections.Sequence, collections.Mapping)
+
     @classmethod
     def grok(cls, value, value_type, visitor):
         """Like :py:meth:`normalize.visitor.VisitorPattern.unpack` but called
@@ -377,13 +396,35 @@ class VisitorPattern(object):
         to override this function and throw ``TypeError`` if the passed
         ``value_type`` is not appropriate for ``value``.
         """
-        values = value
         is_coll = issubclass(value_type, Collection)
-        if value_type.properties and is_coll:
-            if "values" in value:
-                values = value['values']
+        is_record = any(not visitor.is_filtered(prop) for prop in
+                        value_type.properties.values())
+
+        if is_record and not isinstance(value, cls.grok_mapping_types):
+            raise exc.VisitorGrokRecordError(
+                val=repr(value),
+                record_type=value_type,
+                record_type_name=value_type.__name__,
+                field_selector=visitor.field_selector,
+            )
+
+        values = value
+        if is_coll and is_record:
+            try:
+                if "values" in value:
+                    values = value['values']
+            except TypeError:
+                pass
+
         generator = None
         if is_coll:
+            if not isinstance(values, cls.grok_coll_types):
+                raise exc.VisitorGrokCollectionError(
+                    val=repr(values),
+                    record_type=value_type,
+                    record_type_name=value_type.__name__,
+                    field_selector=visitor.field_selector,
+                )
             generator = value_type.coll_to_tuples(values)
 
         return (lambda prop: value[prop.name]), generator
@@ -590,6 +631,7 @@ class VisitorPattern(object):
                     exception=e,
                     prop=prop,
                     prop_name=name,
+                    record_type_name=record_type.__name__,
                     fs=rv.field_selector,
                 )
 
@@ -610,7 +652,7 @@ class VisitorPattern(object):
         rv = visitor.copy()
         for key, value in coll_generator:
             rv.push(key)
-            mapped = cls.map(visitor, value, coll_type.itemtype)
+            mapped = cls.map(rv, value, coll_type.itemtype)
             rv.pop(key)
             if mapped is None and visitor.ignore_none:
                 pass

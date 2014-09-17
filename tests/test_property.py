@@ -458,3 +458,12 @@ class TestProperties(unittest2.TestCase):
 
         self.assertIsInstance(society.proleteriat[0], Person)
         self.assertIsInstance(society.bourgeois[0], Person)
+
+    def test_list_safety(self):
+        """Test that ListProperty implies SafeProperty"""
+
+        with self.assertRaises(exc.ListOfWhat):
+            self.assertIsInstance(ListProperty(), SafeProperty)
+
+        self.assertIsInstance(ListProperty(of=str), SafeProperty)
+        self.assertIsInstance(ListProperty(of=Record), SafeProperty)

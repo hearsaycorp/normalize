@@ -48,6 +48,7 @@ class Property(object):
     change the way it behaves.
     """
     __metaclass__ = MetaProperty
+    __safe_unless_ro__ = False
 
     def __init__(self, isa=None,  coerce=None, check=None,
                  required=False, default=_none, traits=None,

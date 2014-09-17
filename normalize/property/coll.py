@@ -27,6 +27,7 @@ class CollectionProperty(Property):
     creating new collection types (via :py:func:`normalize.coll._make_generic`)
     """
     __trait__ = "coll"
+    __safe_unless_ro__ = True
 
     def __init__(self, of=None, coll=None, isa=None, **kwargs):
         """Create a new Collection property.
