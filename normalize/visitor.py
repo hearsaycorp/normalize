@@ -58,7 +58,8 @@ class Visitor(object):
             ``visit_filter=``\ *MultiFieldSelector*
                 This supplies an instance of
                 :py:class:`normalize.selector.MultiFieldSelector`, and
-                restricts the operation to the matched object fields.
+                restricts the operation to the matched object fields.  Can also
+                be specified as just ``filter=``
         """
         self.unpack = unpack_func
         self.apply = apply_func
@@ -72,7 +73,10 @@ class Visitor(object):
 
         if visit_filter is None:
             visit_filter = filter
-        self.visit_filter = visit_filter
+        if isinstance(visit_filter, (MultiFieldSelector, types.NoneType)):
+            self.visit_filter = visit_filter
+        else:
+            self.visit_filter = MultiFieldSelector(*visit_filter)
 
         self.seen = set()  # TODO
         self.cue = list()
