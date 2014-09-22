@@ -233,6 +233,13 @@ class PropertiesNotKnown(RecordDefinitionError):
     )
 
 
+class PropertyArgumentNotKnown(PropertyDefinitionError, TypeError):
+    message = (
+        "No such keyword argument '{badkwarg}' of {proptypename} "
+        "or any loaded subclass' constructor"
+    )
+
+
 class PropertyNotKnown(UsageException):
     message = "unknown property {propname} in {typename}"
 

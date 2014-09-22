@@ -62,13 +62,20 @@ def has(selfie, self, args, kwargs):
                     implies_traits.add(traits)
                     if proptype.__safe_unless_ro__:
                         safe_unless_ro = True
-            if len(implies_traits) > 1:  # if it's 0, it'll fail later
+            if len(implies_traits) > 1:
                 raise exc.AmbiguousPropertyTraitArg(
                     trait_arg=argname,
                     could_be=" ".join(
                         sorted(x.__name__ for x in implies_traits)
                     ),
                     matched_traits=implies_traits,
+                )
+            elif not implies_traits:
+                raise exc.PropertyArgumentNotKnown(
+                    badkwarg=argname,
+                    badkwarg_value=kwargs[argname],
+                    proptypename=self.__name__,
+                    proptype=self,
                 )
             else:
                 extra_traits.update(list(implies_traits)[0])

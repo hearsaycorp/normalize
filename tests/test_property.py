@@ -467,3 +467,8 @@ class TestProperties(unittest2.TestCase):
 
         self.assertIsInstance(ListProperty(of=str), SafeProperty)
         self.assertIsInstance(ListProperty(of=Record), SafeProperty)
+
+    def test_unknown_kwarg(self):
+        with self.assertRaisesRegexp(TypeError, r"'yo_momma' of Property"):
+            Property(yo_momma="so fat, when she sits around the house, "
+                              "she really SITS AROUND THE HOUSE")
