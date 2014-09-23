@@ -633,10 +633,20 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                 b_val = propval_b[b_key]
                 selector_a = fs_a + a_key
                 selector_b = fs_b + b_key
+                any_diffs = False
                 for diff in compare_record_iter(
                     a_val, b_val, selector_a, selector_b, options,
                 ):
+                    if diff.diff_type != DiffTypes.NO_CHANGE:
+                        any_diffs = True
                     yield diff
+
+                if options.unchanged and not any_diffs:
+                    yield DiffInfo(
+                        diff_type=DiffTypes.NO_CHANGE,
+                        base=fs_a + [a_key],
+                        other=fs_b + [b_key],
+                    )
 
     if options.unchanged:
         unchanged = values['a'] & values['b']
