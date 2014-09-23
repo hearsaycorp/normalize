@@ -1,12 +1,20 @@
 Normalize changelog and errata
 ==============================
 
+0.6.1 23rd September 2014
+-------------------------
+* Gracefully handle unknown keyword arguments to Property()
+  previously this would throw an awful internal exception.
+
+* Be sure to emit NO_CHANGE diff events if deep, fuzzy matching found no
+  differences
+
 0.6.0 17th September 2014
 -------------------------
 * Diff will now attempt to do fuzzy matching when comparing
   collections.  This should result in more fine-grained differences
   when comparing data where the values have to be matched by content.
-  This implmentation in this version can be slow (O(N²)), if comparing
+  This implementation in this version can be slow (O(N²)), if comparing
   very large sets with few identical items.
 
 0.5.5 17th September 2014
