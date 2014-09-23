@@ -393,6 +393,9 @@ class LazyProperty(Property):
 
         return super(LazyProperty, self).__get__(obj, type_)
 
+    def __hasattr__(self, obj):
+        return True
+
 
 class ROProperty(Property):
     """A read-only property throws an exception when the attribute slot is
