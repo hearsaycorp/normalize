@@ -495,8 +495,14 @@ def collection_generator(collection):
     return generator()
 
 
-def _fuzzy_match(set_a, set_b):
+def _nested_falsy(x):
+    if isinstance(x, tuple):
+        return not all(not _nested_falsy(y) for y in x)
+    else:
+        return x is _nothing or not x
 
+
+def _fuzzy_match(set_a, set_b):
     seen = dict()
     scores = list()
 
@@ -515,7 +521,7 @@ def _fuzzy_match(set_a, set_b):
             no_match = max((len(a_pk), len(b_pk))) - common
             for i in range(0, common):
                 if a_pk[i] == b_pk[i]:
-                    if a_pk[i] is not None:
+                    if not _nested_falsy(a_pk[i]):
                         match += 1
                 else:
                     no_match += 1
