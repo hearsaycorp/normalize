@@ -1,6 +1,10 @@
 Normalize changelog and errata
 ==============================
 
+0.6.2 24rd September 2014
+-------------------------
+* A false positive match was fixed in the fuzzy matching code.
+
 0.6.1 23rd September 2014
 -------------------------
 * Gracefully handle unknown keyword arguments to Property()
