@@ -152,6 +152,7 @@ class TestProperties(unittest2.TestCase):
         # lazy properties may be assigned
         tdr.fired = None
         self.assertEqual(tdr.fired, None)
+        self.assertEqual(TrapDoorRecord.fired.__get__(tdr), None)
 
         # delete and start again!
         tdr.chamber = "bullet"
