@@ -100,6 +100,21 @@ class TestStructableFieldSelector(unittest.TestCase):
         ):
             FieldSelector(["foo", "bar", 1.0])
 
+    def test_path_marshal(self):
+        for path in (
+            ("foo", "bar"),
+            (None, ),
+            (None, "bob", 6, "frop"),
+            (),
+            ("Bob", "one flew over the cuckoo's nest"),
+            ("Leaning", "toothpick", "syndrome", "\\/\"/"),
+        ):
+            fs = FieldSelector(path)
+            fs_path = fs.path
+            fs_2 = FieldSelector.from_path(fs_path)
+            self.assertEqual(fs.path, fs_2.path)
+            self.assertEqual(fs.selectors, fs_2.selectors)
+
     def test_add_property(self):
         fs = FieldSelector(["foo", "bar"])
         self.assertEqual(fs.selectors, ["foo", "bar"])

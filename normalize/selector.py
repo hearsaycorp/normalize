@@ -369,6 +369,10 @@ class FieldSelector(object):
         """
         return "".join(_fmt_selector_path(x) for x in self.selectors)
 
+    @classmethod
+    def from_path(cls, path):
+        return cls(_scan_selector_path(path))
+
 
 def _fmt_selector_path(selector):
     if isinstance(selector, (int, long)):
@@ -376,9 +380,42 @@ def _fmt_selector_path(selector):
     elif selector is None:
         return "[*]"
     elif re.search(r'[^a-z_]', selector):
-        return "['%s']" % selector.replace("'", "\\'")
+        return "['%s']" % selector.replace("\\", "\\\\").replace("'", "\\'")
     else:
         return ".%s" % selector
+
+
+_PATH_TOK = re.compile(
+    r'''\.(?P<attr>\w+)|
+        \[(?:
+            (?P<idx>\d+)|
+            (?P<wild>\*)|
+            '(?P<key>(?:[^']+|\\')*)'
+        )\]''',
+    re.X,
+)
+
+
+def _scan_selector_path(path):
+    fs = list()
+    for m in re.finditer(_PATH_TOK, path):
+
+        text_item = m.group('key')
+        if text_item is not None:
+            text_item = re.sub(r'\\(.)', lambda m: m.group(1), text_item)
+        else:
+            text_item = m.group('attr')
+
+        if text_item:
+            fs.append(text_item)
+        else:
+            idx_item = m.group('idx')
+            if idx_item:
+                fs.append(int(idx_item))
+            elif m.group('wild'):
+                fs.append(None)
+
+    return fs
 
 
 def _fmt_mfs_path(head, tail):
