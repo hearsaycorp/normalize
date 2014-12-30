@@ -1,6 +1,12 @@
 Normalize changelog and errata
 ==============================
 
+0.6.3 20th December 2014
+------------------------
+* Add support in to_json for marshaling out a property of a record
+* The 'path' form of a field selector can now round-trip, using
+  ``FieldSelector.from_path``
+
 0.6.2 24rd September 2014
 -------------------------
 * A false positive match was fixed in the fuzzy matching code.
