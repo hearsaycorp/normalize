@@ -394,14 +394,12 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         person2.friends[0].given_name = "Jim"
         del person2.friends[1].phone_number
         person2.friends[2].family_name = "Woolf"
-        person2.friends[4].given_name = "Stephie"
         person2.friends[6].family_name = "Haines"
 
         self.assertDifferences(
             person.diff_iter(person2, compare_filter=strip_ssn_mfs),
             basic_differences | {
                 'MODIFIED .friends[0].given_name',
-                'MODIFIED (.friends[2].given_name/.friends[4].given_name)',
                 'MODIFIED (.friends[3].family_name/.friends[6].family_name)',
                 'REMOVED (.friends[5].phone_number/.friends[1].phone_number)',
                 'MODIFIED (.friends[1].family_name/.friends[2].family_name)',
