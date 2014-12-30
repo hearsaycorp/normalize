@@ -237,6 +237,14 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertEqual(jpd.created_date, "2012-07-00")
         self.assertJsonDataEqual(jpd.json_data(), json_in_2)
 
+        self.assertJsonDataEqual(
+            to_json(jpd, prop="created_date"), json_in_2['created'],
+        )
+        self.assertJsonDataEqual(
+            to_json(jpd, prop=PackedDate.created_date),
+            json_in_2['created'],
+        )
+
         # to_json should not emit keys for undefined values
         self.assertEqual(to_json(PackedDate()), {})
         self.assertEqual(to_json(CheeseRecord()), {})

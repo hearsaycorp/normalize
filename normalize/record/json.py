@@ -151,7 +151,7 @@ def _json_data(x, extraneous):
             return to_json(x, extraneous)
 
 
-def to_json(record, extraneous=True):
+def to_json(record, extraneous=True, prop=None):
     """JSON marshall out function: a 'visitor' function which implements
     marshall out, honoring JSON property types/hints but does not require
     them.
@@ -166,8 +166,21 @@ def to_json(record, extraneous=True):
         ``extraneous=``\ *BOOL*
             This parameter is passed through to any ``json_data()`` methods
             which support it.
+
+        ``prop=``\ *PROPNAME*\ |\ *PROPERTY*
+            Specifies to return the given property from an object, calling any
+            ``to_json`` mapping defined on the property.  Does not catch the
+            ``AttributeError`` that is raised by the property not being set.
     """
-    if isinstance(record, Collection):
+    if prop:
+        if isinstance(prop, basestring):
+            prop = type(record).properties[prop]
+        val = prop.__get__(record)
+        if hasattr(prop, "to_json"):
+            val = prop.to_json(val)
+        return _json_data(val, extraneous)
+
+    elif isinstance(record, Collection):
         return list(_json_data(x, extraneous) for x in record)
 
     elif isinstance(record, Record):
@@ -178,14 +191,9 @@ def to_json(record, extraneous=True):
             elif not hasattr(prop, "json_name") or prop.json_name is not None:
                 json_name = getattr(prop, "json_name", prop.name)
                 try:
-                    val = prop.__get__(record)
+                    rv_dict[json_name] = to_json(record, extraneous, prop)
                 except AttributeError:
                     pass
-                else:
-                    if hasattr(prop, "to_json"):
-                        val = prop.to_json(val)
-                    rv_dict[json_name] = _json_data(val, extraneous)
-
         return rv_dict
 
     elif isinstance(record, long):
