@@ -367,7 +367,7 @@ class FieldSelector(object):
             foo = FieldSelector(["foo", 2, "b ar", None, "baz"])
             print foo.path  # foo[2]['b ar'][*].baz
         """
-        return "".join(_fmt_selector_path(x) for x in self.selectors)
+        return u"".join(_fmt_selector_path(x) for x in self.selectors)
 
     @classmethod
     def from_path(cls, path):
@@ -380,7 +380,7 @@ def _fmt_selector_path(selector):
     elif selector is None:
         return "[*]"
     elif re.search(r'[^a-z_]', selector):
-        return "['%s']" % selector.replace("\\", "\\\\").replace("'", "\\'")
+        return u"['%s']" % selector.replace("\\", "\\\\").replace("'", "\\'")
     else:
         return ".%s" % selector
 

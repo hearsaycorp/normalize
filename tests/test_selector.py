@@ -108,6 +108,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             (),
             ("Bob", "one flew over the cuckoo's nest"),
             ("Leaning", "toothpick", "syndrome", "\\/\"/"),
+            (u"\u2620",)
         ):
             fs = FieldSelector(path)
             fs_path = fs.path
