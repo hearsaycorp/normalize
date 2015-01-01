@@ -26,6 +26,7 @@ from normalize.coll import ListCollection
 from normalize.exc import FieldSelectorAttributeError
 from normalize.exc import FieldSelectorException
 from normalize.exc import FieldSelectorKeyError
+from normalize.exc import FieldSelectorOperationUnsupported
 
 
 @functools.total_ordering
@@ -237,6 +238,47 @@ class FieldSelector(object):
             i = i + 1
         type(self)([self.selectors[-1]]).put(record, value)
         return 1
+
+    def delete(self, record):
+        """
+        Like 'put', but deletes the item from the specified location.
+
+        If there is a problem, this method will typically raise
+        :py:class:`FieldSelectorException`.
+
+        ::
+
+           record.foo = "bar"
+           field_selector = FieldSelector(["foo"])
+           field_selector.delete(record)
+           print field_selector.foo  # AttributeError
+        """
+        i = 0
+        for selector in self.selectors[:-1]:
+            if selector is None:
+                sub_field_selector = type(self)(self.selectors[i + 1:])
+                for r in record:
+                    sub_field_selector.delete(r)
+            elif isinstance(selector, (int, long)):
+                try:
+                    record = record[selector]
+                except IndexError:
+                    raise FieldSelectorKeyError(key=selector)
+            else:
+                if not hasattr(record, selector):
+                    raise FieldSelectorAttributeError(name=selector)
+                record = getattr(record, selector)
+            i = i + 1
+        to_delete = self.selectors[-1]
+        if isinstance(to_delete, (int, long, types.NoneType)):
+            # can't do this until the coll types support mutation operations
+            raise FieldSelectorOperationUnsupported(
+                operation="delete",
+                target="collection",
+            )
+        else:
+            if hasattr(record, to_delete):
+                delattr(record, to_delete)
 
     def __eq__(self, other):
         """Implemented; field selectors must have identical paths to compare

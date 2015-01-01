@@ -173,6 +173,13 @@ class FieldSelectorKeyError(FieldSelectorException, KeyError):
     message = "Could not find Record specified by index: {key}"
 
 
+class FieldSelectorOperationUnsupported(FieldSelectorException):
+    message = (
+        "Field Selector Operation {operation} not supported on "
+        "{target}.  Patches welcome."
+    )
+
+
 class KeyHashError(StringFormatException):
     message = (
         "PK for {prop} returned an unhashable value; try setting "

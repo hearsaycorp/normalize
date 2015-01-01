@@ -275,6 +275,33 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs.put(record, "Nested")
         self.assertEqual(record.nested.name, "Nested")
 
+    def test_delete(self):
+
+        class MyObj(Record):
+            foo = Property()
+
+        class OtherObj(Record):
+            objs = ListProperty(of=MyObj)
+
+        mo = MyObj(foo="bar")
+        fs1 = FieldSelector(["foo"])
+        self.assertEqual(fs1.get(mo), "bar")
+        fs1.delete(mo)
+        self.assertRaises(AttributeError, fs1.get, mo)
+
+        oo = OtherObj(objs=[{"foo": "bar"}, {"foo": "frop"}])
+
+        fs2 = FieldSelector(["objs", 0, "foo"])
+        self.assertEqual(fs2.get(oo), "bar")
+        fs2.delete(oo)
+        self.assertRaises(AttributeError, fs2.get, mo)
+        fs2.put(oo,"hey")
+
+        fs3 = FieldSelector(["objs", None, "foo"])
+        self.assertEqual(fs3.get(oo), ["hey", "frop"])
+        fs3.delete(oo)
+        self.assertEqual(oo, OtherObj(objs=[{}, {}]))
+
     def test_eq(self):
         fs1 = FieldSelector(["foo", "bar"])
         fs2 = FieldSelector(["foo", "bar"])
