@@ -17,7 +17,7 @@
 from __future__ import absolute_import
 
 import collections
-import copy
+from copy import deepcopy
 import functools
 import re
 import types
@@ -468,6 +468,10 @@ def _fmt_mfs_path(head, tail):
     )
 
 
+class _None(object):
+    pass
+
+
 class MultiFieldSelector(object):
     """Version of a FieldSelector which stores multiple FieldSelectors combined
     into a single tree structure."""
@@ -652,7 +656,7 @@ class MultiFieldSelector(object):
 
     def _get(self, obj, tail):
         if tail is all:
-            return copy.deepcopy(obj)
+            return deepcopy(obj)
         else:
             return tail.get(obj)
 
@@ -707,3 +711,71 @@ class MultiFieldSelector(object):
                     if val is not None:
                         kwargs[head] = self._get(val, tail)
                 return ctor(**kwargs)
+
+    def delete(self, obj, force=False):
+        """Deletes all of the fields at the specified locations.
+
+        args:
+
+            ``obj=``\ *OBJECT*
+                the object to remove the fields from
+
+            ``force=``\ *BOOL*
+                if True, missing attributes do not raise errors.  Otherwise,
+                the first failure raises an exception without making any
+                changes to ``obj``.
+        """
+        # TODO: this could be a whole lot more efficient!
+        if not force:
+            for fs in self:
+                try:
+                    fs.get(obj)
+                except FieldSelectorException:
+                    raise
+
+        for fs in self:
+            try:
+                fs.delete(obj)
+            except FieldSelectorException:
+                pass
+
+    def patch(self, target, source, copy=False):
+        """Copies fields from ``obj`` to ``target``.  If a matched field does
+        not exist in ``obj``, it will be deleted from ``target``, otherwise it
+        will be assigned (or copied).
+
+        args:
+
+            ``target=``\ *OBJECT*
+                the object to set the fields in
+
+            ``source=``\ *OBJECT*
+                the object to lift the fields from
+
+            ``copy=``\ *BOOL*\ |\ *FUNCTION*
+                deep copy the values set, using copy.deepcopy (or the passed
+                function).  False by default.
+        """
+        # TODO: this could also be a whole lot more efficient!
+        fs_val = []
+        for fs in self:
+            try:
+                fs_val.append((fs, fs.get(source)))
+            except AttributeError:
+                fs_val.append((fs, _None))
+            except FieldSelectorException:
+                raise
+
+        if copy and not callable(copy):
+            copy = lambda x: deepcopy(x)
+
+        for fs, val in fs_val:
+            if val is _None:
+                fs.delete(target)
+            else:
+                fs.post(target, val if not copy else copy(val))
+
+    @classmethod
+    def from_path(cls, mfs_path):
+        mfs = _scan_mfs_path(mfs_path)
+        return cls(*mfs)

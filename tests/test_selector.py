@@ -540,3 +540,51 @@ class TestStructableFieldSelector(unittest.TestCase):
         self.assertNotIn(any, null_mfs)
         self.assertFalse(null_mfs)
         self.assertFalse(null_mfs[any])
+
+    def test_mfs_apply_ops(self):
+        from copy import deepcopy
+        from testclasses import wall_one
+        from normalize.diff import DiffTypes
+
+        selectors = (
+            ("owner",),
+            ("posts", 0, "comments", 0, "poster"),
+            ("posts", 0, "comments", 1, "content"),
+        )
+        required_fields = (
+            ("id",),
+            ("posts", 0, "edited"),
+            ("posts", 0, "post_id"),
+            ("posts", 0, "wall_id"),
+            ("posts", 0, "comments", 0, "edited"),
+            ("posts", 0, "comments", 0, "id"),
+            ("posts", 0, "comments", 1, "edited"),
+            ("posts", 0, "comments", 1, "id"),
+        )
+        deletable_mfs = MultiFieldSelector(*selectors)
+        skeleton_mfs = MultiFieldSelector(*(required_fields + selectors))
+
+        scratch_wall = deepcopy(wall_one)
+        saved_fields = skeleton_mfs.get(scratch_wall)
+        deletable_mfs.delete(scratch_wall)
+        removed = set(
+            tuple(x.base) for x in wall_one.diff_iter(scratch_wall)
+            if x.diff_type == DiffTypes.REMOVED
+        )
+        self.assertEqual(
+            removed, set(selectors),
+            "MultiFieldSelector.delete() can delete named attributes",
+        )
+
+        deletable_mfs.patch(scratch_wall, saved_fields)
+        self.assertFalse(
+            scratch_wall.diff(wall_one),
+            "MultiFieldSelector.patch() can copy named attributes",
+        )
+
+        del saved_fields.owner
+        deletable_mfs.patch(scratch_wall, saved_fields)
+        self.assertFalse(
+            hasattr(scratch_wall, "owner"),
+            "MultiFieldSelector.patch() can delete missing attributes",
+        )
