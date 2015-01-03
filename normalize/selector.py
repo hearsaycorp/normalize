@@ -413,6 +413,8 @@ class FieldSelector(object):
 
     @classmethod
     def from_path(cls, path):
+        """Alternate constructor.  Constructs a FieldSelector from the
+        abbreviated text representation (.path attribute)"""
         return cls(_scan_selector_path(path))
 
 
@@ -777,6 +779,8 @@ class MultiFieldSelector(object):
 
     @classmethod
     def from_path(cls, mfs_path):
+        """Alternate constructor.  Constructs a MultiFieldSelector from the
+        abbreviated text representation (.path attribute)"""
         mfs = _scan_mfs_path(mfs_path)
         return cls(*mfs)
 
