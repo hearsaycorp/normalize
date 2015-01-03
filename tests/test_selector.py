@@ -588,3 +588,22 @@ class TestStructableFieldSelector(unittest.TestCase):
             hasattr(scratch_wall, "owner"),
             "MultiFieldSelector.patch() can delete missing attributes",
         )
+
+    def test_mfs_marshal(self):
+        mfs = MultiFieldSelector(
+            ["rakkk", None, "awkkkkkk"],
+            ["rakkk", None, "zgruppp"],
+            ["cr_r_a_a_ck", "rip"],
+            ["cr_r_a_a_ck", "aiieee"],
+        )
+
+        path = mfs.path
+
+        new_mfs = MultiFieldSelector.from_path(path)
+        for fs in mfs:
+            self.assertIn(fs, new_mfs)
+
+        for fs in new_mfs:
+            self.assertIn(fs, mfs)
+
+        self.assertEqual(len(mfs.path), len(new_mfs.path))

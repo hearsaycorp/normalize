@@ -779,3 +779,56 @@ class MultiFieldSelector(object):
     def from_path(cls, mfs_path):
         mfs = _scan_mfs_path(mfs_path)
         return cls(*mfs)
+
+
+_MFS_PATH_TOK = re.compile(
+    r'''\.(?P<attr>\w+)|
+        \[(?:
+            (?P<idx>\d+)|
+            (?P<wild>\*)|
+            '(?P<key>(?:[^']+|\\')*)'
+        )\]|
+        (?P<branch>[()|])
+        ''',
+    re.X,
+)
+
+
+def _scan_mfs_path(path):
+    mfs = list()
+    fs = list()
+    stack = list()
+    popping = False
+    for m in re.finditer(_MFS_PATH_TOK, path):
+        if m.group("branch"):
+            branch = m.group("branch")
+            if branch == "(":
+                stack.append(list(fs))
+            elif branch == "|":
+                if not popping:
+                    mfs.append(fs)
+                fs = list(stack[-1])
+            else:
+                if not popping:
+                    mfs.append(fs)
+                    popping = True
+                fs = stack.pop()
+        else:
+            popping = False
+
+        text_item = m.group('key')
+        if text_item is not None:
+            text_item = re.sub(r'\\(.)', lambda m: m.group(1), text_item)
+        else:
+            text_item = m.group('attr')
+
+        if text_item:
+            fs.append(text_item)
+        else:
+            idx_item = m.group('idx')
+            if idx_item:
+                fs.append(int(idx_item))
+            elif m.group('wild'):
+                fs.append(None)
+
+    return mfs
