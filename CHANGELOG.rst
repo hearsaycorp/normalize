@@ -1,7 +1,14 @@
 Normalize changelog and errata
 ==============================
 
-0.6.3 20th December 2014
+0.6.4 2nd January 2014
+------------------------
+* The 'path' form of a multi field selector can now round-trip, using
+  ``MultiFieldSelector.from_path``
+* Two new operations on ``MultiFieldSelector``: ``delete`` and
+  ``patch``
+
+0.6.3 30th December 2014
 ------------------------
 * Add support in to_json for marshaling out a property of a record
 * The 'path' form of a field selector can now round-trip, using
