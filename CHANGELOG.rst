@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.6.5 2nd January 2014
+------------------------
+* lazy properties would fire extra times when using visitor APIs or
+  other direct use of __get__ on the meta-property (#50)
+
 0.6.4 2nd January 2014
 ------------------------
 * The 'path' form of a multi field selector can now round-trip, using
