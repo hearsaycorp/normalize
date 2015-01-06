@@ -302,9 +302,11 @@ class LazyProperty(Property):
         """
         if obj is None:
             return self
-        value = self.get_default(obj)
 
-        obj.__dict__[self.name] = self.type_safe_value(value)
+        if self.name not in obj.__dict__:
+            value = self.get_default(obj)
+            obj.__dict__[self.name] = self.type_safe_value(value)
+
         return super(LazyProperty, self).__get__(obj, type_)
 
 
