@@ -152,9 +152,10 @@ def _json_data(x, extraneous):
 
 
 def to_json(record, extraneous=True, prop=None):
-    """JSON marshall out function: a 'visitor' function which implements
-    marshall out, honoring JSON property types/hints but does not require
-    them.
+    """JSON conversion function: a 'visitor' function which implements marshall
+    out (to JSON data form), honoring JSON property types/hints but does not
+    require them.  To convert to an actual JSON document, pass the return value
+    to ``json.dumps`` or a similar function.
 
     args:
         ``record=``\ *anything*
