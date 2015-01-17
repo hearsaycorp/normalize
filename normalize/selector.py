@@ -117,6 +117,12 @@ class FieldSelector(object):
         If there is a problem, this method will typically raise
         :py:class:`FieldSelectorException`.
 
+        If the FieldSelector contains ``None``, then exceptions from iterating
+        over all of the sub-fields are suppressed, so long as one of the items
+        succeed.  The return value will have ``None`` for the values which did
+        not have the attribute.  If all the items fail, then one of the
+        exceptions will be bubbled up to the caller.
+
         ::
 
            record.foo = "bar"
@@ -127,7 +133,21 @@ class FieldSelector(object):
         for selector in self.selectors:
             if selector is None:
                 sub_field_selector = type(self)(self.selectors[i + 1:])
-                return [sub_field_selector.get(r) for r in record]
+                rv = []
+                all_exc = None
+                for r in record:
+                    val = None
+                    try:
+                        val = sub_field_selector.get(r)
+                        all_exc = False
+                    except FieldSelectorException as e:
+                        if all_exc is None:
+                            all_exc = e
+                    rv.append(val)
+                if all_exc:
+                    raise all_exc
+                else:
+                    return rv
             elif isinstance(selector, (int, long)):
                 try:
                     record = record[selector]
@@ -246,6 +266,10 @@ class FieldSelector(object):
         If there is a problem, this method will typically raise
         :py:class:`FieldSelectorException`.
 
+        This function has the same behavior with respect to collections as
+        ``get()``: it will only raise an exception if all of the items in the
+        set did not have the property to delete.
+
         ::
 
            record.foo = "bar"
@@ -257,8 +281,18 @@ class FieldSelector(object):
         for selector in self.selectors[:-1]:
             if selector is None:
                 sub_field_selector = type(self)(self.selectors[i + 1:])
+                all_exc = None
                 for r in record:
-                    sub_field_selector.delete(r)
+                    try:
+                        sub_field_selector.delete(r)
+                        all_exc = False
+                    except FieldSelectorException as e:
+                        if all_exc is None:
+                            all_exc = e
+                if all_exc:
+                    raise all_exc
+                else:
+                    return
             elif isinstance(selector, (int, long)):
                 try:
                     record = record[selector]

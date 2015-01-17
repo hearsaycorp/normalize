@@ -279,6 +279,7 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         class MyObj(Record):
             foo = Property()
+            bar = Property()
 
         class OtherObj(Record):
             objs = ListProperty(of=MyObj)
@@ -301,6 +302,19 @@ class TestStructableFieldSelector(unittest.TestCase):
         self.assertEqual(fs3.get(oo), ["hey", "frop"])
         fs3.delete(oo)
         self.assertEqual(oo, OtherObj(objs=[{}, {}]))
+
+        oo = OtherObj(objs=[{"foo": "baz"}, {"bar": "quux"}])
+        self.assertEqual(fs3.get(oo), ["baz", None])
+        fs3.delete(oo)
+        self.assertEqual(oo, OtherObj(objs=[{}, {"bar": "quux"}]))
+
+        fs4 = FieldSelector(["objs", None, "bar", "foo"])
+        self.assertRaises(FieldSelectorException, fs4.get, oo)
+
+        oo = OtherObj(objs=[{"foo": "baz"}, {"bar": MyObj(foo="bob")}])
+        self.assertEqual(fs4.get(oo), [None, "bob"])
+        fs4.delete(oo)
+        self.assertRaises(FieldSelectorException, fs4.get, oo)
 
     def test_eq(self):
         fs1 = FieldSelector(["foo", "bar"])
