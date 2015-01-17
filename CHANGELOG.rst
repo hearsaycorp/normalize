@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.6.6 16th January 2014
+------------------------
+* Fix ``FieldSelector.delete`` and ``FieldSelector.get`` when some of
+  the items in a collection are missing attributes
+
 0.6.5 2nd January 2014
 ------------------------
 * lazy properties would fire extra times when using visitor APIs or
