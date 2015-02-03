@@ -240,6 +240,15 @@ class TestRecordComparison(unittest.TestCase):
             (),
         )
 
+        bert.name = "Bert\x1d"
+        ubert.name = u"Be\U000e0043rt\x1d"
+        self.assertDifferences(compare_record_iter(bert, ubert), ())
+        self.assertDifferences(
+                compare_record_iter(bert, ubert,
+                                    options=DiffOptions(ignore_control_chars=False)),
+            {"MODIFIED .name"},
+        )
+
     def test_diff_collection(self):
         """Test diff'ing of collections"""
         circle_a = Circle(

@@ -125,7 +125,8 @@ class DiffOptions(object):
                  unicode_normal=True, unchanged=False,
                  ignore_empty_slots=False,
                  duck_type=False, extraneous=False,
-                 compare_filter=None, fuzzy_match=True):
+                 compare_filter=None, fuzzy_match=True,
+                 ignore_control_chars=True):
         """Create a new ``DiffOptions`` instance.
 
         args:
@@ -136,6 +137,9 @@ class DiffOptions(object):
 
             ``ignore_case=``\ *BOOL*
                 Ignore case differences in strings.  False by default.
+
+            ``ignore_control_chars=``\ *BOOL*
+                Ignore control characters in strings.  True by default.
 
             ``unicode_normal=``\ *BOOL*
                 Ignore unicode normal form differences in strings by
@@ -173,6 +177,7 @@ class DiffOptions(object):
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
         self.ignore_empty_slots = ignore_empty_slots
+        self.ignore_control_chars = ignore_control_chars
         self.unicode_normal = unicode_normal
         self.fuzzy_match = fuzzy_match
         self.unchanged = unchanged
@@ -187,6 +192,52 @@ class DiffOptions(object):
         """Sub-class hook which performs value comparison.  Only called for
         comparisons which are not Records."""
         return a == b
+
+    def normalize_control_chars(self, value):
+        """Normalizes control and format chars; called if
+        ``ignore_control_chars`` is true."""
+        if isinstance(value, unicode):
+            # The control-chars list below was precomputed with all
+            # characters in the [Cc] (Control) and [Cf] (Format)
+            # unicode categories.
+            # http://www.fileformat.info/info/unicode/category/
+            # Code used:
+            # all_chars = (unichr(i) for i in xrange(0x110000))
+            # control_chars = ''.join(
+            #     c for c in all_chars if unicodedata.category(c) in ['Cc', 'Cf']
+            # )
+            control_chars = (
+                u'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f'
+                u'\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d'
+                u'\x1e\x1f\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a'
+                u'\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99'
+                u'\x9a\x9b\x9c\x9d\x9e\x9f\xad\u0600\u0601\u0602\u0603\u06dd'
+                u'\u070f\u17b4\u17b5\u200b\u200c\u200d\u200e\u200f\u202a\u202b'
+                u'\u202c\u202d\u202e\u2060\u2061\u2062\u2063\u2064\u206a\u206b'
+                u'\u206c\u206d\u206e\u206f\ufeff\ufff9\ufffa\ufffb\U000110bd'
+                u'\U0001d173\U0001d174\U0001d175\U0001d176\U0001d177\U0001d178'
+                u'\U0001d179\U0001d17a\U000e0001\U000e0020\U000e0021\U000e0022'
+                u'\U000e0023\U000e0024\U000e0025\U000e0026\U000e0027\U000e0028'
+                u'\U000e0029\U000e002a\U000e002b\U000e002c\U000e002d\U000e002e'
+                u'\U000e002f\U000e0030\U000e0031\U000e0032\U000e0033\U000e0034'
+                u'\U000e0035\U000e0036\U000e0037\U000e0038\U000e0039\U000e003a'
+                u'\U000e003b\U000e003c\U000e003d\U000e003e\U000e003f\U000e0040'
+                u'\U000e0041\U000e0042\U000e0043\U000e0044\U000e0045\U000e0046'
+                u'\U000e0047\U000e0048\U000e0049\U000e004a\U000e004b\U000e004c'
+                u'\U000e004d\U000e004e\U000e004f\U000e0050\U000e0051\U000e0052'
+                u'\U000e0053\U000e0054\U000e0055\U000e0056\U000e0057\U000e0058'
+                u'\U000e0059\U000e005a\U000e005b\U000e005c\U000e005d\U000e005e'
+                u'\U000e005f\U000e0060\U000e0061\U000e0062\U000e0063\U000e0064'
+                u'\U000e0065\U000e0066\U000e0067\U000e0068\U000e0069\U000e006a'
+                u'\U000e006b\U000e006c\U000e006d\U000e006e\U000e006f\U000e0070'
+                u'\U000e0071\U000e0072\U000e0073\U000e0074\U000e0075\U000e0076'
+                u'\U000e0077\U000e0078\U000e0079\U000e007a\U000e007b\U000e007c'
+                u'\U000e007d\U000e007e\U000e007f'
+            )
+            control_char_re = re.compile('[%s]' % re.escape(control_chars))
+            return control_char_re.sub('', value)
+        else:
+            return "".join([i for i in value if 31 < ord(i) < 127])
 
     def normalize_whitespace(self, value):
         """Normalizes whitespace; called if ``ignore_ws`` is true."""
@@ -226,6 +277,8 @@ class DiffOptions(object):
         value (after slot/item normalization) is a string, and is responsible
         for calling the various ``normalize_``\ foo methods which act on text.
         """
+        if self.ignore_control_chars:
+            value = self.normalize_control_chars(value)
         if self.ignore_ws:
             value = self.normalize_whitespace(value)
         if self.ignore_case:
