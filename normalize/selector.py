@@ -555,6 +555,7 @@ class MultiFieldSelector(object):
         self.has_int = int in head_types or long in head_types
         self.has_string = any(issubclass(x, basestring) for x in head_types)
         self.has_none = types.NoneType in head_types
+        self.complete = self.has_none and self.heads[None] is all
         if self.has_none and (self.has_int or self.has_string):
             # this should be possible, but I'm punting on it for now
             raise ValueError(
@@ -613,25 +614,34 @@ class MultiFieldSelector(object):
                     yield head_selector + x
 
     def __getitem__(self, index):
-        """Returns the MultiFieldSelector that applies to the specified
-        field/key/index.
+        """Returns the sub-MultiFieldSelector that applies to the specified
+        field/key/index.  If the MultiFieldSelector does not match any fields
+        at this path, it returns ``None``.  If it matches all fields at the
+        path, then it returns a 'complete' MultiFieldSelector (ie, a field
+        selector which matches everything).  If it matches a subset of fields
+        at that location, it will return a MultiFieldSelector which contains
+        those fields.
 
         ::
 
             >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
             >>> mfs["a"]
             MultiFieldSelector(['b'], ['d'])
-            >>>
+            >>> mfs[("a", "c")]
+            None
         """
         if isinstance(index, (FieldSelector, tuple, list)):
             if len(index) == 0:
                 return self
-            if self.has_none:
+            head_index = None if self.has_none else index[0]
+            if self.complete:
                 pass
+            elif head_index not in self.heads:
+                return None
             elif len(index) == 1:
-                index = index[0]
+                return self.heads[head_index]
             else:
-                return self.heads[index[0]][index[1:]]
+                return self.heads[head_index][index[1:]]
         if index is any:
             assert len(self.heads) <= 1, "ambigious fetch of 'any'"
             if len(self.heads) == 1:
@@ -639,12 +649,29 @@ class MultiFieldSelector(object):
             else:
                 return self
 
-        tail = self.heads[None] if self.has_none else self.heads[index]
+        tail = (
+            self.heads[None] if self.complete else
+            self.heads.get(index, None)
+        )
         return type(self)([None]) if tail == all else tail
 
     def __contains__(self, index):
         """Checks to see whether the given item matches the MultiFieldSelector.
 
+        For item index (string, number, ``None``) lookups, the result is True
+        if the result of applying the MultiFieldSelector (with ``.get``) would
+        return an item in that location (if it existed in the input).
+
+        For a FieldSelector (or sequence) lookups, the result is True if the
+        result of applying the MultiFieldSelector and then the FieldSelector on
+        an input is the same as applying the FieldSelector on the input.  ie,
+        that the MultiFieldSelector is a superset of the FieldSelector.
+
+        Unlike plain collections, use of ``in`` does not mean that subscripting
+        will return ``KeyError``.  When used with a FieldSelector, it returns
+        ``False`` when ``__getitem__`` with the index would not return a
+        complete FieldSelector, whereas the ``__getitem__`` call would return a
+        partial (non-complete) MultiFieldSelector.
         ::
 
             >>> mfs = MultiFieldSelector(["a", "b"], ["a", "d"], ["c"])
@@ -653,23 +680,19 @@ class MultiFieldSelector(object):
             >>> "b" in mfs
             False
             >>> FieldSelector(["a"]) in mfs
-            True
+            False
             >>> FieldSelector(["a", "d"]) in mfs
             True
             >>> FieldSelector(["a", "e"]) in mfs
             False
             >>>
         """
-        if isinstance(index, (FieldSelector, tuple, list)) and \
-                len(index) == 1:
-            index = index[0]
-
         if isinstance(index, (basestring, types.IntType, types.NoneType)):
             return self.has_none or index in self.heads
         elif index is any:
             return True if len(self.heads) else False
         elif len(index) == 0:
-            return True
+            return self.complete
         else:
             head_key = None if self.has_none else index[0]
             return (

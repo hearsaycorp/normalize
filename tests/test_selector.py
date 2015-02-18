@@ -482,6 +482,14 @@ class TestStructableFieldSelector(unittest.TestCase):
         self.assertEqual(mfs[FieldSelector(())].path, mfs.path)
         self.assertEqual(mfs[()].path, mfs.path)
 
+    def test_mfs_subscript_by_selector(self):
+        """MultiFieldSelector subscript using FieldSelector"""
+        mfs = MultiFieldSelector([None, "foo"])
+        self.assertEqual(mfs.path, "[*].foo")
+        x = mfs[(1, "none")]
+        self.assertEqual(x, None)
+        self.assertEqual(mfs[FieldSelector((1, "none"))], None)
+
     def test_mfs_json(self):
         """MultiFieldSelector can work on JsonRecordList objects"""
 
@@ -525,11 +533,8 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         fs_in = tuple(
             FieldSelector(x) for x in (
-                ("rakkk",),
-                ("rakkk", 0),
                 ("rakkk", 1, "zgruppp"),
                 ("rakkk", 2, "awkkkkkk", "bap"),
-                ("cr_r_a_a_ck",),
                 ("cr_r_a_a_ck", "rip"),
                 ("cr_r_a_a_ck", "rip", "spla_a_t"),
             )
@@ -540,7 +545,10 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         fs_not_in = tuple(
             FieldSelector(x) for x in (
+                ("rakkk",),
+                ("rakkk", 0),
                 ("ouch",),
+                ("cr_r_a_a_ck",),
                 ("cr_r_a_a_ck", "zlopp"),
                 ("rakkk", 1, "pow"),
             )

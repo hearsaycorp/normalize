@@ -322,7 +322,7 @@ class DiffOptions(object):
     def is_filtered(self, prop, fs):
         if not self.extraneous and prop.extraneous:
             return True
-        return self.compare_filter and fs not in self.compare_filter
+        return self.compare_filter and not self.compare_filter[fs]
 
 
 def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
