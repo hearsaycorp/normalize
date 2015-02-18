@@ -56,6 +56,7 @@ class RecordMeta(type):
             if isinstance(attrval, Property):
                 properties[attrname] = attrval
                 if not attrval.bound:
+                    attrval.set_name(attrname)
                     local_props[attrname] = attrval
                     for aux_name, aux_prop in attrval.aux_props():
                         aux_props[aux_name] = aux_prop
@@ -93,6 +94,6 @@ class RecordMeta(type):
         self = super(RecordMeta, mcs).__new__(mcs, name, bases, attrs)
 
         for propname, prop in local_props.iteritems():
-            prop.bind(self, propname)
+            prop.bind(self)
 
         return self

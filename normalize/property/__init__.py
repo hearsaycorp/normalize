@@ -162,8 +162,10 @@ class Property(object):
     def bound(self):
         return bool(self.class_)
 
-    def bind(self, class_, name):
+    def set_name(self, name):
         self.name = name
+
+    def bind(self, class_):
         self.class_ = weakref.ref(class_)
 
     @property
@@ -171,7 +173,10 @@ class Property(object):
         """Returns the name of the ``Record`` class this ``Property`` is
         attached to, and attribute name it is attached as."""
         if not self.bound:
-            return "(unbound)"
+            if self.name is not None:
+                return "(unbound).%s" % self.name
+            else:
+                return "(unbound)"
         elif not self.class_():
             classname = "(GC'd class)"
         else:
