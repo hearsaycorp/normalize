@@ -1,18 +1,97 @@
 Normalize changelog and errata
 ==============================
 
-0.6.6 16th January 2014
+0.7.0 18th February 2015
 ------------------------
+Lots of long awaited and behavior-changing features:
+
+* empty pseudo-attributes are now available which return (usually falsy)
+  values when the attribute is not set, instead of throwing
+  AttributeError like the regular getters.
+
+  The default is to call this the same as the regular attribute, but
+  with a '0' appended;
+
+  ::
+
+      class Foo(Record):
+          bar = Property()
+
+      foo = Foo()
+      foo.bar  # raises AttributeError
+      foo.bar0  # None
+
+  The default 'empty' value depends on the passed ``isa=`` type
+  constraint, and can be set to ``None`` or the empty string, as
+  desired, using ``empty=``:
+
+  ::
+
+      class Dated(Record):
+          date = Property(isa=MyType, empty=None)
+
+  It's also possible to disable this functionality for particular
+  attributes using ``empty_attr=None``.  Constructor arguments will see
+  a new exception thrown (EmptyDefinitionRequired) which includes
+  instructions on the changes required if this is detected to be the
+  case.
+
+* accordingly, bool(record) now also returns false if the record has no
+  attributes defined; this allows you to use '0' in a chain with
+  properties that are record types:
+
+  ::
+
+      if some_record.sub_prop0.foobar0:
+          pass
+
+  Instead of the previous:
+
+  ::
+
+      if hasattr(some_record, "sub_prop") and \
+              getattr(some_record.sub_prop, "foobar", False):
+          pass
+
+  This currently involves creating a new (empty) instance of the object
+  for each of the intermediate properties; but this may in the future be
+  replaced by a proxy object for performance.
+
+  The main side effect of this change is that this kind of code is no
+  longer safe:
+
+  ::
+
+      try:
+          foo = FooJsonRecord(json_data)
+      except:
+          foo = None 
+
+      if foo:
+          #... doesn't imply an exception happened
+
+* The mechanism by which ``empty=`` delivers psuedo-attributes is
+  available via the ``aux_props`` sub-class API on Property. 
+
+* Various ambiguities around the way MultiFieldSelectors and their ``__getattr__``
+  and ``__contains__`` operators (ie, ``multi_field_selector[X]`` and ``X in
+  multi_field_selector``) are defined have been updated based on
+  findings from using them in real applications.  See the function
+  definitions for more.
+
+
+0.6.6 16th January 2014
+-----------------------
 * Fix ``FieldSelector.delete`` and ``FieldSelector.get`` when some of
   the items in a collection are missing attributes
 
 0.6.5 2nd January 2014
-------------------------
+----------------------
 * lazy properties would fire extra times when using visitor APIs or
   other direct use of __get__ on the meta-property (#50)
 
 0.6.4 2nd January 2014
-------------------------
+----------------------
 * The 'path' form of a multi field selector can now round-trip, using
   ``MultiFieldSelector.from_path``
 * Two new operations on ``MultiFieldSelector``: ``delete`` and
