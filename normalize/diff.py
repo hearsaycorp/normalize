@@ -67,6 +67,7 @@ class DiffInfo(Record):
     diff_type = SafeProperty(
         coerce=_coerce_diff,
         isa=DiffTypes.EnumValue,
+        empty_attr=None,
         required=True,
         doc="Enumeration describing the type of difference; a "
             ":py:class:`DiffType` value.")

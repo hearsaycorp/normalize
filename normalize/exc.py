@@ -112,6 +112,13 @@ class AmbiguousConstruction(UsageException):
     message = "only init_dict or kwargs may be specified"
 
 
+class AttributeEmptyFault(PropertyDefinitionError, AttributeError):
+    message = (
+        "{prop_fullname} ('empty' function raised {exc_type_name}: "
+        "{exception})"
+    )
+
+
 class CoerceError(CoercionError):
     message = (
         "coerce to {valuetype} for {prop} failed with value {value}: "
@@ -163,6 +170,21 @@ class DefaultSignatureError(PropertyDefinitionError):
 
 class DiffOptionsException(UsageException):
     message = "pass options= or DiffOptions constructor arguments; not both"
+
+
+class EmptyDefinitionRequired(PropertyDefinitionError):
+    message = (
+        "'{classname}()' threw {exc_type_name}; define an empty value or "
+        "function and pass with empty=, or disable empty pseudo-attribute "
+        "using empty_attr=None"
+    )
+
+
+class EmptySignatureError(PropertyDefinitionError):
+    message = (
+        "empty functions must have no required arguments (except "
+        "'self'); {module}.{func} wants {nargs}"
+    )
 
 
 class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
