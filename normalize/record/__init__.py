@@ -174,6 +174,13 @@ class Record(object):
         from normalize.diff import diff
         return diff(self, other, **kwargs)
 
+    def __nonzero__(self):
+        for propname, prop in type(self).properties.iteritems():
+            if not prop.extraneous:
+                if getattr(self, propname, False):
+                    return True
+        return False
+
 
 class OhPickle(object):
     """Sentinel type for Un-Pickling.  ``pickle`` does not allow a

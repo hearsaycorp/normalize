@@ -162,6 +162,9 @@ class Collection(Record):
             coll='Collection',
         )
 
+    def __nonzero__(self):
+        return super(Collection, self).__nonzero__() or bool(len(self))
+
 
 class KeyedCollection(Collection):
     def __getitem__(self, item):
