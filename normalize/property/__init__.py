@@ -261,6 +261,9 @@ class Property(object):
         metaclass = str(type(self).__name__)
         return "<%s %s>" % (metaclass, self.fullname)
 
+    def aux_props(self):
+        return ()
+
 
 class LazyProperty(Property):
     """This declares a property which has late evaluation using its 'default'

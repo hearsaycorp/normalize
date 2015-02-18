@@ -46,6 +46,7 @@ class RecordMeta(type):
                         properties[propname] = prop
 
         local_props = dict()
+        aux_props = dict()
 
         for attrname, attrval in attrs.items():
             # don't allow clobbering of these meta-properties in class
@@ -56,6 +57,8 @@ class RecordMeta(type):
                 properties[attrname] = attrval
                 if not attrval.bound:
                     local_props[attrname] = attrval
+                    for aux_name, aux_prop in attrval.aux_props():
+                        aux_props[aux_name] = aux_prop
 
         all_properties = set(properties.values())
 
@@ -76,6 +79,7 @@ class RecordMeta(type):
                     good_props.append(prop)
             return tuple(good_props)
 
+        attrs.update(aux_props)
         attrs['primary_key'] = coerce_prop_list('primary_key')
         attrs['properties'] = properties
         attrs['_sorted_properties'] = sorted(
