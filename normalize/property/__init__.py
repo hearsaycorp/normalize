@@ -331,6 +331,15 @@ class Property(object):
         return "<%s %s>" % (metaclass, self.fullname)
 
     def aux_props(self):
+        """This method is available for property traits to provide extra class
+        attributes which are added to the class they are defined in during
+        class creation.  The default implementation is responsible for defining
+        ``empty_attr`` attributes.
+
+        The return value should be an iterable list of 2-tuples, with the first
+        member of each 2-tuple being the attribute name and the second being
+        the value to insert.
+        """
         if self.empty_attr is not None:
             return ((self.empty_attr, EmptyAuxProp(self)), )
         else:

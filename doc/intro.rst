@@ -227,15 +227,39 @@ function.
 
 .. _defaults:
 
-Property Defaults
------------------
+Property Defaults and Empty psuedo-attributes
+---------------------------------------------
 
+Normally, when you access an attribute which is not set, you will get
+an ``AttributeError``.  This is largely an artefact of Python's core
+design.  Typically you would guard against attributes not being set
+like this:
+
+  ::
+
+      if hasattr(record, "some_property", False) and \
+              record.some_property == "foo":
+          # ...
+
+However, this gets repetitive quickly.  Instead, you can access the
+``empty_attr`` attribute, a read-only attribute which is implicitly
+created, and named the same as your own attribute but with '0'
+appended.  This reduces the above to:
+
+  ::
+
+      if record.some_property0 == "foo":
+          # ...
+
+If you don't like the name, you can override it on a per-attribute
+basis using ``empty_attr``, or define a Property type that overrides
+``aux_props`` and use that property type.
+
+One alternative way to do to this is to set defaults on attributes.
 It's possible to pass a value or function to the ``default=``
 parameter, to set a default value for a property in case one is not
-provided.
-
-You can even use this to make properties that do not raise
-``AttributeError`` if they were not set:
+provided.  That way, because there is always a value in the slot,
+there is no chance that ``AttributeError`` will be raised.
 
   ::
 
@@ -250,12 +274,18 @@ You can even use this to make properties that do not raise
       Sloppy(anything=None, goes='', here=None)
       >>>
 
-Beware that the value is assigned without consideration about whether
-it needs to be copied or not.  For immutable value types like strings,
-integers, etc this is fine.  For mutable lists, dictionaries, etc, it
-is likely to be a problem if you want to change the value after
-construction.  An easy way around this is to supply a function that
-returns a new instance of the value:
+However, you should be careful with this approach.  Does it really
+make sense for the information about whether a value is present to be
+"in-band" with the value?  In general, ``default=`` should be reserved
+for true default values, and not simply to avoid the
+``AttributeError``.
+
+Also beware that the value is assigned without consideration about
+whether it needs to be copied or not.  For immutable value types like
+strings, integers, etc this is fine.  For mutable lists, dictionaries,
+etc, it is likely to be a problem if you want to change the value
+after construction.  An easy way around this is to supply a function
+that returns a new instance of the value:
 
   ::
 

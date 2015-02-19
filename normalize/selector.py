@@ -578,6 +578,10 @@ class MultiFieldSelector(object):
 
     @property
     def path(self):
+        """The path attribute returns a stringified, concise representation of
+        the MultiFieldSelector.  It can be reversed by the ``from_path``
+        constructor.
+        """
         if len(self.heads) == 1:
             return _fmt_mfs_path(self.heads.keys()[0], self.heads.values()[0])
         else:
@@ -811,7 +815,7 @@ class MultiFieldSelector(object):
             ``source=``\ *OBJECT*
                 the object to lift the fields from
 
-            ``copy=``\ *BOOL*\ |\ *FUNCTION*
+            ``copy=``\ *BOOL*\ \|\ *FUNCTION*
                 deep copy the values set, using copy.deepcopy (or the passed
                 function).  False by default.
         """
