@@ -31,10 +31,10 @@ Lots of long awaited and behavior-changing features:
           date = Property(isa=MyType, empty=None)
 
   It's also possible to disable this functionality for particular
-  attributes using ``empty_attr=None``.  Constructor arguments will see
-  a new exception thrown (EmptyDefinitionRequired) which includes
-  instructions on the changes required if this is detected to be the
-  case.
+  attributes using ``empty_attr=None``.
+
+  Property uses which are not safe will see a new warning raised which
+  includes instructions on the changes recommended.
 
 * accordingly, bool(record) now also returns false if the record has no
   attributes defined; this allows you to use '0' in a chain with

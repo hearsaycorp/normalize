@@ -168,11 +168,13 @@ class Property(object):
                 try:
                     self.get_empty(None)
                 except exc.AttributeEmptyFault as aef:
-                    raise exc.EmptyDefinitionRequired(
+                    warning = exc.EmptyDefinitionMissing(
                         classname=self.empty.__name__,
                         exception=aef.exception,
                         exc_type_name=aef.exc_type_name,
                     )
+                    warnings.warn(str(warning), stacklevel=2)
+                    self.empty = None
             else:
                 is_method, nargs = self.func_info(self.empty)
                 if nargs:

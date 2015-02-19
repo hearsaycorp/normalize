@@ -19,7 +19,9 @@
 from __future__ import absolute_import
 
 from datetime import datetime
+import os.path
 import unittest2
+import warnings
 
 from normalize import Property
 from normalize import Record
@@ -84,6 +86,14 @@ class TestRecords(unittest2.TestCase):
 
     def test_bad_constructor(self):
         """Test the 'empty' definition errors happen early"""
-        with self.assertRaises(exc.EmptyDefinitionRequired):
+        with warnings.catch_warnings(record=True) as w:
             class OhNoRecord(Record):
                 lets_go = Property(isa=datetime)
+
+            self.assertEqual(len(w), 1)
+            this_file = os.path.basename(__file__)
+            bad_file = os.path.basename(w[0].filename)
+            self.assertEqual(
+                os.path.splitext(this_file)[0],
+                os.path.splitext(bad_file)[0],
+            )

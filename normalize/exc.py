@@ -172,11 +172,11 @@ class DiffOptionsException(UsageException):
     message = "pass options= or DiffOptions constructor arguments; not both"
 
 
-class EmptyDefinitionRequired(PropertyDefinitionError):
+class EmptyDefinitionMissing(PropertyDefinitionError):
     message = (
         "'{classname}()' threw {exc_type_name}; define an empty value or "
         "function and pass with empty=, or disable empty pseudo-attribute "
-        "using empty_attr=None"
+        "using empty_attr=None; assuming empty=None"
     )
 
 
