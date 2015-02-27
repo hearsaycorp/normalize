@@ -179,7 +179,9 @@ def to_json(record, extraneous=True, prop=None):
         val = prop.__get__(record)
         if hasattr(prop, "to_json"):
             val = prop.to_json(val)
-        return _json_data(val, extraneous)
+            return val
+        else:
+            return _json_data(val, extraneous)
 
     elif isinstance(record, Collection):
         return list(_json_data(x, extraneous) for x in record)

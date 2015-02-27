@@ -59,6 +59,9 @@ class JsonProperty(Property):
                 You'll probably want to convert native python objects to
                 strings, in a form which can be reversed by the
                 ``json_in`` function.
+
+                This function should recurse into
+                :py:func:`normalize.record.to_json` if required.
         """
         super(JsonProperty, self).__init__(**kwargs)
         self._json_name = json_name
