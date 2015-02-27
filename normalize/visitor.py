@@ -87,8 +87,7 @@ class Visitor(object):
 
     def is_filtered(self, prop):
         return (not self.extraneous and prop.extraneous) or (
-            self.visit_filter and self.cue + [prop.name] not in
-            self.visit_filter
+            self.visit_filter and not self.visit_filter[self.cue + [prop.name]]
         )
 
     @property
