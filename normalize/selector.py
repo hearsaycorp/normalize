@@ -513,6 +513,7 @@ class MultiFieldSelector(object):
     into a single tree structure."""
 
     FieldSelector = FieldSelector
+    _complete_mfs = None
 
     def __init__(self, *others):
         """Returns a MultiFieldSelector based on combining the passed-in
@@ -634,6 +635,9 @@ class MultiFieldSelector(object):
             >>> mfs[("a", "c")]
             None
         """
+        if self.complete:
+            return self
+
         if isinstance(index, (FieldSelector, tuple, list)):
             if len(index) == 0:
                 return self
@@ -657,7 +661,7 @@ class MultiFieldSelector(object):
             self.heads[None] if self.complete else
             self.heads.get(index, None)
         )
-        return type(self)([None]) if tail == all else tail
+        return type(self).complete_mfs() if tail == all else tail
 
     def __contains__(self, index):
         """Checks to see whether the given item matches the MultiFieldSelector.
@@ -844,6 +848,12 @@ class MultiFieldSelector(object):
         abbreviated text representation (.path attribute)"""
         mfs = _scan_mfs_path(mfs_path)
         return cls(*mfs)
+
+    @classmethod
+    def complete_mfs(cls):
+        if not isinstance(cls._complete_mfs, cls):
+            cls._complete_mfs = cls([None])
+        return cls._complete_mfs
 
 
 _MFS_PATH_TOK = re.compile(
