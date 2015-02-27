@@ -33,6 +33,7 @@ from normalize.property import Property
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
+from normalize.property.json import JsonProperty
 
 
 class CheeseRecord(Record):
@@ -362,4 +363,30 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertJsonDataEqual(
             nested_record.json_data(extraneous=True),
             nested_input,
+        )
+
+    def test_json_round_trip(self):
+        class Fruit(JsonRecord):
+            protein = Property()
+            fat = Property()
+            carb = Property()
+
+        class Banana(JsonRecord):
+            color = Property(isa=str)
+            length = Property(isa=int)
+            contents = JsonProperty(isa=Fruit)
+
+        banana = Banana(
+            color="yellow",
+            contents={
+                "carb": "23%",
+                "fat": "0.5%",
+                "protein": "1%",
+            },
+            length=6,
+        )
+
+        self.assertEqual(
+            Banana(banana.json_data(extraneous=True)),
+            banana
         )
