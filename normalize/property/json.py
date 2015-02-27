@@ -74,10 +74,18 @@ class JsonProperty(Property):
         the attribute name in the class it is bound to."""
         return self.name if self._json_name is _default else self._json_name
 
-    def to_json(self, propval):
-        """This function calls the ``json_out`` function, if it was
-        specified, otherwise passes through."""
-        return self.json_out(propval) if self.json_out else propval
+    def to_json(self, propval, extraneous=False, to_json_func=None):
+        """This function calls the ``json_out`` function, if it was specified,
+        otherwise continues with JSON conversion of the value in the slot by
+        calling ``to_json_func`` on it.
+        """
+        if self.json_out:
+            return self.json_out(propval)
+        else:
+            if not to_json_func:
+                from normalize.record.json import to_json
+                to_json_func = to_json
+            return to_json_func(propval, extraneous)
 
     def from_json(self, json_data):
         """This function calls the ``json_in`` function, if it was
