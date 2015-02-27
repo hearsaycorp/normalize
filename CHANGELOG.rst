@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.7.2 27th February 2015
+------------------------
+* Fixed a regression with the new 'json_out' behavior I decided was big
+  enough to pull 0.7.1 from PyPI for.
+
 0.7.1 27th February 2015
 ------------------------
 * VisitorPattern.visit with visit_filter would not visit everything in
