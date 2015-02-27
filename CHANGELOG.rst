@@ -1,6 +1,34 @@
 Normalize changelog and errata
 ==============================
 
+0.7.1 27th February 2015
+------------------------
+* VisitorPattern.visit with visit_filter would not visit everything in
+  the filter due to the changes in 0.7.0
+
+* MultiFieldSelector subscripting, where the result is now a "complete"
+  MultiFieldSelector (ie, matches all fields/values) is now more
+  efficient by using a singleton
+
+* the return of 'json_out' is no longer unconditionally passed to
+  ``to_json``: call it explicitly if you desire this behavior:
+
+  ::
+
+      class Foo(Record):
+          bar = Property(isa=Record, json_out=lambda x: {"bar": x})
+
+  If you are using ``json_out`` like this, and expecting ``Record``
+  values or anything with a ``json_data`` method to have that called,
+  then you can wrap the whole thing in ``to_json``:
+
+  ::
+
+      from normalize.record.json import to_json
+
+      class Foo(Record):
+          bar = Property(isa=Record, json_out=lambda x: to_json({"bar": x}))
+
 0.7.0 18th February 2015
 ------------------------
 Lots of long awaited and behavior-changing features:
