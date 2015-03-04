@@ -499,9 +499,7 @@ def make_property_type(name, base_type=Property,
 
     The typical use of this function is to make types for the API you are
     mapping so that, for instance, any time they use a date you can convert
-    it in a consistent way to a ``datetime.date``, or to supply
-    ``default=None`` because you and prefer subtle bugs caused by stray
-    ``None`` values to ``AttributeError`` exceptions.
+    it in a consistent way to a ``datetime.date``.
 
     It's also used by :py:mod:`normalize.property.types` to create all
     of its Property subclasses.
