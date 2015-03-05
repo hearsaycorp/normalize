@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.7.3 4th March 2015
+--------------------
+* Added a new option to diff to suppress diffs found when comparing
+  lists of objects for which all populated fields are filtered.
+
 0.7.2 27th February 2015
 ------------------------
 * Fixed a regression with the new 'json_out' behavior I decided was big
