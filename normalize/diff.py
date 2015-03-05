@@ -124,7 +124,7 @@ class DiffOptions(object):
 
     def __init__(self, ignore_ws=True, ignore_case=False,
                  unicode_normal=True, unchanged=False,
-                 ignore_empty_slots=False,
+                 ignore_empty_slots=False, ignore_empty_items=False,
                  duck_type=False, extraneous=False,
                  compare_filter=None, fuzzy_match=True):
         """Create a new ``DiffOptions`` instance.
@@ -152,6 +152,12 @@ class DiffOptions(object):
                 just ``''`` and ``None``) are treated as if they were not set.
                 False by default.
 
+            ``ignore_empty_items=``\ *BOOL*
+                If true, items are considered to be absent from collections if
+                they have all ``None``, not set, or ``''`` in their primary key
+                fields (all compared fields in the absence of a primary key
+                definition).  False by default.
+
             ``duck_type=``\ *BOOL*
                 Normally, types must match or the result will always be
                 :py:attr:`normalize.diff.DiffTypes.MODIFIED` and the comparison
@@ -174,6 +180,7 @@ class DiffOptions(object):
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
         self.ignore_empty_slots = ignore_empty_slots
+        self.ignore_empty_items = ignore_empty_items
         self.unicode_normal = unicode_normal
         self.fuzzy_match = fuzzy_match
         self.unchanged = unchanged
@@ -503,6 +510,13 @@ def _nested_falsy(x):
         return x is _nothing or not x
 
 
+def _nested_empty(x):
+    if isinstance(x, tuple):
+        return all(_nested_empty(y) for y in x)
+    else:
+        return x is _nothing or x is None or x is ''
+
+
 def _fuzzy_match(set_a, set_b):
     seen = dict()
     scores = list()
@@ -592,6 +606,8 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
         for k, v in collection_generator(propval_x):
             pk = options.record_id(v, **id_args)
+            if options.ignore_empty_items and _nested_empty(pk):
+                continue
             if compare_values is None:
                 # the primary key being a tuple is taken to imply that
                 # the value type is a Record, and hence descent is

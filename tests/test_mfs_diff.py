@@ -405,3 +405,22 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
                 'MODIFIED (.friends[1].family_name/.friends[2].family_name)',
             }
         )
+
+    def test_ignore_empty_items(self):
+        person = get_person(3)
+        person.friends = []
+        person2 = get_person(3, 0, 4, 2, 6)
+
+        no_populated_subfields_mfs = MultiFieldSelector(
+            ["given_name"], ["family_name"], ["description"],
+            ["phone_number"],
+            ["friends", None, "description"],
+        )
+        self.assertDifferences(
+            person.diff_iter(
+                person2,
+                compare_filter=no_populated_subfields_mfs,
+                ignore_empty_items=True,
+            ),
+            set(),
+        )
