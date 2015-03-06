@@ -639,23 +639,32 @@ class MultiFieldSelector(object):
             return self
 
         if isinstance(index, (FieldSelector, tuple, list)):
+            # the semantics of this are a little different.  It should
+            # return a MultiFieldSelector, or None.
             if len(index) == 0:
                 return self
             head_index = None if self.has_none else index[0]
+            tail = index[1:]
             if self.complete:
-                pass
+                return self
             elif head_index not in self.heads:
                 return None
-            elif len(index) == 1:
-                return self.heads[head_index]
+
+            head = self.heads[head_index]
+            if head is all:
+                return type(self).complete_mfs()
+            elif tail:
+                return head[tail]
             else:
-                return self.heads[head_index][index[1:]]
+                return head
+
         if index is any:
+            # XXX useful?
             assert len(self.heads) <= 1, "ambigious fetch of 'any'"
             if len(self.heads) == 1:
                 index = self.heads.keys()[0]
             else:
-                return self
+                return self  # XXX wat
 
         tail = (
             self.heads[None] if self.complete else

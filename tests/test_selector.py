@@ -541,7 +541,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         )
 
         for fs in fs_in:
-            self.assertIn(fs, mfs)
+            self.assertIn(fs, mfs, fs.path)
 
         fs_not_in = tuple(
             FieldSelector(x) for x in (
@@ -555,7 +555,29 @@ class TestStructableFieldSelector(unittest.TestCase):
         )
 
         for fs in fs_not_in:
-            self.assertNotIn(fs, mfs)
+            self.assertNotIn(fs, mfs, fs.path)
+
+        fs_some = fs_in + tuple(
+            FieldSelector(x) for x in (
+                ("rakkk",),
+                ("rakkk", 0),
+                ("cr_r_a_a_ck",),
+            )
+        )
+
+        for fs in fs_some:
+            self.assertIsNotNone(mfs[fs], fs.path)
+
+        fs_not_any = tuple(
+            FieldSelector(x) for x in (
+                ("ouch",),
+                ("cr_r_a_a_ck", "zlopp"),
+                ("rakkk", 1, "pow"),
+            )
+        )
+
+        for fs in fs_not_any:
+            self.assertIsNone(mfs[fs], fs.path)
 
     def test_null_mfs(self):
         null_mfs = MultiFieldSelector()
