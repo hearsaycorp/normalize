@@ -1,6 +1,14 @@
 Normalize changelog and errata
 ==============================
 
+0.7.4 5th March 2015
+--------------------
+* A regression which introduced subtle bugs in 0.7.0, which became more
+  significant with the new feature delivered in 0.7.3 was fixed.
+
+* An exception with some forms of dereferencing MultiFieldSelectors was
+  fixed.
+
 0.7.3 4th March 2015
 --------------------
 * Added a new option to diff to suppress diffs found when comparing
