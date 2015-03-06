@@ -433,8 +433,13 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         self.assertDifferences(
             person.diff_iter(
                 person2,
-                compare_filter=no_populated_subfields_mfs,
+                compare_filter=some_populated_subfields_mfs,
                 ignore_empty_items=True,
             ),
-            set(),
+            {
+                "ADDED .friends[0]",
+                "ADDED .friends[1]",
+                "ADDED .friends[2]",
+                "ADDED .friends[3]",
+            }
         )

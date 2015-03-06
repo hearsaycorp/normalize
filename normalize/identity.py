@@ -33,7 +33,7 @@ def record_id(object_, type_=None, selector=None, normalize_object_slot=None):
     key_vals = list()
     pk_cols = type_.primary_key
     if selector and pk_cols and not all(
-        (x.name,) in selector for x in pk_cols
+        selector[(x.name,)] for x in pk_cols
     ):
         pk_cols = None
 
@@ -48,7 +48,7 @@ def record_id(object_, type_=None, selector=None, normalize_object_slot=None):
         return tuple(
             record_id(
                 v, type_.itemtype, selector[k], normalize_object_slot,
-            ) for k, v in gen if (k,) in selector
+            ) for k, v in gen if selector[(k,)]
         ) if selector else tuple(
             record_id(v, type_.itemtype, None, normalize_object_slot) for
             k, v in gen
@@ -58,7 +58,7 @@ def record_id(object_, type_=None, selector=None, normalize_object_slot=None):
         all_properties = type_._sorted_properties
         if selector:
             all_properties = tuple(
-                x for x in all_properties if (x.name,) in selector
+                x for x in all_properties if selector[(x.name,)]
             )
 
     for prop in pk_cols or all_properties:
