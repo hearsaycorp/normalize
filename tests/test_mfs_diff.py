@@ -39,9 +39,13 @@ from normalize.property.types import UnicodeProperty
 from normalize.selector import MultiFieldSelector
 
 
+class Name(Record):
+    given = UnicodeProperty()
+    family = UnicodeProperty()
+
+
 class SurrogatePerson(Record):
-    given_name = UnicodeProperty()
-    family_name = UnicodeProperty()
+    name = Property(isa=Name)
     ssn = Property(isa=str, check=lambda x: re.match(r'\d{3}-\d{2}-\d{4}', x))
     date_of_birth = DateProperty()
     description = UnicodeProperty()
@@ -92,8 +96,7 @@ def get_person(i, *friends, **kwargs):
         cls = PersonWithFriends
 
     return cls(
-        given_name=x[0],
-        family_name=x[1],
+        name=Name(given=x[0], family=x[1]),
         date_of_birth=x[2],
         phone_number=x[3],
         ssn="123-%.2d-%.4d" % (
@@ -120,7 +123,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
 
     def test_filtered_diff(self):
         """Test that diff notices when fields are removed"""
-        name_mfs = MultiFieldSelector(["given_name"], ["family_name"])
+        name_mfs = MultiFieldSelector(["name", "given"], ["name", "family"])
         person = get_person(1)
         filtered_person = name_mfs.get(person)
         self.assertDifferences(
@@ -131,7 +134,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
 
     def test_filtered_coll_diff(self):
         name_and_friends_mfs = MultiFieldSelector(
-            ["given_name"], ["family_name"],
+            ["name"],
             ["friends", 0],
             ["friends", 2],
         )
@@ -147,9 +150,8 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
 
     def test_filtered_coll_items_diff(self):
         strip_ids_mfs = MultiFieldSelector(
-            ["given_name"], ["family_name"], ["date_of_birth"],
-            ["friends", None, "given_name"],
-            ["friends", None, "family_name"],
+            ["name", "family"], ["date_of_birth"],
+            ["friends", None, "name"],
             ["friends", None, "date_of_birth"],
         )
         person = get_person(0, 2, 5, 6, 3)
@@ -159,6 +161,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         self.assertDifferences(
             person.diff_iter(filtered_person), {
                 "REMOVED .ssn", "REMOVED .phone_number",
+                "REMOVED .name.given",
                 "REMOVED .friends[0]", "ADDED .friends[0]",
                 "REMOVED .friends[1]", "ADDED .friends[1]",
                 "REMOVED .friends[2]", "ADDED .friends[2]",
@@ -184,9 +187,8 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
     def test_ignore_empty_and_coll(self):
         person = get_person(6, 0, 3, 4, 5)
         strip_ids_mfs = MultiFieldSelector(
-            ["given_name"], ["family_name"], ["description"],
-            ["friends", None, "given_name"],
-            ["friends", None, "family_name"],
+            ["name"], ["description"],
+            ["friends", None, "name"],
             ["friends", None, "description"],
         )
         filtered_person = strip_ids_mfs.get(person)
@@ -222,9 +224,8 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
     def test_normalize_slot(self):
         person = get_person(3, 0, 2, 4, 6)
         strip_ids_mfs = MultiFieldSelector(
-            ["given_name"], ["family_name"], ["phone_number"],
-            ["friends", None, "given_name"],
-            ["friends", None, "family_name"],
+            ["name"], ["phone_number"],
+            ["friends", None, "name"],
             ["friends", None, "phone_number"],
         )
         filtered_person = strip_ids_mfs.get(person)
@@ -280,7 +281,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         ignore_friends = MyDiffOptions(
             ignore_empty_slots=True,
             compare_filter=MultiFieldSelector(
-                ["given_name"], ["family_name"], ["phone_number"],
+                ["name"], ["phone_number"],
             )
         )
 
@@ -373,10 +374,9 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         person2 = get_person(3, 0, 1, 2, 3, 4, 5, 6)
 
         strip_ssn_mfs = MultiFieldSelector(
-            ["given_name"], ["family_name"], ["description"],
+            ["name"], ["description"],
             ["phone_number"],
-            ["friends", None, "given_name"],
-            ["friends", None, "family_name"],
+            ["friends", None, "name"],
             ["friends", None, "description"],
             ["friends", None, "phone_number"],
         )
@@ -391,18 +391,18 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
             basic_differences,
         )
 
-        person2.friends[0].given_name = "Jim"
+        person2.friends[0].name.given = "Jim"
         del person2.friends[1].phone_number
-        person2.friends[2].family_name = "Woolf"
-        person2.friends[6].family_name = "Haines"
+        person2.friends[2].name.family = "Woolf"
+        person2.friends[6].name.family = "Haines"
 
         self.assertDifferences(
             person.diff_iter(person2, compare_filter=strip_ssn_mfs),
             basic_differences | {
-                'MODIFIED .friends[0].given_name',
-                'MODIFIED (.friends[3].family_name/.friends[6].family_name)',
+                'MODIFIED .friends[0].name.given',
+                'MODIFIED (.friends[3].name.family/.friends[6].name.family)',
                 'REMOVED (.friends[5].phone_number/.friends[1].phone_number)',
-                'MODIFIED (.friends[1].family_name/.friends[2].family_name)',
+                'MODIFIED (.friends[1].name.family/.friends[2].name.family)',
             }
         )
 
@@ -412,9 +412,23 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         person2 = get_person(3, 0, 4, 2, 6)
 
         no_populated_subfields_mfs = MultiFieldSelector(
-            ["given_name"], ["family_name"], ["description"],
+            ["name"], ["description"],
             ["phone_number"],
             ["friends", None, "description"],
+        )
+        self.assertDifferences(
+            person.diff_iter(
+                person2,
+                compare_filter=no_populated_subfields_mfs,
+                ignore_empty_items=True,
+            ),
+            set(),
+        )
+
+        some_populated_subfields_mfs = MultiFieldSelector(
+            ["name"], ["description"],
+            ["phone_number"],
+            ["friends", None, "name", "family"],
         )
         self.assertDifferences(
             person.diff_iter(
