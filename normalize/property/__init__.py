@@ -30,6 +30,7 @@ import inspect
 import warnings
 import weakref
 
+import normalize.empty as empty
 import normalize.exc as exc
 from normalize.property.meta import MetaProperty
 
@@ -52,8 +53,8 @@ class Property(object):
 
     def __init__(self, isa=None,  coerce=None, check=None,
                  required=False, default=_none, traits=None,
-                 extraneous=False, empty=_none, empty_attr=_none,
-                 doc=None):
+                 extraneous=False, empty_attr=_none,
+                 empty=None, doc=None):
         """Declares a new standard Property.  Note: if you pass arguments which
         are not understood by this constructor, or pass extra property traits
         to ``traits``, then the call will be redirected to a sub-class; see
@@ -95,18 +96,17 @@ class Property(object):
                 is ``["safe"]``, and any unknown keyword arguments will add
                 extra traits on.
 
-            ``empty=``\ *VAL*\ \|\ *CLASS*\ \|\ *FUNC*
-                Specify what is returned by the ``empty_attr`` method.
-                Defaults to ``None``, or the result of calling the constructor
-                for the type passed to ``isa=`` with no arguments; eg for
-                ``int`` this returns 0, and for ``str`` this returns the empty
-                string.  It can also be a function or method; this does NOT set
-                the slot with its return value; use ``default=`` for that.
-
             ``empty_attr=``\ *METHODNAME*
                 Specify an auxiliary method name which returns the value if the
-                attribute is set, otherwise the ``empty`` value.  Defaults to
-                the name of the attribute with a ``0`` appended.
+                attribute is set, otherwise an ``empty`` proxy value.  Defaults
+                to the name of the attribute with a ``0`` appended, or ``None``
+                if the attribute already ends with a number (disabling the
+                accessor)
+
+            ``empty=``\ *IGNORED*
+                For partial compatibility with normalize 0.7.x.  This used to
+                specify the value returned by the ``empty_attr`` attribute;
+                now that attribute always returns a Falsy placeholder.
 
             ``extraneous=``\ *BOOL*
                 This Property is considered *denormalized* and does not affect
@@ -156,34 +156,7 @@ class Property(object):
         self.coerce = coerce or isa
         if self.coerce and not self.valuetype:
             raise exc.CoerceWithoutType()
-        self.empty = (
-            None if isinstance(self.valuetype, tuple) else
-            self.valuetype
-        ) if empty is _none else empty
-
         self.empty_attr = empty_attr
-        if empty_attr is not None and callable(self.empty):
-            if isinstance(self.empty, type):
-                self.empty_is_method = False
-                try:
-                    self.get_empty(None)
-                except exc.AttributeEmptyFault as aef:
-                    warning = exc.EmptyDefinitionMissing(
-                        classname=self.empty.__name__,
-                        exception=aef.exception,
-                        exc_type_name=aef.exc_type_name,
-                    )
-                    warnings.warn(str(warning), stacklevel=2)
-                    self.empty = None
-            else:
-                is_method, nargs = self.func_info(self.empty)
-                if nargs:
-                    raise exc.EmptySignatureError(
-                        func=self.empty,
-                        module=self.empty.__module__,
-                        nargs=nargs,
-                    )
-                self.empty_is_method = is_method
         self.extraneous = extraneous
 
     def func_info(self, func):
@@ -281,24 +254,6 @@ class Property(object):
             rv = self.default
         return rv
 
-    def get_empty(self, obj):
-        if callable(self.empty):
-            try:
-                if self.empty_is_method:
-                    rv = self.empty(obj)
-                else:
-                    rv = self.empty()
-            except Exception as e:
-                raise exc.AttributeEmptyFault(
-                    exception=e,
-                    exc_type_name=type(e).__name__,
-                    prop_fullname=self.fullname,
-                    prop=self,
-                )
-            return rv
-        else:
-            return self.empty
-
     def init_prop(self, obj, value=_Default):
         if value is _Default:
             value = self.get_default(obj)
@@ -349,12 +304,13 @@ class Property(object):
 class EmptyAuxProp(object):
     def __init__(self, prop):
         self.prop = prop
+        self.valuetype = prop.valuetype or any
 
     def __get__(self, obj, type_=None):
         try:
             return self.prop.__get__(obj)
         except AttributeError:
-            return self.prop.get_empty(obj)
+            return empty.placeholder(self.valuetype)
 
 
 class LazyProperty(Property):

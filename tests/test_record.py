@@ -23,6 +23,7 @@ import os.path
 import unittest2
 import warnings
 
+from normalize import ListProperty
 from normalize import Property
 from normalize import Record
 import normalize.exc as exc
@@ -47,10 +48,10 @@ class TestRecords(unittest2.TestCase):
         with self.assertRaises(AttributeError):
             sophie.aux_placeholder
 
-        self.assertEqual(sophie.aux_placeholder0, '')
-        self.assertEqual(sophie.age0, 0)
-        self.assertEqual(sophie.name0, None)
-        self.assertEqual(sophie.placeholder0, None)
+        self.assertFalse(sophie.aux_placeholder0)
+        self.assertFalse(sophie.age0)
+        self.assertFalse(sophie.name0)
+        self.assertFalse(sophie.placeholder0)
 
         # the properties aren't really set...
         self.assertEqual(VisitorPattern.visit(sophie), {})
@@ -71,29 +72,69 @@ class TestRecords(unittest2.TestCase):
             blah = Property()
 
         class LambdaRecord(Record):
-            epoch = Property(empty=lambda: datetime(1970, 1, 1, 0, 0, 0))
-            objective = Property(empty=BlahRecord)
+            epoch = Property(isa=datetime)
+            objective = Property(isa=BlahRecord)
 
         lambda_ = LambdaRecord()
 
-        self.assertTrue(
-            lambda_.epoch0.isoformat().startswith("1970-01-01T00:00:00"),
-            "lambda empty values are called",
+        self.assertFalse(
+            lambda_.epoch0.isoformat()[:4].bob.foo,
+            "empty values work",
         )
-        lambda_.objective0.blah = 123
-        self.assertIsNone(lambda_.objective0.blah0,
-                          "empty values don't persist")
+        self.assertFalse(lambda_.objective0.blah0,
+                         "empty values don't persist")
+
+        with self.assertRaisesRegexp(AttributeError, r'BlahRecord.*blha0'):
+            ph = lambda_.objective0.blha0
+
+        with self.assertRaisesRegexp(
+            exc.EmptyAttributeError, r"Can't assign.*BlahRecord"
+        ):
+            ph = lambda_.objective0.blah = 42
 
     def test_bad_constructor(self):
-        """Test the 'empty' definition errors happen early"""
+        """Test that 'empty' definition errors are no longer possible"""
         with warnings.catch_warnings(record=True) as w:
             class OhNoRecord(Record):
                 lets_go = Property(isa=datetime)
 
-            self.assertEqual(len(w), 1)
-            this_file = os.path.basename(__file__)
-            bad_file = os.path.basename(w[0].filename)
-            self.assertEqual(
-                os.path.splitext(this_file)[0],
-                os.path.splitext(bad_file)[0],
-            )
+            self.assertEqual(len(w), 0)
+
+    def test_empty_type_inference(self):
+
+        class OneRecord(Record):
+            foo = Property()
+
+        class TwoRecord(Record):
+            bar = Property()
+
+        class NumRecord(Record):
+            which = Property(isa=(OneRecord, TwoRecord))
+
+        class NumsRecord(Record):
+            nums = ListProperty(of=NumRecord)
+
+        nr = NumsRecord()
+
+        with self.assertRaisesRegexp(
+            exc.EmptyAttributeError, r"NumRecordList.*attribute 'which'",
+        ):
+            nr.nums0.which
+        self.assertFalse(nr.nums0[1].which)
+
+        with self.assertRaisesRegexp(
+            exc.EmptyAttributeError, r"NumRecord\b.*attribute 'blah'",
+        ):
+            nr.nums0[0].blah
+
+        self.assertFalse(nr.nums0[2].which.foo)
+        self.assertFalse(nr.nums0[2].which.bar)
+
+        # 0 forms also work as well
+        self.assertFalse(nr.nums0[3].which0.bar0)
+        self.assertFalse(nr.nums0[4].which0.foo0)
+
+        with self.assertRaisesRegexp(
+            exc.NotSubscriptable, r"OneRecord,TwoRecord"
+        ):
+            nr.nums0[1].which[1]

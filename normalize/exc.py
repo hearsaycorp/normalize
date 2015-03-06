@@ -75,6 +75,10 @@ class CoercionError(StringFormatException, ValueError):
     pass
 
 
+class EmptyAttributeError(StringFormatException):
+    pass
+
+
 class FieldSelectorException(StringFormatException):
     pass
 
@@ -116,6 +120,12 @@ class AttributeEmptyFault(PropertyDefinitionError, AttributeError):
     message = (
         "{prop_fullname} ('empty' function raised {exc_type_name}: "
         "{exception})"
+    )
+
+
+class BadAssignment(EmptyAttributeError, TypeError):
+    message = (
+        "Can't assign to the empty placeholder for ({typenames})"
     )
 
 
@@ -237,6 +247,24 @@ class MultipleInheritanceClash(SubclassError):
     message = (
         "Property {propname} defined by multiple base "
         "classes of {typename}"
+    )
+
+
+class NotCallable(EmptyAttributeError, TypeError):
+    message = (
+        "No types in ({typenames}) support invoking"
+    )
+
+
+class NotSubscriptable(EmptyAttributeError, TypeError):
+    message = (
+        "No types in ({typenames}) support subscripting"
+    )
+
+
+class NoSuchAttribute(EmptyAttributeError, AttributeError):
+    message = (
+        "No types in ({typenames}) have attribute '{attribute}'"
     )
 
 
