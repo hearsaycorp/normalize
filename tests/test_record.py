@@ -92,6 +92,11 @@ class TestRecords(unittest2.TestCase):
         ):
             ph = lambda_.objective0.blah = 42
 
+        with self.assertRaisesRegexp(
+            exc.EmptyAttributeError, r"Can't assign.*BlahRecord"
+        ):
+            ph = lambda_.objective0[0] = 42
+
     def test_bad_constructor(self):
         """Test that 'empty' definition errors are no longer possible"""
         with warnings.catch_warnings(record=True) as w:
@@ -107,6 +112,9 @@ class TestRecords(unittest2.TestCase):
 
         class TwoRecord(Record):
             bar = Property()
+
+            def __call__(self):
+                return "hi"
 
         class NumRecord(Record):
             which = Property(isa=(OneRecord, TwoRecord))
@@ -134,7 +142,42 @@ class TestRecords(unittest2.TestCase):
         self.assertFalse(nr.nums0[3].which0.bar0)
         self.assertFalse(nr.nums0[4].which0.foo0)
 
+        # array slicing
+        self.assertFalse(nr.nums0[3:-1][0].which0.foo0)
+
         with self.assertRaisesRegexp(
             exc.NotSubscriptable, r"OneRecord,TwoRecord"
         ):
             nr.nums0[1].which[1]
+
+        # test invoking
+        with self.assertRaisesRegexp(exc.NotCallable, r"NumRecord"):
+            nr.nums0[1]()
+
+        self.assertFalse(nr.nums0[4].which())
+
+        class MagicRecord(Record):
+            def __getattr__(self, whatever):
+                return 1
+
+        class MagicList(Record):
+            def __getitem__(self, whatever):
+                return 1
+
+        class LooseRecord(Record):
+            this = Property(isa=(OneRecord, TwoRecord, datetime))
+            that = Property(isa=MagicRecord)
+            other = Property(isa=MagicList)
+
+        lr = LooseRecord()
+        self.assertFalse(lr.this0.date)
+        with self.assertRaisesRegexp(exc.NoSuchAttribute, r"TwoRecord,datetime"):
+            lr.this0.dote
+
+        self.assertFalse(lr.that0.date)
+        with self.assertRaisesRegexp(exc.NotSubscriptable, r"MagicRecord"):
+            lr.that0[7]
+
+        self.assertFalse(lr.other0[0].foo.bar())
+        with self.assertRaisesRegexp(exc.NoSuchAttribute, r"MagicList"):
+            lr.other0.anything

@@ -39,22 +39,15 @@ class EmptyVal(object):
             return self
         if attr_name not in self._attrs:
             attrs_found = []
-            all_record = None
             for type_ in self._typetuple:
-                is_record = issubclass(type_, normalize.record.Record)
-                if is_record:
-                    if all_record is None:
-                        all_record = True
-                else:
-                    all_record = False
                 prop = getattr(type_, attr_name, None)
                 if prop is None:
-                    if getattr(type_, "__getattr__", None):
+                    if '__getattr__' in type_.__dict__:
                         attrs_found.append(None)
                 else:
                     attrs_found.append(prop)
         
-            if not attrs_found and all_record:
+            if not attrs_found:
                 raise self._exc(
                     "NoSuchAttribute",
                     attribute=attr_name,
@@ -64,8 +57,6 @@ class EmptyVal(object):
                     tuple(itertypes(getattr(attr, "valuetype", any) for
                                     attr in attrs_found))
                 )
-            else:
-                self._attrs[attr_name] = placeholder(any)
         return self._attrs[attr_name]
 
     def __setattr__(self, item, value):
@@ -74,16 +65,16 @@ class EmptyVal(object):
         else:
             raise self._exc("BadAssignment")
 
-    def __setitem__(self, item):
+    def __setitem__(self, item, value):
         raise self._exc("BadAssignment")
 
     def __call__(self, *args, **kwargs):
         if self._typetuple is any:
             return self
         for type_ in self._typetuple:
-            if hasattr(type_, "__call__"):
+            if type_.__dict__.get("__call__", False):
                 return placeholder(any)
-            raise self._exc('CannotInvoke')
+        raise self._exc('NotCallable')
 
     def __getitem__(self, item):
         if self._typetuple is any:
@@ -91,20 +82,15 @@ class EmptyVal(object):
         if isinstance(item, slice):
             return self
         elif self._member_type is None:
-            all_record = None
             coll_types = []
             for type_ in self._typetuple:
-                is_record = issubclass(type_, normalize.record.Record)
-                if is_record:
-                    if all_record is None:
-                        all_record = True
-                    is_coll = issubclass(type_, normalize.coll.Collection)
-                    if is_coll:
-                        coll_types.append(type_.itemtype)
-                else:
-                    all_record = False
+                is_coll = issubclass(type_, normalize.coll.Collection)
+                if is_coll:
+                    coll_types.append(type_.itemtype)
+                elif '__getitem__' in type_.__dict__:
+                    coll_types.append(any)
 
-            if all_record and not coll_types:
+            if not coll_types:
                 raise self._exc("NotSubscriptable")
             elif coll_types:
                 self._member_type = placeholder(tuple(itertypes(coll_types)))
