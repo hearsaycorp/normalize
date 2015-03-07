@@ -126,10 +126,19 @@ class EmptyVal(object):
     def __nonzero__(self):
         return False
 
+    def _typelist(self):
+        return "any" if self._typetuple is any else ",".join(
+             str(t.__name__) for t in self._typetuple
+            if isinstance(t, type)
+        )
+
+    def __repr__(self):
+        return "normalize.empty.placeholder(%s)" % self._typelist()
+
+    def __str__(self):
+        return "False(%s)" % self._typelist()
+
     def _exc(self, which, **kwargs):
         return getattr(normalize.exc, which)(
-            typenames=",".join(
-                str(t.__name__) for t in self._typetuple
-                    if isinstance(t, type)
-            ),
+            typenames=self._typelist(),
             **kwargs)
