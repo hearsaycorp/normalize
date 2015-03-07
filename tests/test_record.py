@@ -108,10 +108,10 @@ class TestRecords(unittest2.TestCase):
     def test_empty_type_inference(self):
 
         class OneRecord(Record):
-            foo = Property()
+            foo = Property(isa=type(2))
 
         class TwoRecord(Record):
-            bar = Property()
+            bar = Property(isa=type(None))
 
             def __call__(self):
                 return "hi"
@@ -170,9 +170,13 @@ class TestRecords(unittest2.TestCase):
             other = Property(isa=MagicList)
 
         lr = LooseRecord()
+
         self.assertFalse(lr.this0.date)
+        self.assertFalse(lr.this0.foo.real)
         with self.assertRaisesRegexp(exc.NoSuchAttribute, r"TwoRecord,datetime"):
             lr.this0.dote
+        with self.assertRaisesRegexp(exc.NoSuchAttribute, r"None"):
+            self.assertFalse(lr.this0.bar.real)
 
         self.assertFalse(lr.that0.date)
         with self.assertRaisesRegexp(exc.NotSubscriptable, r"MagicRecord"):

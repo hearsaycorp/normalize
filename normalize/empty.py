@@ -54,8 +54,12 @@ class EmptyVal(object):
                 )
             elif attrs_found:
                 self._attrs[attr_name] = placeholder(
-                    tuple(itertypes(getattr(attr, "valuetype", any) for
-                                    attr in attrs_found))
+                    tuple(
+                        itertypes(
+                            getattr(attr, "valuetype", False) or any for
+                            attr in attrs_found
+                        )
+                    )
                 )
         return self._attrs[attr_name]
 
