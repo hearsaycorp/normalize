@@ -1,6 +1,17 @@
 Normalize changelog and errata
 ==============================
 
+0.8.0 6th March 2015
+--------------------
+* ``bool(record)`` was reverted to pre-0.7.x behavior: always True,
+  unless a Collection in which case Falsy depending on the number of
+  members in the collection.
+
+* Empty psuedo-attributes now return ``normalize.empty.EmptyVal``
+  objects, which are always ``False`` and perform a limited amount of
+  sanity checking/type inference, so that misspellings of sub-properties
+  can sometimes be caught.
+
 0.7.4 5th March 2015
 --------------------
 * A regression which introduced subtle bugs in 0.7.0, which became more
