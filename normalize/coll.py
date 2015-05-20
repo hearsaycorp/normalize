@@ -96,7 +96,7 @@ class Collection(Record):
                 It is possible to add extra properties to ``Collection``
                 objects; this is how you specify them on construction.
         """
-        self.values = type(self).tuples_to_coll(
+        self._values = type(self).tuples_to_coll(
             type(self).coll_to_tuples(values)
         )
         super(Collection, self).__init__(**kwargs)
@@ -104,7 +104,7 @@ class Collection(Record):
     def __iter__(self):
         """The default iterator always iterates over the *values* of a
         Collection."""
-        for x in self.values:
+        for x in self._values:
             yield x
 
     def __eq__(self, other):
@@ -115,7 +115,7 @@ class Collection(Record):
         if not isinstance(other, type(self)) and isinstance(other, self.colltype):
             other = type(self)(other)
         return self.itemtype == getattr(other, "itemtype", None) and \
-            self.values == getattr(other, "values", None)
+            self._values == getattr(other, "_values", None)
 
     def __ne__(self, other):
         """Implemented, for compatibility"""
@@ -123,7 +123,7 @@ class Collection(Record):
 
     def __len__(self):
         """Forwarded to the ``values`` property."""
-        return len(self.values)
+        return len(self._values)
 
     @classmethod
     def coerce_value(cls, v):
@@ -174,13 +174,13 @@ class Collection(Record):
 
 class KeyedCollection(Collection):
     def __getitem__(self, key):
-        return self.values[key]
+        return self._values[key]
 
     def __setitem__(self, key, item):
-        self.values[key] = self.coerce_value(item)
+        self._values[key] = self.coerce_value(item)
 
     def __delitem__(self, key):
-        del self.values[key]
+        del self._values[key]
 
 
 class DictCollection(KeyedCollection):
@@ -217,7 +217,7 @@ class DictCollection(KeyedCollection):
                 i += 1
 
     def itertuples(self):
-        return self.values.iteritems()
+        return self._values.iteritems()
 
     def items(self):
         return self.itertuples()
@@ -266,16 +266,16 @@ class ListCollection(KeyedCollection):
     def append(self, item):
         """Adds a new value to the collection, coercing it.
         """
-        self.values.append(self.coerce_value(item))
+        self._values.append(self.coerce_value(item))
 
     def extend(self, iterable):
         """Adds new values to the end of the collection, coercing items.
         """
         # perhaps: self[len(self):len(self)] = iterable
-        self.values.extend(self.coerce_value(item) for item in iterable)
+        self._values.extend(self.coerce_value(item) for item in iterable)
 
     def count(self, value):
-        return self.values.count(value)
+        return self._values.count(value)
 
     def index(self, x, i=0, j=None):
         len_ = len(self)
@@ -314,33 +314,33 @@ class ListCollection(KeyedCollection):
         del self[self.index(x)]
 
     def reverse(self):
-        self.values.reverse()
+        self._values.reverse()
 
     def sort(self, *a, **kw):
-        self.values.sort(*a, **kw)
+        self._values.sort(*a, **kw)
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            self.values[key] = (self.coerce_value(item) for item in value)
+            self._values[key] = (self.coerce_value(item) for item in value)
         else:
             return super(ListCollection, self).__setitem__(key, value)
 
     def itertuples(self):
-        return type(self).coll_to_tuples(self.values)
+        return type(self).coll_to_tuples(self._values)
 
     def __str__(self):
         """Informal stringification returns the type of collection, and the
         length.  For example, ``<MyRecordList: 8 item(s)>``
         """
         return "<%s: %d item(s)>" % (
-            type(self).__name__, len(self.values)
+            type(self).__name__, len(self._values)
         )
 
     def __repr__(self):
         """Implemented: prints a valid constructor.
         """
         property_info = super(ListCollection, self).__repr__()
-        list_info = "[%s]" % ", ".join(repr(x) for x in self.values)
+        list_info = "[%s]" % ", ".join(repr(x) for x in self._values)
         optional_comma = "" if property_info.endswith("()") else ", "
         return property_info.replace("(", "(" + list_info + optional_comma, 1)
 
@@ -364,7 +364,7 @@ class _Generic(Collection):
     things."""
     def __reduce__(self):
         """helper method for pickling"""
-        return (_GenericPickler(type(self).generic_key), (self.values,))
+        return (_GenericPickler(type(self).generic_key), (self._values,))
 
 
 def _make_generic(of, coll):

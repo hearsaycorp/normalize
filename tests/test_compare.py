@@ -101,10 +101,10 @@ class TestRecordComparison(unittest.TestCase):
         holder = CompoundListHolder(parts=[first])
         other_holder = CompoundListHolder(parts=[second])
         diff_a = holder.diff(other_holder)
-        self.assertEqual([], diff_a.values)
+        self.assertEqual([], diff_a)
         second.part_a.ident = 'z'
         diff_b = holder.diff(other_holder)
-        self.assertNotEqual([], diff_b.values)
+        self.assertNotEqual([], diff_b)
 
     def test_diff_list(self):
         """Test diff'ing of simple lists/tuples"""
