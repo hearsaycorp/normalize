@@ -67,3 +67,74 @@ class TestCollections(unittest2.TestCase):
         map_.items = {"foo": "bob", "x": None, 3: 2}
         self.assertEqual(dict(map_.items.itertuples()),
                          {"foo": "bob", "x": "None", 3: "2"})
+
+    def test_list_operations(self):
+        class Listicle(Record):
+            theme = Property()
+            witty_examples = ListProperty(of=Item)
+
+        article = Listicle()
+        article.witty_examples = []
+        wittiness = article.witty_examples
+        self.assertEqual(len(article.witty_examples), 0)
+
+        wittiness.append({"name": "Bob"})
+        self.assertEqual(len(wittiness), 1)
+        self.assertIsInstance(wittiness[0], Item)
+
+        wittiness.extend(
+            ({"name": "Jane"}, {"name": "Jill"},)
+        )
+        self.assertIsInstance(wittiness[2], Item)
+
+        self.assertEqual(wittiness.pop(), Item(name="Jill"))
+        self.assertEqual(wittiness, [Item(name="Bob"), Item(name="Jane")])
+        self.assertEqual(wittiness.count(Item(name="Bob")), 1)
+
+        self.assertEqual(wittiness.index(Item(name="Bob")), 0)
+        wittiness.extend(
+            ({"name": "Peter"}, {"name": "Jack"},
+             {"name": "Gertrude"}, {"name": "Cuthbert"},)
+        )
+        w = list(wittiness)  # compare behavior with standard list
+        self.assertEqual(wittiness.index(Item(name="Jack")), 3)
+        self.assertEqual(w.index(Item(name="Jack")), 3)
+        self.assertRaises(ValueError, wittiness.index, Item(name="Jack"), 4)
+        self.assertRaises(ValueError, w.index, Item(name="Jack"), 4)
+        self.assertRaises(ValueError, wittiness.index, Item(name="Jack"), 1, 2)
+        self.assertRaises(ValueError, w.index, Item(name="Jack"), 1, 2)
+        self.assertEqual(wittiness.index(Item(name="Jane"), 1, 2), 1)
+        self.assertEqual(w.index(Item(name="Jane"), 1, 2), 1)
+
+        self.assertEqual(wittiness.pop(3), Item(name="Jack"))
+
+        wittiness.remove(Item(name="Peter"))
+        self.assertEqual(wittiness[-1], Item(name="Cuthbert"))
+        del wittiness[-1]
+        self.assertEqual(wittiness[-1], Item(name="Gertrude"))
+
+        wittiness.sort(key=lambda item: item.name)
+        self.assertEqual(wittiness[-2], Item(name="Gertrude"))
+
+        wittiness.reverse()
+        self.assertEqual(wittiness[0], Item(name="Jane"))
+
+        # slicing!
+        self.assertEqual(wittiness[0:1], [Item(name="Jane")])
+        self.assertEqual(
+            wittiness[0:3:2], [Item(name="Jane"), Item(name="Bob")],
+        )
+
+        wittiness[1:3] = [{"name": "Worzel"}]
+        self.assertEqual(wittiness, [Item(name="Jane"), Item(name="Worzel")])
+
+        wittiness.extend(
+            ({"name": "Phil"}, {"name": "Quentin"},
+             {"name": "Arthur"}, {"name": "George"},)
+        )
+        wittiness[1:5:2] = [{"name": "Dagon"}, {"name": "Ruth"}]
+        del wittiness[0:-1:2]
+        self.assertEqual(
+            wittiness,
+            [Item(name="Dagon"), Item(name="Ruth"), Item(name="George")],
+        )

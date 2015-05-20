@@ -111,6 +111,9 @@ class Collection(Record):
         """To be ``==``, collections must have exactly the same ``itemtype``
         and ``colltype``, and equal ``values``
         """
+        # coerce collections derived from simple python collection types
+        if not isinstance(other, type(self)) and isinstance(other, self.colltype):
+            other = type(self)(other)
         return self.itemtype == getattr(other, "itemtype", None) and \
             self.values == getattr(other, "values", None)
 
@@ -123,6 +126,12 @@ class Collection(Record):
         return len(self.values)
 
     @classmethod
+    def coerce_value(cls, v):
+        """Coerce a value to the right type for the collection, or return it if
+        it is already of the right type."""
+        return v if isinstance(v, cls.itemtype) else cls.coerceitem(v)
+
+    @classmethod
     def coerce_tuples(cls, generator):
         """This class method converts a generator of ``(K, V)`` tuples (the
         *tuple protocol*), where ``V`` is not yet of the correct type, to a
@@ -130,7 +139,7 @@ class Collection(Record):
         class property)
         """
         for k, v in generator:
-            yield k, v if isinstance(v, cls.itemtype) else cls.coerceitem(v)
+            yield k, cls.coerce_value(v)
 
     @classmethod
     def tuples_to_coll(cls, generator, coerce=False):
@@ -164,8 +173,14 @@ class Collection(Record):
 
 
 class KeyedCollection(Collection):
-    def __getitem__(self, item):
-        return self.values[item]
+    def __getitem__(self, key):
+        return self.values[key]
+
+    def __setitem__(self, key, item):
+        self.values[key] = self.coerce_value(item)
+
+    def __delitem__(self, key):
+        del self.values[key]
 
 
 class DictCollection(KeyedCollection):
@@ -249,10 +264,66 @@ class ListCollection(KeyedCollection):
             )
 
     def append(self, item):
-        """``Sequence`` API, currently passed through to underlying collection.
-        Type-checking is currently TODO.
+        """Adds a new value to the collection, coercing it.
         """
-        self.values.append(item)
+        self.values.append(self.coerce_value(item))
+
+    def extend(self, iterable):
+        """Adds new values to the end of the collection, coercing items.
+        """
+        # perhaps: self[len(self):len(self)] = iterable
+        self.values.extend(self.coerce_value(item) for item in iterable)
+
+    def count(self, value):
+        return self.values.count(value)
+
+    def index(self, x, i=0, j=None):
+        len_ = len(self)
+        if i < 0:
+            i += len_
+            if i < 0:
+                i = 0
+        if j is None:
+            j = len_
+        elif j < 0:
+            j += len_
+            if j < 0:
+                j = 0
+        for k in xrange(i, j):
+            if self[k] == x:
+                return k
+        raise ValueError("%r is not in list" % x)
+
+    def insert(self, i, x):
+        if i < 0:
+            i += len(self)
+        if i < 0:
+            i = 0
+        self[i:i] = x
+
+    def pop(self, i=-1):
+        if i < 0:
+            i += len(self)
+            if i < 0:
+                i = 0
+        x = self[i]
+        del self[i]
+        return x
+
+    def remove(self, x):
+        del self[self.index(x)]
+
+    def reverse(self):
+        self.values.reverse()
+
+    def sort(self, *a, **kw):
+        self.values.sort(*a, **kw)
+
+    def __setitem__(self, key, value):
+        if isinstance(key, slice):
+            self.values[key] = (self.coerce_value(item) for item in value)
+        else:
+            return super(ListCollection, self).__setitem__(key, value)
 
     def itertuples(self):
         return type(self).coll_to_tuples(self.values)
