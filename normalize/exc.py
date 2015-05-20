@@ -178,6 +178,20 @@ class DefaultSignatureError(PropertyDefinitionError):
     )
 
 
+class DictOfWhat(PropertyDefinitionError):
+    message = (
+        "Dict Properties must have a defined item type; pass of= "
+        "or dict_of= to the declaration"
+    )
+
+
+class DictPropertyMustDeriveDictCollection(PropertyDefinitionError):
+    message = (
+        "Dict Property collections must derive DictCollection, and "
+        "{got} doesn't"
+    )
+
+
 class DiffOptionsException(UsageException):
     message = "pass options= or DiffOptions constructor arguments; not both"
 

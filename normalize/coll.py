@@ -204,6 +204,9 @@ class DictCollection(KeyedCollection):
     def itertuples(self):
         return self.values.iteritems()
 
+    def items(self):
+        return self.itertuples()
+
 
 class ListCollection(KeyedCollection):
     """An implementation of sequences which obey the `Record` property protocol

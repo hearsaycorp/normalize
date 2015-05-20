@@ -23,6 +23,7 @@ from normalize.record import Record
 from normalize.record.json import JsonRecordList
 from normalize.property import Property
 from normalize.property import SafeProperty
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.types import DatetimeProperty
 
@@ -38,6 +39,7 @@ class Person(LegalPerson):
     interests = SafeProperty(isa=list)
     info = SafeProperty(isa=dict)
     primary_key = ['id']
+    family = DictProperty(of=LegalPerson)
 
 
 class Circle(Record):

@@ -240,8 +240,8 @@ class TestRecordComparison(unittest.TestCase):
             (),
         )
 
-    def test_diff_collection(self):
-        """Test diff'ing of collections"""
+    def test_diff_lists(self):
+        """Test diff'ing of lists"""
         circle_a = Circle(
             members=(self.bob2, self.bob1, self.bill),
         )
@@ -283,6 +283,54 @@ class TestRecordComparison(unittest.TestCase):
         self.assertDifferences(
             compare_collection_iter(
                 circle_b.members, sparta,
+                options=DiffOptions(
+                    compare_filter=MultiFieldSelector([None, 'name']),
+                    duck_type=True,
+                ),
+            ), {},
+        )
+
+    def test_diff_dicts(self):
+        """Test diff'ing of typed dicts"""
+        person_a = Person(
+            id=823,
+            family={"father": self.bob2,
+                    "uncle": self.bob1,
+                    "brother": self.bill},
+        )
+        person_b = Person(
+            id=824,
+            family={"father": self.bob1,
+                    "uncle": self.bob2},
+        )
+        self.assertIsInstance(person_a.family, Collection)
+
+        expected_a_to_b = {
+            "REMOVED .brother",
+        }
+        self.assertDifferences(
+            compare_collection_iter(person_a.family, person_b.family),
+            expected_a_to_b
+        )
+
+        sparta = dict()
+        for relation, member in person_b.family.items():
+            sparta[relation] = Spartan(member.__getstate__())
+
+        self.assertDifferences(
+            compare_collection_iter(person_b.family, sparta,
+                                    options=DiffOptions(duck_type=True)),
+            {}
+        )
+        self.assertDifferences(
+            compare_collection_iter(person_a.family, sparta,
+                                    options=DiffOptions(duck_type=True)),
+            expected_a_to_b
+        )
+
+        self.assertDifferences(
+            compare_collection_iter(
+                person_b.family, sparta,
                 options=DiffOptions(
                     compare_filter=MultiFieldSelector([None, 'name']),
                     duck_type=True,
