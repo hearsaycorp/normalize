@@ -219,8 +219,43 @@ class DictCollection(KeyedCollection):
     def itertuples(self):
         return self._values.iteritems()
 
+    def iteritems(self):
+        return self.itertuples()
+
     def items(self):
         return self.itertuples()
+
+    def clear(self):
+        self._values.clear()
+
+    def iterkeys(self):
+        return (k for k, v in self.itertuples())
+
+    def itervalues(self):
+        return (v for k, v in self.itertuples())
+
+    def keys(self):
+        return self._values.keys()
+
+    def values(self):
+        return self._values.values()
+
+    def pop(self, k):
+        return self._values.pop(k)
+
+    def popitem(self):
+        return self._values.popitem()
+
+    def update(self, iterable=None, **kw):
+        keys = getattr(iterable, "keys", None)
+        if keys and callable(keys):
+            for k in iterable.keys():
+                self[k] = self.coerce_value(iterable[k])
+        elif iterable is not None:
+            for k, v in iterable:
+                self[k] = self.coerce_value(v)
+        for k, v in kw.items():
+            self[k] = self.coerce_value(v)
 
 
 class ListCollection(KeyedCollection):

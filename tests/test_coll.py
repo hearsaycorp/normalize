@@ -138,3 +138,52 @@ class TestCollections(unittest2.TestCase):
             wittiness,
             [Item(name="Dagon"), Item(name="Ruth"), Item(name="George")],
         )
+
+    def test_dict_operations(self):
+        class HashMap(Record):
+            intent = Property()
+            hashed = DictProperty(of=Item)
+
+        hashmap = HashMap(hashed={})
+        dp = hashmap.hashed
+        self.assertEqual(len(dp), 0)
+
+        dp['bob'] = Item(name="Bob")
+        self.assertIsInstance(dp['bob'], Item)
+        dp['bert'] = {"name": "Bert"}
+        self.assertIsInstance(dp['bert'], Item)
+
+        dp.update(dict(ernest={"name": "Ernest"},
+                       leonard={"name": "Leonard"}))
+        self.assertIsInstance(dp['ernest'], Item)
+
+        dp2 = type(dp)()
+        dp2.update(dp.itertuples())
+
+        self.assertEqual(len(dp2), len(dp))
+        self.assertEqual(dp2, dp)
+
+        self.assertEqual(
+            set(dp.iterkeys()),
+            {"bob", "bert", "ernest", "leonard"},
+        )
+
+        del dp['bob']
+
+        self.assertEqual(
+            set(dp.itervalues()),
+            {Item(name='Bert'),
+             Item(name='Leonard'), Item(name='Ernest')}
+        )
+
+        dp2.clear()
+        self.assertEqual(dp2, {})
+
+        self.assertEqual(dp.pop("bert"), Item(name="Bert"))
+        self.assertEqual(dp.pop("ernest"), Item(name="Ernest"))
+        self.assertEqual(dp.popitem(), ("leonard", Item(name="Leonard")))
+        self.assertEqual(dp, {})
+        self.assertEqual(dp, dp2)
+
+        dp.update(fred=Item(name="Fred"))
+        self.assertEqual(dp['fred'], Item(name="Fred"))
