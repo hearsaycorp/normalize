@@ -213,6 +213,8 @@ class TestCollections(unittest2.TestCase):
         self.assertEqual(repr(dos), "strMap({'foo': 'bar'})")
         self.assertIn("foo", dos)
         self.assertNotIn("bar", dos)
+        with self.assertRaises(exc.CoercionError):
+            dos = dict_of(str)("foobar")
 
     def test_dict_of_list_of_str(self):
         class MyDoLoS(Record):
@@ -227,3 +229,6 @@ class TestCollections(unittest2.TestCase):
         self.assertEqual(
             repr(dolos), "strListMap({'bob': strList(['foo', 'bar'])})",
         )
+
+        with self.assertRaises(exc.CoercionError):
+            dolos['baz'] = "foobar"

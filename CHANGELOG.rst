@@ -40,6 +40,9 @@ Normalize changelog and errata
      complex['foo'] = ["1"]  # ok
      complex['foo'].append("bar")  # raises a CoercionError
 
+  Be warned if using ``str`` as a type that just about anything will
+  happily coerce to a string, but that might not be what you want.
+
 0.8.0 6th March 2015
 --------------------
 * ``bool(record)`` was reverted to pre-0.7.x behavior: always True,

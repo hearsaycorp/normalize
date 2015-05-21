@@ -213,6 +213,11 @@ class DictCollection(KeyedCollection):
 
     @classmethod
     def coll_to_tuples(cls, coll):
+        if isinstance(coll, basestring):
+            raise exc.CollectionCoerceError(
+                giventype=type(coll).__name__,
+                fortype=cls.__name__,
+            )
         if isinstance(coll, collections.Mapping):
             for k, v in coll.iteritems():
                 yield k, v
@@ -304,6 +309,11 @@ class ListCollection(KeyedCollection):
         sequences and iterators.  Returns ``(*int*, Value)``.  Does not coerce
         items.
         """
+        if isinstance(coll, basestring):
+            raise exc.CollectionCoerceError(
+                giventype=type(coll).__name__,
+                fortype=cls.__name__,
+            )
         if isinstance(coll, collections.Mapping):
             i = 0
             for k in sorted(coll.keys()):
