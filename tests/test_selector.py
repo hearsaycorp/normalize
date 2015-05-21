@@ -534,6 +534,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs_in = tuple(
             FieldSelector(x) for x in (
                 ("rakkk", 1, "zgruppp"),
+                ("rakkk", None, "zgruppp"),
                 ("rakkk", 2, "awkkkkkk", "bap"),
                 ("cr_r_a_a_ck", "rip"),
                 ("cr_r_a_a_ck", "rip", "spla_a_t"),
@@ -547,6 +548,9 @@ class TestStructableFieldSelector(unittest.TestCase):
             FieldSelector(x) for x in (
                 ("rakkk",),
                 ("rakkk", 0),
+                ("rakkk", None),
+                ("rakkk", 0, "aiee"),
+                ("rakkk", "clank"),
                 ("ouch",),
                 ("cr_r_a_a_ck",),
                 ("cr_r_a_a_ck", "zlopp"),
