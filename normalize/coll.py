@@ -107,6 +107,9 @@ class Collection(Record):
         for x in self._values:
             yield x
 
+    def __contains__(self, item):
+        return self.coerce_value(item) in self._values
+
     def __eq__(self, other):
         """To be ``==``, collections must have exactly the same ``itemtype``
         and ``colltype``, and equal ``values``
@@ -257,6 +260,10 @@ class DictCollection(KeyedCollection):
         for k, v in kw.items():
             self[k] = self.coerce_value(v)
 
+    def __contains__(self, item):
+        # don't fall through, because 'in' checks keys in dicts
+        return item in self._values
+
 
 class ListCollection(KeyedCollection):
     """An implementation of sequences which obey the `Record` property protocol
@@ -378,6 +385,11 @@ class ListCollection(KeyedCollection):
         list_info = "[%s]" % ", ".join(repr(x) for x in self._values)
         optional_comma = "" if property_info.endswith("()") else ", "
         return property_info.replace("(", "(" + list_info + optional_comma, 1)
+
+    def __add__(self, other):
+        if not isinstance(other, type(self)) and isinstance(other, self.colltype):
+            other = type(self)(other)
+        return type(self)(self._values + other._values)
 
 
 GENERIC_TYPES = dict()
