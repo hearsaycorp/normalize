@@ -132,7 +132,18 @@ class Collection(Record):
     def coerce_value(cls, v):
         """Coerce a value to the right type for the collection, or return it if
         it is already of the right type."""
-        return v if isinstance(v, cls.itemtype) else cls.coerceitem(v)
+        if isinstance(v, cls.itemtype):
+            return v
+        else:
+            try:
+                return cls.coerceitem(v)
+            except Exception as e:
+                raise exc.CollectionItemCoerceError(
+                    valuetype=cls.itemtype.__name__,
+                    colltype=cls.__name__,
+                    value=repr(v),
+                    exc=e,
+                )
 
     @classmethod
     def coerce_tuples(cls, generator):

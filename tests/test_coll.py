@@ -20,6 +20,7 @@ import unittest2
 from normalize import Property
 from normalize import Record
 from normalize.coll import *
+import normalize.exc as exc
 from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 
@@ -197,6 +198,15 @@ class TestCollections(unittest2.TestCase):
         self.assertIn("bar", los)
         self.assertIn(1, los)
         self.assertNotIn("quux", los)
+
+        loi = list_of(int)()
+        loi.append(1)
+        loi += [2, 3]
+        with self.assertRaisesRegexp(
+            exc.CoercionError,
+            r"coerce to int for insertion to intList failed",
+        ):
+            loi.append("foo")
 
     def test_dict_of(self):
         dos = dict_of(str)({"foo": "bar"})

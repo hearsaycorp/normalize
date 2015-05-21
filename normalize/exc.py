@@ -147,6 +147,13 @@ class CollectionCoerceError(CoercionError):
     message = "Cannot interpret {giventype} as a {fortype} constructor"
 
 
+class CollectionItemCoerceError(CoercionError):
+    message = (
+        "coerce to {valuetype} for insertion to {colltype} failed for "
+        "value {value}: {exc}"
+    )
+
+
 class CollectionDefinitionError(SubclassError):
     message = "{property} must be defined in a {coll} subclass"
 

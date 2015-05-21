@@ -29,6 +29,17 @@ Normalize changelog and errata
 * ``DictProperty`` can now be used, and these also support the
   important ``dict`` methods, with type-checking.
 
+* You can now construct typed collections using ``list_of`` and
+  ``dict_of``:
+
+  ::
+
+     from normalize.coll import list_of, dict_of
+
+     complex = dict_of(list_of(int))()
+     complex['foo'] = ["1"]  # ok
+     complex['foo'].append("bar")  # raises a CoercionError
+
 0.8.0 6th March 2015
 --------------------
 * ``bool(record)`` was reverted to pre-0.7.x behavior: always True,
