@@ -176,7 +176,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
         )
 
         filtered_person.friends.append(get_person(1))
-        del filtered_person.friends.values[0]  # FIXME :)
+        del filtered_person.friends[0]
 
         self.assertDifferences(
             person.diff_iter(filtered_person,

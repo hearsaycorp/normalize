@@ -23,8 +23,11 @@ from normalize.record import Record
 from normalize.record.json import JsonRecordList
 from normalize.property import Property
 from normalize.property import SafeProperty
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.types import DatetimeProperty
+from normalize.property.types import FloatProperty
+from normalize.property.types import StringProperty
 
 
 class LegalPerson(Record):
@@ -38,6 +41,7 @@ class Person(LegalPerson):
     interests = SafeProperty(isa=list)
     info = SafeProperty(isa=dict)
     primary_key = ['id']
+    family = DictProperty(of=LegalPerson)
 
 
 class Circle(Record):
@@ -172,12 +176,23 @@ class NamedStarList(StarList):
     name = Property()
 
 
+class StarAttribute(Record):
+    value = FloatProperty(required=True)
+    unit = StringProperty()
+
+
 class StarSystem(Record):
     name = Property(isa=str)
     components = Property(isa=StarList)
+    attributes = DictProperty(of=StarAttribute)
 
 
 maia = Star(hip_id=17573, name="maia")
+acent_attributes = dict(
+    parallax={"value": 747.1, "unit": "mas"},
+    distance={"value": 4.366, "unit": "ly"},
+    magnitude={"value": 4.38},
+)
 acent = StarSystem(
     name="Alpha Centauri",
     components=(
@@ -185,6 +200,7 @@ acent = StarSystem(
         {"name": "Alpha Centauri B", "hip_id": 71681},
         {"name": "Alpha Centauri C", "hip_id": 70890},
     ),
+    attributes=acent_attributes,
 )
 
 

@@ -27,6 +27,7 @@ import normalize.exc as exc
 from normalize.property.types import DateProperty
 from normalize.visitor import VisitorPattern
 from testclasses import acent
+from testclasses import acent_attributes
 from testclasses import JsonStarList
 from testclasses import NamedStarList
 from testclasses import PullRequest
@@ -36,7 +37,7 @@ from testclasses import Wall
 from testclasses import wall_one
 
 
-JSON_CAN_DUMP = (basestring, int, long, dict, list, types.NoneType)
+JSON_CAN_DUMP = (basestring, int, float, long, dict, list, types.NoneType)
 
 
 class SimpleDumper(VisitorPattern):
@@ -68,6 +69,7 @@ class TestVisitor(AssertDiffTest):
             'components': [{'hip_id': 71683, 'name': 'Alpha Centauri A'},
                            {'hip_id': 71681, 'name': 'Alpha Centauri B'},
                            {'hip_id': 70890, 'name': 'Alpha Centauri C'}],
+            'attributes': acent_attributes,
         }
         self.nsl_json_data = {
             'name': 'Alpha Centauri',

@@ -96,7 +96,7 @@ class Collection(Record):
                 It is possible to add extra properties to ``Collection``
                 objects; this is how you specify them on construction.
         """
-        self.values = type(self).tuples_to_coll(
+        self._values = type(self).tuples_to_coll(
             type(self).coll_to_tuples(values)
         )
         super(Collection, self).__init__(**kwargs)
@@ -104,15 +104,21 @@ class Collection(Record):
     def __iter__(self):
         """The default iterator always iterates over the *values* of a
         Collection."""
-        for x in self.values:
+        for x in self._values:
             yield x
+
+    def __contains__(self, item):
+        return self.coerce_value(item) in self._values
 
     def __eq__(self, other):
         """To be ``==``, collections must have exactly the same ``itemtype``
         and ``colltype``, and equal ``values``
         """
+        # coerce collections derived from simple python collection types
+        if not isinstance(other, type(self)) and isinstance(other, self.colltype):
+            other = type(self)(other)
         return self.itemtype == getattr(other, "itemtype", None) and \
-            self.values == getattr(other, "values", None)
+            self._values == getattr(other, "_values", None)
 
     def __ne__(self, other):
         """Implemented, for compatibility"""
@@ -120,7 +126,24 @@ class Collection(Record):
 
     def __len__(self):
         """Forwarded to the ``values`` property."""
-        return len(self.values)
+        return len(self._values)
+
+    @classmethod
+    def coerce_value(cls, v):
+        """Coerce a value to the right type for the collection, or return it if
+        it is already of the right type."""
+        if isinstance(v, cls.itemtype):
+            return v
+        else:
+            try:
+                return cls.coerceitem(v)
+            except Exception as e:
+                raise exc.CollectionItemCoerceError(
+                    valuetype=cls.itemtype.__name__,
+                    colltype=cls.__name__,
+                    value=repr(v),
+                    exc=e,
+                )
 
     @classmethod
     def coerce_tuples(cls, generator):
@@ -130,7 +153,7 @@ class Collection(Record):
         class property)
         """
         for k, v in generator:
-            yield k, v if isinstance(v, cls.itemtype) else cls.coerceitem(v)
+            yield k, cls.coerce_value(v)
 
     @classmethod
     def tuples_to_coll(cls, generator, coerce=False):
@@ -164,8 +187,14 @@ class Collection(Record):
 
 
 class KeyedCollection(Collection):
-    def __getitem__(self, item):
-        return self.values[item]
+    def __getitem__(self, key):
+        return self._values[key]
+
+    def __setitem__(self, key, item):
+        self._values[key] = self.coerce_value(item)
+
+    def __delitem__(self, key):
+        del self._values[key]
 
 
 class DictCollection(KeyedCollection):
@@ -184,6 +213,11 @@ class DictCollection(KeyedCollection):
 
     @classmethod
     def coll_to_tuples(cls, coll):
+        if isinstance(coll, basestring):
+            raise exc.CollectionCoerceError(
+                giventype=type(coll).__name__,
+                fortype=cls.__name__,
+            )
         if isinstance(coll, collections.Mapping):
             for k, v in coll.iteritems():
                 yield k, v
@@ -202,7 +236,58 @@ class DictCollection(KeyedCollection):
                 i += 1
 
     def itertuples(self):
-        return self.values.iteritems()
+        return self._values.iteritems()
+
+    def iteritems(self):
+        return self.itertuples()
+
+    def items(self):
+        return self.itertuples()
+
+    def clear(self):
+        self._values.clear()
+
+    def iterkeys(self):
+        return (k for k, v in self.itertuples())
+
+    def itervalues(self):
+        return (v for k, v in self.itertuples())
+
+    def keys(self):
+        return self._values.keys()
+
+    def values(self):
+        return self._values.values()
+
+    def pop(self, k):
+        return self._values.pop(k)
+
+    def popitem(self):
+        return self._values.popitem()
+
+    def update(self, iterable=None, **kw):
+        keys = getattr(iterable, "keys", None)
+        if keys and callable(keys):
+            for k in iterable.keys():
+                self[k] = self.coerce_value(iterable[k])
+        elif iterable is not None:
+            for k, v in iterable:
+                self[k] = self.coerce_value(v)
+        for k, v in kw.items():
+            self[k] = self.coerce_value(v)
+
+    def __repr__(self):
+        """Implemented: prints a valid constructor.
+        """
+        property_info = super(DictCollection, self).__repr__()
+        dict_info = repr(self._values)
+        optional_comma = "" if property_info.endswith("()") else ", "
+        return property_info.replace(
+            "(", "(" + dict_info + optional_comma, 1)
+
+    def __contains__(self, item):
+        # don't fall through, because 'in' checks keys in dicts
+        return item in self._values
 
 
 class ListCollection(KeyedCollection):
@@ -224,6 +309,11 @@ class ListCollection(KeyedCollection):
         sequences and iterators.  Returns ``(*int*, Value)``.  Does not coerce
         items.
         """
+        if isinstance(coll, basestring):
+            raise exc.CollectionCoerceError(
+                giventype=type(coll).__name__,
+                fortype=cls.__name__,
+            )
         if isinstance(coll, collections.Mapping):
             i = 0
             for k in sorted(coll.keys()):
@@ -246,29 +336,90 @@ class ListCollection(KeyedCollection):
             )
 
     def append(self, item):
-        """``Sequence`` API, currently passed through to underlying collection.
-        Type-checking is currently TODO.
+        """Adds a new value to the collection, coercing it.
         """
-        self.values.append(item)
+        self._values.append(self.coerce_value(item))
+
+    def extend(self, iterable):
+        """Adds new values to the end of the collection, coercing items.
+        """
+        # perhaps: self[len(self):len(self)] = iterable
+        self._values.extend(self.coerce_value(item) for item in iterable)
+
+    def count(self, value):
+        return self._values.count(value)
+
+    def index(self, x, i=0, j=None):
+        len_ = len(self)
+        if i < 0:
+            i += len_
+            if i < 0:
+                i = 0
+        if j is None:
+            j = len_
+        elif j < 0:
+            j += len_
+            if j < 0:
+                j = 0
+        for k in xrange(i, j):
+            if self[k] == x:
+                return k
+        raise ValueError("%r is not in list" % x)
+
+    def insert(self, i, x):
+        if i < 0:
+            i += len(self)
+        if i < 0:
+            i = 0
+        self[i:i] = x
+
+    def pop(self, i=-1):
+        if i < 0:
+            i += len(self)
+            if i < 0:
+                i = 0
+        x = self[i]
+        del self[i]
+        return x
+
+    def remove(self, x):
+        del self[self.index(x)]
+
+    def reverse(self):
+        self._values.reverse()
+
+    def sort(self, *a, **kw):
+        self._values.sort(*a, **kw)
+
+    def __setitem__(self, key, value):
+        if isinstance(key, slice):
+            self._values[key] = (self.coerce_value(item) for item in value)
+        else:
+            return super(ListCollection, self).__setitem__(key, value)
 
     def itertuples(self):
-        return type(self).coll_to_tuples(self.values)
+        return type(self).coll_to_tuples(self._values)
 
     def __str__(self):
         """Informal stringification returns the type of collection, and the
         length.  For example, ``<MyRecordList: 8 item(s)>``
         """
         return "<%s: %d item(s)>" % (
-            type(self).__name__, len(self.values)
+            type(self).__name__, len(self._values)
         )
 
     def __repr__(self):
         """Implemented: prints a valid constructor.
         """
         property_info = super(ListCollection, self).__repr__()
-        list_info = "[%s]" % ", ".join(repr(x) for x in self.values)
+        list_info = "[%s]" % ", ".join(repr(x) for x in self._values)
         optional_comma = "" if property_info.endswith("()") else ", "
         return property_info.replace("(", "(" + list_info + optional_comma, 1)
+
+    def __add__(self, other):
+        if not isinstance(other, type(self)) and isinstance(other, self.colltype):
+            other = type(self)(other)
+        return type(self)(self._values + other._values)
 
 
 GENERIC_TYPES = dict()
@@ -290,7 +441,7 @@ class _Generic(Collection):
     things."""
     def __reduce__(self):
         """helper method for pickling"""
-        return (_GenericPickler(type(self).generic_key), (self.values,))
+        return (_GenericPickler(type(self).generic_key), (self._values,))
 
 
 def _make_generic(of, coll):
@@ -322,3 +473,11 @@ def _make_generic(of, coll):
         if not hasattr(mod, generic_name):
             setattr(mod, generic_name, GENERIC_TYPES[key])
     return GENERIC_TYPES[key]
+
+
+def list_of(of):
+    return _make_generic(of, ListCollection)
+
+
+def dict_of(of):
+    return _make_generic(of, DictCollection)

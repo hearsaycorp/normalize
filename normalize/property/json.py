@@ -18,6 +18,7 @@ from __future__ import absolute_import
 
 from normalize.property import Property
 from normalize.property import SafeProperty
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 
 
@@ -98,11 +99,19 @@ class SafeJsonProperty(JsonProperty, SafeProperty):
 
 
 class JsonListProperty(ListProperty, JsonProperty):
-    """A property which map to a list of records in JSON.
+    """A property which map to a list of a known item type in JSON.
 
     It can also map a dictionary with some top level keys (eg, streaming
     information) and a key with the actual list contents.  See
     :py:mod:`normalize.record.json` for more details.
+    """
+    pass
+
+
+class JsonDictProperty(DictProperty, JsonProperty):
+    """A property which map to a dictionary of a known item type in JSON.
+
+    Currently the key type is not enforced.
     """
     pass
 

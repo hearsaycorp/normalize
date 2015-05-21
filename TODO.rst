@@ -26,15 +26,10 @@ TODO
 
 * collections:
 
-  * complete ``KeyedCollection``: __delitem__, __contains__
+  * Support ``DictCollection`` key typing
 
-  * complete ``ListCollection``: extend, __getslice__, etc
-
-  * implement ``DictCollection``
-
-  * implement ``SetCollection``
-
-  * enhance Collection types to type-check items on append, etc
+  * implement ``SetCollection`` (probably as DictCollection's that map
+    values to themselves)
 
 * property traits for basic XML marshal support (in case the 90's
   calls and wants to send us some data)

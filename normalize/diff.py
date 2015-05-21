@@ -484,6 +484,14 @@ def collection_generator(collection):
 
     elif hasattr(collection, "itertuples"):
         return collection.itertuples()
+    elif hasattr(collection, "keys"):
+
+        def generator():
+            for key in collection.keys():
+                yield (key, collection[key])
+
+    elif hasattr(collection, "items"):
+        return collection.items()
     elif hasattr(collection, "iteritems"):
         return collection.iteritems()
     elif hasattr(collection, "__getitem__"):

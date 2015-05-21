@@ -15,6 +15,7 @@
 #
 
 
+from normalize.coll import DictCollection
 from normalize.coll import ListCollection
 from normalize.coll import _make_generic
 import normalize.exc as exc
@@ -82,4 +83,23 @@ class ListProperty(CollectionProperty):
 
         super(ListProperty, self).__init__(
             of=list_of, coll=colltype, **kwargs
+        )
+
+
+class DictProperty(CollectionProperty):
+    __trait__ = "dict"
+
+    def __init__(self, dict_of=None, **kwargs):
+        if dict_of is None:
+            dict_of = kwargs.pop("of", None)
+        if not dict_of:
+            raise exc.DictOfWhat()
+        colltype = kwargs.pop('coll', DictCollection)
+        if not issubclass(colltype, DictCollection):
+            raise exc.DictPropertyMustDeriveDictCollection(
+                got=colltype.__name__,
+            )
+
+        super(DictProperty, self).__init__(
+            of=dict_of, coll=colltype, **kwargs
         )

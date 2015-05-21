@@ -25,8 +25,10 @@ from normalize.property import make_property_type
 from normalize.property import Property
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
+from normalize.property.json import JsonDictProperty
 from normalize.property.json import JsonListProperty
 from normalize.property.json import JsonCollectionProperty
 from normalize.property.json import SafeJsonProperty
@@ -47,12 +49,14 @@ JsonCollection = ListCollection
 
 __all__ = [
     "DictCollection",
+    "DictProperty",
     "exc",
     "FieldSelector",
     "FieldSelectorException",
     "from_json",
     "JsonCollection",  # deprecated - use JsonRecordList
     "JsonCollectionProperty",  # deprecated
+    "JsonDictProperty",
     "JsonListProperty",
     "JsonProperty",
     "JsonRecord",
