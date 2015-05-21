@@ -1,6 +1,34 @@
 Normalize changelog and errata
 ==============================
 
+0.9.0 21st May 2015
+-------------------
+* ``ListProperty`` attribute can now be treated like lists; they
+  support almost all of the same methods the built-in ``list`` type
+  does, and type-checks values inserted into them with coercion.
+
+  *note*: if you were using ``.values`` to access the internal array,
+  this is now not present on ``RecordList`` instances.  You should be
+  able to just remove the ``.values``:
+
+  ::
+
+      class MyFoo(Record):
+          bar = ListProperty(of=SomeRecord)
+
+      foo = MyFoo(bar=[somerecord1, somerecord2])
+
+      # before:
+      foo.bar.values.extend(more_records)
+      foo.bar.values[-1:] = even_more_records
+
+      # now:
+      foo.bar.extend(more_records)
+      foo.bar[-1:] = even_more_records
+
+* ``DictProperty`` can now be used, and these also support the
+  important ``dict`` methods, with type-checking.
+
 0.8.0 6th March 2015
 --------------------
 * ``bool(record)`` was reverted to pre-0.7.x behavior: always True,
