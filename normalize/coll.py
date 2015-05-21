@@ -260,6 +260,15 @@ class DictCollection(KeyedCollection):
         for k, v in kw.items():
             self[k] = self.coerce_value(v)
 
+    def __repr__(self):
+        """Implemented: prints a valid constructor.
+        """
+        property_info = super(DictCollection, self).__repr__()
+        dict_info = repr(self._values)
+        optional_comma = "" if property_info.endswith("()") else ", "
+        return property_info.replace(
+            "(", "(" + dict_info + optional_comma, 1)
+
     def __contains__(self, item):
         # don't fall through, because 'in' checks keys in dicts
         return item in self._values

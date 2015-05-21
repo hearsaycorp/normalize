@@ -200,6 +200,7 @@ class TestCollections(unittest2.TestCase):
 
     def test_dict_of(self):
         dos = dict_of(str)({"foo": "bar"})
+        self.assertEqual(repr(dos), "strMap({'foo': 'bar'})")
         self.assertIn("foo", dos)
         self.assertNotIn("bar", dos)
 
@@ -213,3 +214,6 @@ class TestCollections(unittest2.TestCase):
 
         dolos['bob'] = ["foo", "bar"]
         self.assertEqual(dolos, {"bob": ["foo", "bar"]})
+        self.assertEqual(
+            repr(dolos), "strListMap({'bob': strList(['foo', 'bar'])})",
+        )
