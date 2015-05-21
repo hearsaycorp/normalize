@@ -443,3 +443,11 @@ def _make_generic(of, coll):
         if not hasattr(mod, generic_name):
             setattr(mod, generic_name, GENERIC_TYPES[key])
     return GENERIC_TYPES[key]
+
+
+def list_of(of):
+    return _make_generic(of, ListCollection)
+
+
+def dict_of(of):
+    return _make_generic(of, DictCollection)

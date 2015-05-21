@@ -187,3 +187,29 @@ class TestCollections(unittest2.TestCase):
 
         dp.update(fred=Item(name="Fred"))
         self.assertEqual(dp['fred'], Item(name="Fred"))
+
+    def test_list_of(self):
+        los = list_of(str)(["foo", "bar"])
+        self.assertEqual(repr(los), "strList(['foo', 'bar'])")
+
+        los += [1]
+        self.assertEqual(los[-1], "1")
+        self.assertIn("bar", los)
+        self.assertIn(1, los)
+        self.assertNotIn("quux", los)
+
+    def test_dict_of(self):
+        dos = dict_of(str)({"foo": "bar"})
+        self.assertIn("foo", dos)
+        self.assertNotIn("bar", dos)
+
+    def test_dict_of_list_of_str(self):
+        class MyDoLoS(Record):
+            items = DictProperty(of=list_of(str), default={})
+
+        # note: DictProperty does not yet let you specify the key type.
+        container = MyDoLoS()
+        dolos = container.items
+
+        dolos['bob'] = ["foo", "bar"]
+        self.assertEqual(dolos, {"bob": ["foo", "bar"]})
