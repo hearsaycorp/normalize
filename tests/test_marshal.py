@@ -27,11 +27,13 @@ from normalize.diff import DiffOptions
 from normalize.record import Record
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
+from normalize.record.json import JsonRecordDict
 from normalize.record.json import JsonRecordList
 from normalize.record.json import to_json
 from normalize.property import Property
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 
@@ -46,6 +48,7 @@ class CheeseCupboardRecord(Record):
     name = SafeProperty(isa=str)
     best_cheese = SafeProperty(isa=CheeseRecord)
     cheeses = ListProperty(of=CheeseRecord)
+    favorites = DictProperty(of=CheeseRecord)
 
 
 json_data_number_types = (basestring, int, long, float)
@@ -73,6 +76,11 @@ class TestRecordMarshaling(unittest2.TestCase):
                 dict(variety="Stilton", smelliness="82"),
                 dict(variety="Polkobin", smelliness="31"),
             ],
+            "favorites": {
+                "Dorothy": dict(variety="Stracchinata", smelliness="28"),
+                "Walter": dict(variety="Caciobufala", smelliness="32"),
+                "Albert": dict(variety="Quartirolo Lombardo", smelliness="53"),
+           },
         }
 
     def assertDataOK(self, ccr):
@@ -81,6 +89,7 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertEqual(len(ccr.cheeses), 3)
         self.assertEqual(ccr.best_cheese.variety, "Gouda")
         self.assertEqual(ccr.cheeses[1].smelliness, 82)
+        self.assertEqual(ccr.favorites['Walter'].variety, "Caciobufala")
 
     def assertJsonDataEqual(self, got, wanted, path=""):
         """Test that two JSON-data structures are the same.  We can't use
@@ -375,6 +384,7 @@ class TestRecordMarshaling(unittest2.TestCase):
             color = Property(isa=str)
             length = Property(isa=int)
             contents = JsonProperty(isa=Fruit)
+            vitamins = JsonProperty(isa=str)
 
         banana = Banana(
             color="yellow",
@@ -382,6 +392,11 @@ class TestRecordMarshaling(unittest2.TestCase):
                 "carb": "23%",
                 "fat": "0.5%",
                 "protein": "1%",
+            },
+            vitamins={
+                "A": "144 IU",
+                "C": "19.6 mg",
+                "E": "0.2 mg",
             },
             length=6,
         )

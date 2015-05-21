@@ -23,6 +23,7 @@ import json
 import types
 
 from normalize.coll import Collection
+from normalize.coll import DictCollection as RecordDict
 from normalize.coll import ListCollection as RecordList
 from normalize.diff import Diff
 from normalize.diff import DiffInfo
@@ -183,7 +184,12 @@ def to_json(record, extraneous=True, prop=None):
             return _json_data(val, extraneous)
 
     elif isinstance(record, Collection):
-        return list(_json_data(x, extraneous) for x in record)
+        if isinstance(record, RecordDict):
+            return dict(
+                (k, _json_data(v, extraneous)) for k, v in record.items()
+            )
+        else:
+            return list(_json_data(x, extraneous) for x in record)
 
     elif isinstance(record, Record):
         rv_dict = {}
@@ -363,6 +369,58 @@ class JsonRecordList(RecordList, JsonRecord):
     def __repr__(self):
         super_repr = super(JsonRecordList, self).__repr__()
         return super_repr.replace("[", "values=[", 1)
+
+
+class JsonRecordDict(RecordDict, JsonRecord):
+    """Version of a RecordDict which deals primarily in JSON"""
+    def __init__(self, json_data=None, **kwargs):
+        """Build a new JsonRecord sub-class.
+
+        Args:
+            ``json_data=``\ *DICT|other*
+                JSON data (string or already ``json.loads``'d)
+
+            ``**kwargs``
+                Other initializer attributes, for lists with extra
+                attributes (eg, paging information).
+        """
+        if isinstance(json_data, OhPickle):
+            return
+        if isinstance(json_data, basestring):
+            json_data = json.loads(json_data)
+        if json_data is not None:
+            kwargs = type(self).json_to_initkwargs(json_data, kwargs)
+        super(JsonRecordList, self).__init__(**kwargs)
+
+    @classmethod
+    def json_to_initkwargs(cls, json_struct, kwargs):
+        member_type = cls.itemtype
+        if kwargs.get('values', None) is None:
+            kwargs['values'] = values = {}
+            if not json_struct:
+                json_struct = {}
+
+            if hasattr(member_type, "from_json"):
+                for x in json_struct:
+                    values[x] = member_type.from_json(json_struct[x])
+            elif issubclass(member_type, Record):
+                for x in json_struct:
+                    values[x] = from_json(member_type, json_struct[x])
+            else:
+                raise exc.CollectionDefinitionError(
+                    coll="JsonRecordDict",
+                    property='itemtype',
+                )
+        return kwargs
+
+    def json_data(self, extraneous=False):
+        # this method intentionally does not call the superclass json_data,
+        # because this function returns a collection.
+        return to_json(self, extraneous)
+
+    def __repr__(self):
+        super_repr = super(JsonRecordList, self).__repr__()
+        return super_repr.replace("{", "values={", 1)
 
 
 class JsonDiffInfo(DiffInfo, JsonRecord):
