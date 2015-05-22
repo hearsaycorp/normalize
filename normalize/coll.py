@@ -421,6 +421,16 @@ class ListCollection(KeyedCollection):
             other = type(self)(other)
         return type(self)(self._values + other._values)
 
+    @property
+    def values(self):
+        import warnings
+        warnings.warn(
+            "ListCollection.values is deprecated and will be removed in "
+            "a future release; use the collection directly",
+            stacklevel=2,
+        )
+        return self
+
 
 GENERIC_TYPES = dict()
 
