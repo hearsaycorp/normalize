@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.9.1 22nd May 2015
+-------------------
+* the ``RecordList.values`` removal in 0.9.0 has been changed to be a
+  deprecation with a warning instead of a hard error.
+
 0.9.0 21st May 2015
 -------------------
 * ``ListProperty`` attribute can now be treated like lists; they
