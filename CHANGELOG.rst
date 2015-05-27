@@ -1,6 +1,25 @@
 Normalize changelog and errata
 ==============================
 
+0.9.2 27th May 2015
+-------------------
+* Another backwards compatibility accessor for ``RecordList.values``
+  allows assignment to proceed.
+
+  ::
+
+      class MyFoo(Record):
+          bar = ListProperty(of=SomeRecord)
+
+      foo = MyFoo(bar=[])
+
+      # this will now warn instead of throwing Exception
+      foo.bar.values = list_of_some_records
+
+      # these forms will not warn:
+      foo.bar = list_of_some_records
+      foo.bar[:] = list_of_some_records
+
 0.9.1 22nd May 2015
 -------------------
 * the ``RecordList.values`` removal in 0.9.0 has been changed to be a
