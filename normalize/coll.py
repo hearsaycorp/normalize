@@ -426,10 +426,21 @@ class ListCollection(KeyedCollection):
         import warnings
         warnings.warn(
             "ListCollection.values is deprecated and will be removed in "
-            "a future release; use the collection directly",
+            "a future release; try removing '.values' from the expression",
             stacklevel=2,
         )
         return self
+
+    @values.setter
+    def values(self, value):
+        import warnings
+        warnings.warn(
+            "ListCollection.values is deprecated and will be removed in "
+            "a future release; assign to the property directly in the parent "
+            "object or use slice assignment",
+            stacklevel=2,
+        )
+        self[:] = value
 
 
 GENERIC_TYPES = dict()
