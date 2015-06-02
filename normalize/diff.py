@@ -754,8 +754,14 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                 other=fs_b + [b_idx],
             )
 
+    removed_idx = set(indices['a'][v, seq] for v, seq in removed)
+    added_idx = set(indices['b'][v, seq] for v, seq in added)
+    modified_idx = set(removed_idx.intersection(added_idx))
+
     for v, seq in removed:
         a_key = indices['a'][v, seq]
+        if a_key in modified_idx:
+            continue
         selector = fs_a + [a_key]
         yield DiffInfo(
             diff_type=DiffTypes.REMOVED,
@@ -765,11 +771,20 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     for v, seq in added:
         b_key = indices['b'][v, seq]
+        if b_key in modified_idx:
+            continue
         selector = fs_b + [b_key]
         yield DiffInfo(
             diff_type=DiffTypes.ADDED,
             base=fs_a,
             other=selector,
+        )
+
+    for idx in modified_idx:
+        yield DiffInfo(
+            diff_type=DiffTypes.MODIFIED,
+            base=fs_a + [idx],
+            other=fs_b + [idx],
         )
 
 
@@ -817,8 +832,14 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                 other=fs_b + [b_key],
             )
 
+    removed_keys = set(rev_keys['a'][v, seq] for v, seq in removed)
+    added_keys = set(rev_keys['b'][v, seq] for v, seq in added)
+    modified_keys = set(removed_keys.intersection(added_keys))
+
     for v, seq in removed:
         a_key = rev_keys['a'][v, seq]
+        if a_key in modified_keys:
+            continue
         selector = fs_a + [a_key]
         yield DiffInfo(
             diff_type=DiffTypes.REMOVED,
@@ -828,11 +849,20 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     for v, seq in added:
         b_key = rev_keys['b'][v, seq]
+        if b_key in modified_keys:
+            continue
         selector = fs_b + [b_key]
         yield DiffInfo(
             diff_type=DiffTypes.ADDED,
             base=fs_a,
             other=selector,
+        )
+
+    for key in modified_keys:
+        yield DiffInfo(
+            diff_type=DiffTypes.MODIFIED,
+            base=fs_a + [key],
+            other=fs_b + [key],
         )
 
 

@@ -143,18 +143,18 @@ class TestRecordComparison(unittest.TestCase):
         )
         self.assertDifferences(
             compare_dict_iter(a, b),
-            {"REMOVED ['1955']", "ADDED ['1955']"},  # :-/
+            {"MODIFIED ['1955']"},
         )
         self.assertDifferences(
             compare_dict_iter(a, b, options=DiffOptions(ignore_ws=False,
                                                         ignore_case=True)),
-            {"REMOVED ['1983']", "ADDED ['1983']"},
+            {"MODIFIED ['1983']"},
         )
         self.assertDifferences(
             compare_dict_iter(a, b, options=DiffOptions(unicode_normal=False,
                                                         ignore_case=True,
                                                         ignore_ws=True)),
-            {"REMOVED ['2001']", "ADDED ['2001']"},
+            {"MODIFIED ['2001']"},
         )
 
     def test_diff_record(self):
@@ -390,11 +390,9 @@ class TestRecordComparison(unittest.TestCase):
         )
 
         all_diffs = {
-            'ADDED .unknown_json_keys.shrubbery',
+            'MODIFIED .unknown_json_keys.shrubbery',
+            'MODIFIED .unknown_json_keys.tomato',
             'ADDED .unknown_json_keys.spam',
-            'ADDED .unknown_json_keys.tomato',
-            'REMOVED .unknown_json_keys.shrubbery',
-            'REMOVED .unknown_json_keys.tomato',
         }
 
         # no differences, because 'unknown_json_keys' is extraneous
@@ -424,7 +422,8 @@ class TestRecordComparison(unittest.TestCase):
 
         # this shows up as 'spam' being removed, because it got renamed and
         # the diff in general disregards keys when comparing.
-        all_diffs.add("REMOVED .unknown_json_keys.spam")
+        all_diffs.remove('ADDED .unknown_json_keys.spam')
+        all_diffs.add('MODIFIED .unknown_json_keys.spam')
         del bar.unknown_json_keys['shallots']
         self.assertDifferences(
             compare_record_iter(foo, bar, options=IES),
