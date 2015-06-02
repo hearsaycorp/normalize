@@ -248,6 +248,13 @@ class FieldSelectorOperationUnsupported(FieldSelectorException):
     )
 
 
+class IdentityCrisis(FeatureNotImplementedException):
+    message = (
+        "Can't obtain anything hashable from {val_type_name} instance "
+        "{val_repr}"
+    )
+
+
 class KeyHashError(StringFormatException):
     message = (
         "PK for {prop} returned an unhashable value; try setting "

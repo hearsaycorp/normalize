@@ -27,11 +27,21 @@ def record_id(object_, type_=None, selector=None, normalize_object_slot=None):
     Curiously, this function resembles conversion between a "record" and a
     "tuple": stripping the logical names from the atomic values.
     """
-    if type_ is None:
+    if type_ is None or isinstance(type_, tuple):
         type_ = type(object_)
 
     key_vals = list()
-    pk_cols = type_.primary_key
+    if hasattr(type_, "primary_key"):
+        pk_cols = type_.primary_key
+    elif object_.__hash__:
+        return object_
+    else:
+        raise exc.IdentityCrisis(
+            val=object_,
+            val_repr=repr(object_),
+            val_type=type_,
+            val_type_name=type_.__name__,
+        )
     if selector and pk_cols and not all(
         selector[(x.name,)] for x in pk_cols
     ):
