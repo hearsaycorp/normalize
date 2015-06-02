@@ -305,6 +305,8 @@ class TestRecordComparison(unittest.TestCase):
         )
         self.assertIsInstance(person_a.family, Collection)
 
+        # eventually this should notice that father and uncle swapped places,
+        # too.
         expected_a_to_b = {
             "REMOVED .brother",
         }
@@ -336,6 +338,48 @@ class TestRecordComparison(unittest.TestCase):
                     duck_type=True,
                 ),
             ), {},
+        )
+
+    def test_filter_collections(self):
+        """Test compare_filter used to restrict collections"""
+        self.bill.id = 2345
+        person_a = Person(
+            id=823,
+            family={"father": self.bob2,
+                    "uncle": self.bob1,
+                    "brother": self.bill},
+        )
+        person_b = Person(
+            id=824,
+            family={"father": self.bob1,
+                    "uncle": self.bob2},
+        )
+        self.assertDifferences(
+            compare_collection_iter(
+                person_a.family, person_b.family,
+                options=DiffOptions(
+                    compare_filter=MultiFieldSelector(["father"],
+                                                      ["brother"]),
+                ),
+            ),
+            {
+                "REMOVED .father",
+                "ADDED .father",
+                "REMOVED .brother",
+            }
+        )
+
+        self.assertDifferences(
+            compare_collection_iter(
+                person_a.family, person_b.family,
+                options=DiffOptions(
+                    compare_filter=MultiFieldSelector(["father"]),
+                ),
+            ),
+            {
+                "REMOVED .father",
+                "ADDED .father",
+            }
         )
 
     def test_empty_slots_empty_records(self):

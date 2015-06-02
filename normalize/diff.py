@@ -317,15 +317,23 @@ class DiffOptions(object):
         pk = record_id(record, type_, selector, self.normalize_object_slot)
         return pk
 
-    def id_args(self, type_, fs):
+    def id_args(self, type_, fs):  # XXX deprecated
         options = dict()
         if self.duck_type:
             options['type_'] = type_
         if self.compare_filter:
             if len(fs):
-                options['selector'] = self.compare_filter[fs][any]
+                coll_filter = self.compare_filter[fs]
             else:
-                options['selector'] = self.compare_filter[any]
+                coll_filter = self.compare_filter
+            if not coll_filter.has_none:
+                def _options(k):
+                    options['selector'] = coll_filter[k]
+                    return options
+
+                return _options
+            else:
+                options['selector'] = coll_filter[any]
         return options
 
     def is_filtered(self, prop, fs):
@@ -620,7 +628,8 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         return
 
     id_args = options.id_args(coll_type.itemtype, fs_a)
-    if 'selector' in id_args and not id_args['selector']:
+    if not callable(id_args) and 'selector' in id_args and \
+            not id_args['selector']:
         # early exit shortcut
         return
 
@@ -632,7 +641,11 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         seen = collections.Counter()
 
         for k, v in collection_generator(propval_x):
-            pk = options.record_id(v, **id_args)
+            if callable(id_args):
+                if fs_a + [k] not in options.compare_filter:
+                    continue
+            pk = options.record_id(
+                v, **(id_args(k) if callable(id_args) else id_args))
             if options.ignore_empty_items and _nested_empty(pk):
                 continue
             if compare_values is None:
