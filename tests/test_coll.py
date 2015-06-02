@@ -20,6 +20,7 @@ import unittest2
 from normalize import Property
 from normalize import Record
 from normalize.coll import *
+from normalize.diff import DiffTypes
 import normalize.exc as exc
 from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
@@ -239,3 +240,13 @@ class TestCollections(unittest2.TestCase):
 
         with self.assertRaises(exc.CoercionError):
             dolos['baz'] = "foobar"
+
+        # test that these collections can be compared
+        self.assertEqual(dolos.diff(dolos), [])
+        dolos2 = type(dolos)({"bob": ["foo", "bar", "frop"]})
+        diffs = dolos.diff(dolos2)
+        self.assertEqual(len(diffs), 1)
+        self.assertEqual(diffs[0].other.path, ".bob[2]")
+        self.assertEqual(diffs[0].diff_type, DiffTypes.ADDED)
+
+    #TODO type unions for item types

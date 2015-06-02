@@ -667,8 +667,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                     b_val = _nothing
             selector_a = fs_a + a_key
             selector_b = fs_b + b_key
-            # FIXME: collections of collections!
-            for diff in compare_record_iter(
+            for diff in _diff_iter(
                 a_val, b_val, selector_a, selector_b, options,
             ):
                 yield diff
@@ -684,7 +683,7 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                 selector_a = fs_a + a_key
                 selector_b = fs_b + b_key
                 any_diffs = False
-                for diff in compare_record_iter(
+                for diff in _diff_iter(
                     a_val, b_val, selector_a, selector_b, options,
                 ):
                     if diff.diff_type != DiffTypes.NO_CHANGE:
@@ -924,11 +923,16 @@ def diff_iter(base, other, options=None, **kwargs):
     elif len(kwargs):
         raise exc.DiffOptionsException()
 
+    null_fs = FieldSelector(tuple())
+    return _diff_iter(base, other, null_fs, null_fs, options)
+
+
+def _diff_iter(base, other, fs_a, fs_b, options):
     generators = []
 
     for type_union, func in COMPARE_FUNCTIONS.iteritems():
         if isinstance(base, type_union):
-            generators.append(func(base, other, options=options))
+            generators.append(func(base, other, fs_a, fs_b, options=options))
 
     if len(generators) == 1:
         return generators[0]
