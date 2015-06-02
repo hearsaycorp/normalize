@@ -28,6 +28,7 @@ from richenum import OrderedRichEnumValue
 
 from normalize.property import SafeProperty
 from normalize.coll import Collection
+from normalize.coll import DictCollection
 from normalize.coll import ListCollection
 import normalize.exc as exc
 from normalize.record import Record
@@ -600,6 +601,24 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         type(propval_a) if propval_a is not _nothing else type(propval_b)
     )
     force_descent = (propval_a is _nothing) or (propval_b is _nothing)
+    if isinstance(coll_type.itemtype, tuple):
+        raise exc.CollectionItemTypeUnsupported()
+    elif not issubclass(coll_type.itemtype, Record):
+        iter_func = (
+            compare_dict_iter if issubclass(coll_type, DictCollection) else
+            compare_list_iter if issubclass(coll_type, ListCollection) else
+            None
+        )
+        if not iter_func:
+            raise exc.CollectionDiffUnsupported(
+                coll_type=coll_type,
+                item_type=coll_type.itemtype,
+                item_type_name=coll_type.itemtype.__name__,
+            )
+        for diff in iter_func(propval_a, propval_b, fs_a, fs_b, options):
+            yield diff
+        return
+
     id_args = options.id_args(coll_type.itemtype, fs_a)
     if 'selector' in id_args and not id_args['selector']:
         # early exit shortcut

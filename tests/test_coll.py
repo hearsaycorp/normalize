@@ -216,6 +216,13 @@ class TestCollections(unittest2.TestCase):
         with self.assertRaises(exc.CoercionError):
             dos = dict_of(str)("foobar")
 
+        # test that these simple collections can be compared
+        self.assertEqual(dos.diff(dos), [])
+        dos2 = dict_of(str)({"foo": "baz"})
+        diffs = dos.diff(dos2)
+        self.assertEqual(len(diffs), 1)
+        self.assertEqual(diffs[0].base.path, ".foo")
+
     def test_dict_of_list_of_str(self):
         class MyDoLoS(Record):
             items = DictProperty(of=list_of(str), default={})

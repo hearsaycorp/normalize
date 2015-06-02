@@ -79,6 +79,10 @@ class EmptyAttributeError(StringFormatException):
     pass
 
 
+class FeatureNotImplementedException(StringFormatException):
+    pass
+
+
 class FieldSelectorException(StringFormatException):
     pass
 
@@ -157,6 +161,17 @@ class CollectionItemCoerceError(CoercionError):
 class CollectionDefinitionError(SubclassError):
     message = "{property} must be defined in a {coll} subclass"
 
+
+class CollectionItemTypeUnsupported(FeatureNotImplementedException):
+    message = (
+        "Collections with type union itemtype are not supported"
+    )
+
+class CollectionDiffUnsupported(FeatureNotImplementedException):
+    message = (
+        "Custom collections with simple item type {item_type_name} are "
+        "not supported for diff"
+    )
 
 class CollRequiredError(PropertyDefinitionError):
     message = (
