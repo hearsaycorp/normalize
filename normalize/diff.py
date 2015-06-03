@@ -49,6 +49,7 @@ class DiffTypes(OrderedRichEnum):
     ADDED = EnumValue(2, "added", "ADDED")
     REMOVED = EnumValue(3, "removed", "REMOVED")
     MODIFIED = EnumValue(4, "modified", "MODIFIED")
+    MOVED = EnumValue(5, "moved", "MOVED")
 
 
 def _coerce_diff(dt):
@@ -127,7 +128,7 @@ class DiffOptions(object):
                  unicode_normal=True, unchanged=False,
                  ignore_empty_slots=False, ignore_empty_items=False,
                  duck_type=False, extraneous=False,
-                 compare_filter=None, fuzzy_match=True):
+                 compare_filter=None, fuzzy_match=True, moved=False):
         """Create a new ``DiffOptions`` instance.
 
         args:
@@ -147,6 +148,11 @@ class DiffOptions(object):
                 Yields ``DiffInfo`` objects for every comparison, not just
                 those which found a difference.  Defaults to False.  Useful for
                 testing.
+
+            ``moved=``\ *BOOL*
+                Yields ``DiffInfo`` objects for comparisons where the values
+                matched, but keys or indexes were different.  Defaults to
+                False.
 
             ``ignore_empty_slots=``\ *BOOL*
                 If true, slots containing typical 'empty' values (by default,
@@ -185,6 +191,7 @@ class DiffOptions(object):
         self.unicode_normal = unicode_normal
         self.fuzzy_match = fuzzy_match
         self.unchanged = unchanged
+        self.moved = moved
         self.duck_type = duck_type
         self.extraneous = extraneous
         if isinstance(compare_filter, (MultiFieldSelector, types.NoneType)):
@@ -703,23 +710,36 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                         any_diffs = True
                     yield diff
 
-                if options.unchanged and not any_diffs:
+                if options.moved and a_key != b_key:
+                    yield DiffInfo(
+                        diff_type=DiffTypes.MOVED,
+                        base=fs_a + [a_key],
+                        other=fs_b + [b_key],
+                    )
+                elif options.unchanged and not any_diffs:
                     yield DiffInfo(
                         diff_type=DiffTypes.NO_CHANGE,
                         base=fs_a + [a_key],
                         other=fs_b + [b_key],
                     )
 
-    if options.unchanged:
+    if options.unchanged or options.moved:
         unchanged = values['a'] & values['b']
         for pk, seq in unchanged:
             a_key = rev_keys['a'][pk, seq]
             b_key = rev_keys['b'][pk, seq]
-            yield DiffInfo(
-                diff_type=DiffTypes.NO_CHANGE,
-                base=fs_a + [a_key],
-                other=fs_b + [b_key],
-            )
+            if options.moved and a_key != b_key:
+                yield DiffInfo(
+                    diff_type=DiffTypes.MOVED,
+                    base=fs_a + [a_key],
+                    other=fs_b + [b_key],
+                )
+            elif options.unchanged:
+                yield DiffInfo(
+                    diff_type=DiffTypes.NO_CHANGE,
+                    base=fs_a + [a_key],
+                    other=fs_b + [b_key],
+                )
 
     if not force_descent:
         for pk, seq in removed:
@@ -774,16 +794,23 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
 
-    if options.unchanged:
+    if options.unchanged or options.moved:
         unchanged = values['a'] & values['b']
         for v, seq in unchanged:
             a_idx = indices['a'][v, seq]
             b_idx = indices['b'][v, seq]
-            yield DiffInfo(
-                diff_type=DiffTypes.NO_CHANGE,
-                base=fs_a + [a_idx],
-                other=fs_b + [b_idx],
-            )
+            if options.moved and a_idx != b_idx:
+                yield DiffInfo(
+                    diff_type=DiffTypes.MOVED,
+                    base=fs_a + [a_idx],
+                    other=fs_b + [b_idx],
+                )
+            elif options.unchanged:
+                yield DiffInfo(
+                    diff_type=DiffTypes.NO_CHANGE,
+                    base=fs_a + [a_idx],
+                    other=fs_b + [b_idx],
+                )
 
     removed_idx = set(indices['a'][v, seq] for v, seq in removed)
     added_idx = set(indices['b'][v, seq] for v, seq in added)
@@ -852,16 +879,23 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
 
-    if options.unchanged:
+    if options.moved or options.unchanged:
         unchanged = values['a'] & values['b']
         for v, seq in unchanged:
             a_key = rev_keys['a'][v, seq]
             b_key = rev_keys['b'][v, seq]
-            yield DiffInfo(
-                diff_type=DiffTypes.NO_CHANGE,
-                base=fs_a + [a_key],
-                other=fs_b + [b_key],
-            )
+            if options.moved and a_key != b_key:
+                yield DiffInfo(
+                    diff_type=DiffTypes.MOVED,
+                    base=fs_a + [a_key],
+                    other=fs_b + [b_key],
+                )
+            elif options.unchanged:
+                yield DiffInfo(
+                    diff_type=DiffTypes.NO_CHANGE,
+                    base=fs_a + [a_key],
+                    other=fs_b + [b_key],
+                )
 
     removed_keys = set(rev_keys['a'][v, seq] for v, seq in removed)
     added_keys = set(rev_keys['b'][v, seq] for v, seq in added)

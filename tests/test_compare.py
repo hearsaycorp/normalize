@@ -305,14 +305,20 @@ class TestRecordComparison(unittest.TestCase):
         )
         self.assertIsInstance(person_a.family, Collection)
 
-        # eventually this should notice that father and uncle swapped places,
-        # too.
         expected_a_to_b = {
             "REMOVED .brother",
         }
         self.assertDifferences(
             compare_collection_iter(person_a.family, person_b.family),
             expected_a_to_b
+        )
+
+        # test function to show father and uncle swapping places
+        self.assertDifferences(
+            compare_collection_iter(
+                person_a.family, person_b.family, options=DiffOptions(moved=True),
+            ),
+            expected_a_to_b | {"MOVED (.father/.uncle)", "MOVED (.uncle/.father)"}
         )
 
         sparta = dict()
@@ -502,10 +508,7 @@ class TestRecordComparison(unittest.TestCase):
             str(difference), r'<Diff \[Wall\]; \d+ diff\(s\).*>',
         )
 
-        self.assertDifferences(
-            compare_record_iter(wall_one, wall_two,
-                                options=DiffOptions(unchanged=True)),
-            expected_differences |
+        expected_differences |= (
             {
                 'UNCHANGED ('
                 '.owner.interests[2]/'
@@ -579,5 +582,26 @@ class TestRecordComparison(unittest.TestCase):
                 'UNCHANGED .posts[0]',
                 'UNCHANGED .posts[0].post_id',
                 'UNCHANGED .posts[0].wall_id',
-            },
+            }
+        )
+        self.assertDifferences(
+            compare_record_iter(wall_one, wall_two,
+                                options=DiffOptions(unchanged=True)),
+            expected_differences,
+        )
+
+        moves = (
+            ".posts[0].comments[2]/.posts[0].comments[1]",
+            ".posts[0].comments[1]/.posts[0].comments[0]",
+            ".owner.interests[2]/.owner.interests[1]",
+            ".posts[0].comments[1].poster.interests[2]/.posts[0].comments[0].poster.interests[1]",
+        )
+        for path in moves:
+            expected_differences.remove("UNCHANGED (%s)" % path)
+            expected_differences.add("MOVED (%s)" % path)
+
+        self.assertDifferences(
+            compare_record_iter(wall_one, wall_two,
+                                options=DiffOptions(unchanged=True, moved=True)),
+            expected_differences,
         )
