@@ -1,7 +1,7 @@
 Normalize changelog and errata
 ==============================
 
-0.9.3 27th May 2015
+0.9.3 3rd June 2015
 -------------------
 * Comparing simple collections will now return MODIFIED instead of
   ADDED/REMOVED if individual indexes/keys changed
@@ -17,6 +17,10 @@ Normalize changelog and errata
 
 * the completely undocumented ``DiffOptions.id_args`` sub-class API
   method is now deprecated and will be removed in a future release.
+
+* Specifying 'compare_filter' to diffs over collections where the
+  field selector matches something other than the entire collection
+  now works.
 
 0.9.2 27th May 2015
 -------------------
