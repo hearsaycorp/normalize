@@ -428,19 +428,15 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
             if one_side_nothing:
                 diff_types_found = set()
 
-            for type_union, func in COMPARE_FUNCTIONS.iteritems():
-                if isinstance(propval_a, type_union) or one_side_nothing and (
-                    isinstance(propval_b, type_union)
-                ):
-                    for diff in func(
-                        propval_a, propval_b, prop_fs_a,
-                        prop_fs_b, options,
-                    ):
-                        if one_side_nothing:
-                            if diff.diff_type != DiffTypes.NO_CHANGE:
-                                diff_types_found.add(diff.diff_type)
-                        else:
-                            yield diff
+            for diff in _diff_iter(
+                propval_a, propval_b, prop_fs_a,
+                prop_fs_b, options,
+            ):
+                if one_side_nothing:
+                    if diff.diff_type != DiffTypes.NO_CHANGE:
+                        diff_types_found.add(diff.diff_type)
+                else:
+                    yield diff
 
             if one_side_nothing:
                 net_diff = None
@@ -978,7 +974,9 @@ def _diff_iter(base, other, fs_a, fs_b, options):
     generators = []
 
     for type_union, func in COMPARE_FUNCTIONS.iteritems():
-        if isinstance(base, type_union):
+        matches = (isinstance(base, type_union) if base is not _nothing else
+                   isinstance(other, type_union))
+        if matches:
             generators.append(func(base, other, fs_a, fs_b, options=options))
 
     if len(generators) == 1:
