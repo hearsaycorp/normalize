@@ -27,6 +27,8 @@ from normalize.record.json import JsonRecord
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
+from normalize.property.json import JsonProperty
+from normalize.property.json import JsonListProperty
 from testclasses import *
 
 
@@ -605,3 +607,33 @@ class TestRecordComparison(unittest.TestCase):
                                 options=DiffOptions(unchanged=True, moved=True)),
             expected_differences,
         )
+
+    def test_ignore_empty_slots_added(self):
+
+        class FakeItem(JsonRecord):
+            service_id = JsonProperty(json_name="id")
+            primary_key = [service_id]
+            name = JsonProperty()
+
+        class FakeThing(JsonRecord):
+            att_a = JsonProperty()
+            att_b = JsonProperty()
+            att_c = JsonListProperty(of=FakeItem)
+
+        fake1 = FakeThing(att_a="vixen", att_c=[{"name": "dancer"}])
+        fake2 = FakeThing(att_a="vixen")
+
+        diffs = fake1.diff(fake2)
+        self.assertEqual(len(diffs), 1)
+
+        diffs = fake1.diff(
+            fake2,
+            ignore_empty_slots=True,
+        )
+        self.assertEqual(len(diffs), 1)
+
+        diffs = fake2.diff(
+            fake1,
+            ignore_empty_slots=True,
+        )
+        self.assertEqual(len(diffs), 1)
