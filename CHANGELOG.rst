@@ -1,6 +1,23 @@
 Normalize changelog and errata
 ==============================
 
+0.9.3 27th May 2015
+-------------------
+* Comparing simple collections will now return MODIFIED instead of
+  ADDED/REMOVED if individual indexes/keys changed
+
+* Comparing typed collections where the item type is not a Record type
+  (eg ``list_of(str)``) now falls back to the appropriate 'simple'
+  collection comparison function.  This works recursively, so you can
+  eg get meaningful results comparing ``dict_of(list_of(str))``
+  instances.
+
+* New diff option 'moved' to return a new diff type MOVED for items in
+  collections.
+
+* the completely undocumented ``DiffOptions.id_args`` sub-class API
+  method is now deprecated and will be removed in a future release.
+
 0.9.2 27th May 2015
 -------------------
 * Another backwards compatibility accessor for ``RecordList.values``
