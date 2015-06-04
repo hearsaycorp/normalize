@@ -19,6 +19,7 @@ from time import time
 import types
 
 from normalize import RecordList
+from normalize.coll import list_of
 from normalize.record import Record
 from normalize.record.json import JsonRecordList
 from normalize.property import Property
@@ -156,6 +157,7 @@ class Star(Record):
                       check=lambda i: 0 < i < 120000)
     name = Property(isa=str)
     spectral_type = Property(isa=str)
+    designations = DictProperty(of=list_of(basestring))
 
 
 class Binary(Record):
@@ -187,7 +189,22 @@ class StarSystem(Record):
     attributes = DictProperty(of=StarAttribute)
 
 
-maia = Star(hip_id=17573, name="maia")
+maia = Star(
+    hip_id=17573, name="maia",
+    designations={
+        "common": ["Maia"],
+        "flamsteed": ["20 Tauri"],
+        "BD": [u"23\xc2 516"],
+        "GC": ["4500"],
+        "HD": ["23408"],
+        "HIP": ["17573"],
+        "HR": ["1149"],
+        "NSV": ["01279"],
+        "SAO": ["76155"],
+        "WDS": ["J03458+2422"],
+    },
+)
+
 acent_attributes = dict(
     parallax={"value": 747.1, "unit": "mas"},
     distance={"value": 4.366, "unit": "ly"},

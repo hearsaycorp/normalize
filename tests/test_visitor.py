@@ -29,6 +29,7 @@ from normalize.visitor import VisitorPattern
 from testclasses import acent
 from testclasses import acent_attributes
 from testclasses import JsonStarList
+from testclasses import maia
 from testclasses import NamedStarList
 from testclasses import PullRequest
 from testclasses import StarList
@@ -101,6 +102,11 @@ class TestVisitor(AssertDiffTest):
         nsl.name = "Alpha Centauri"
         dumped = SimpleDumper.visit(nsl)
         self.assertEqual(dumped, self.nsl_json_data)
+
+    def test_complex_dump2(self):
+        dumped = SimpleDumper.visit(maia)
+        maia2 = SimpleDumper.cast(type(maia), dumped)
+        self.assertEqual(maia.diff(maia2), [])
 
     def test_complex_cast(self):
         nsl = NamedStarList(**(self.nsl_json_data))
