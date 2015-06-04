@@ -213,7 +213,9 @@ class VisitorPattern(object):
                 This function should take a
                 :py:class:`normalize.property.Property` instance, and return
                 the slot from the value, or raise ``AttributeError`` or
-                ``KeyError`` if the slot is empty.
+                ``KeyError`` if the slot is empty.  Returning nothing means
+                that the item has no properties to unpack; ie, it's an opaque
+                type.
 
             ``get_item=``\ *generator*
                 This generator should return the tuple protocol used by
@@ -236,7 +238,13 @@ class VisitorPattern(object):
         else:
             generator = None
 
-        return (lambda prop: prop.__get__(value)), generator
+        if issubclass(value_type, Record):
+            def propget(prop):
+                return prop.__get__(value)
+        else:
+            propget = None
+
+        return propget, generator
 
     @classmethod
     def apply(cls, value, prop, visitor):
@@ -260,6 +268,9 @@ class VisitorPattern(object):
             ``prop=``\ *Property*\ \|\ ``None``
                 This is the :py:class:`normalize.Property` instance which
                 represents the field being traversed.
+
+                This can be ``None`` when being applied over Collection
+                instances, where the type of the contents is not a Record.
 
             ``visitor=``\ *Visitor*
                 This object can be used to inspect parameters of the current
@@ -396,8 +407,10 @@ class VisitorPattern(object):
         ``value_type`` is not appropriate for ``value``.
         """
         is_coll = issubclass(value_type, Collection)
-        is_record = any(not visitor.is_filtered(prop) for prop in
-                        value_type.properties.values())
+        is_record = issubclass(value_type, Record) and any(
+            not visitor.is_filtered(prop) for prop in
+            value_type.properties.values()
+        )
 
         if is_record and not isinstance(value, cls.grok_mapping_types):
             raise exc.VisitorGrokRecordError(
@@ -426,7 +439,12 @@ class VisitorPattern(object):
                 )
             generator = value_type.coll_to_tuples(values)
 
-        return (lambda prop: value[prop.name]), generator
+        propget = None
+        if is_record:
+            def propget(prop):
+                return value[prop.name]
+
+        return propget, generator
 
     @classmethod
     def reverse(cls, value, prop, visitor):
@@ -507,7 +525,12 @@ class VisitorPattern(object):
 
             item_type_generator = get_item_types()
 
-        return (lambda prop: prop), item_type_generator
+        propget = None
+        if issubclass(value_type, Record):
+            def propget(prop):
+                return prop
+
+        return propget, item_type_generator
 
     @classmethod
     def propinfo(cls, value, prop, visitor):
@@ -516,6 +539,9 @@ class VisitorPattern(object):
         implementation returns just the name of the property and the type in
         here.
         """
+        if not prop:
+            return {"name": value.__name__}
+
         rv = {"name": prop.name}
         if prop.valuetype:
             if isinstance(prop.valuetype, tuple):
@@ -605,6 +631,8 @@ class VisitorPattern(object):
         mapped_props = None
         if props:
             mapped_props = cls.map_record(visitor, props, value_type)
+        else:
+            return visitor.apply(value, None, visitor)
 
         return visitor.reduce(
             mapped_props, mapped_coll, value_type, visitor,
