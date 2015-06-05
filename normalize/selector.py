@@ -22,11 +22,22 @@ import functools
 import re
 import types
 
+from normalize.coll import DictCollection
 from normalize.coll import ListCollection
 from normalize.exc import FieldSelectorAttributeError
 from normalize.exc import FieldSelectorException
 from normalize.exc import FieldSelectorKeyError
 from normalize.exc import FieldSelectorOperationUnsupported
+
+
+def _try_index(instance, selector):
+    if isinstance(instance, basestring):
+        return False
+    if isinstance(selector, (long, int)):
+        return True
+    if getattr(instance, "__getitem__", False):
+        return True
+    return False
 
 
 @functools.total_ordering
@@ -148,7 +159,7 @@ class FieldSelector(object):
                     raise all_exc
                 else:
                     return rv
-            elif isinstance(selector, (int, long)):
+            elif _try_index(record, selector):
                 try:
                     record = record[selector]
                 except IndexError:
@@ -197,7 +208,7 @@ class FieldSelector(object):
                 for x in record:
                     sub_selector.put(x, value)
             else:
-                if isinstance(selector, (int, long)):
+                if _try_index(record, selector):
                     try:
                         sub_record = record[selector]
                     except IndexError:
@@ -234,7 +245,7 @@ class FieldSelector(object):
             if selector is None:
                 sub_field_selector = type(self)(self.selectors[i + 1:])
                 return sum(sub_field_selector.post(r) for r in record)
-            elif isinstance(selector, (int, long)):
+            elif _try_index(record, selector):
                 try:
                     record = record[selector]
                 except LookupError:
@@ -293,7 +304,7 @@ class FieldSelector(object):
                     raise all_exc
                 else:
                     return
-            elif isinstance(selector, (int, long)):
+            elif _try_index(record, selector):
                 try:
                     record = record[selector]
                 except IndexError:
@@ -760,7 +771,7 @@ class MultiFieldSelector(object):
                 return ctor(values=vals)
             else:
                 return vals
-        elif isinstance(obj, dict):
+        elif isinstance(obj, (dict, DictCollection)):
             if self.has_none:
                 tail = self.heads[None]
                 return ctor(

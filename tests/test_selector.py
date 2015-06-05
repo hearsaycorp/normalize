@@ -30,6 +30,8 @@ from normalize import Property
 from normalize import Record
 from normalize import Record
 from normalize import RecordList
+from normalize.coll import list_of
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.selector import MultiFieldSelector
 
@@ -460,18 +462,35 @@ class TestStructableFieldSelector(unittest.TestCase):
             bar = ListProperty(of=Octothorpe)
             foo = Property(isa=Caret)
             baz = Property()
+            quux = DictProperty(of=str)
+            frop = DictProperty(of=list_of(unicode))
 
         full = Pilcrow(
             bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],
             foo=dict(bar=[dict(name="Owl", hiss="Hunny Bee"),
                           dict(name="Piglet")]),
             baz="Wizzle",
+            quux={"protagonist": "Winnie_the_Pooh",
+                  "antagonist": "Alexander_Beetle"},
+            frop={"lighting": ["Uncle_Robert", "Kanga", "Small"],
+                  "story": ["Smallest_of_all", "Eeyore",
+                            "Christopher_Robin"]},
         )
+        selectors.add(("quux", "protagonist"))
+        self.assertEqual(
+            FieldSelector(("quux", "protagonist")).get(full),
+            "Winnie_the_Pooh",
+        )
+        selectors.add(("frop", "story"))
+        mfs = MultiFieldSelector(*selectors)
         filtered = mfs.get(full)
         expected = Pilcrow(
             bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],
             foo=dict(bar=[dict(hiss="Hunny Bee"),
                           dict(name="Piglet")]),
+            quux={"protagonist": "Winnie_the_Pooh"},
+            frop={"story": ["Smallest_of_all", "Eeyore",
+                            "Christopher_Robin"]},
         )
         self.assertEqual(filtered, expected)
 
