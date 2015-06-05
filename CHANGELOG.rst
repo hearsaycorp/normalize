@@ -1,6 +1,10 @@
 Normalize changelog and errata
 ==============================
 
+0.9.4 5th June 2015
+-------------------
+* Fixed normalize.visitor for collections of non-Record types as well.
+
 0.9.3 3rd June 2015
 -------------------
 * Comparing simple collections will now return MODIFIED instead of
