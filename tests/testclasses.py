@@ -157,7 +157,8 @@ class Star(Record):
                       check=lambda i: 0 < i < 120000)
     name = Property(isa=str)
     spectral_type = Property(isa=str)
-    designations = DictProperty(of=list_of(basestring))
+    designations = DictProperty(of=basestring)
+    coordinates = DictProperty(of=list_of(basestring))
 
 
 class Binary(Record):
@@ -192,16 +193,25 @@ class StarSystem(Record):
 maia = Star(
     hip_id=17573, name="maia",
     designations={
-        "common": ["Maia"],
-        "flamsteed": ["20 Tauri"],
-        "BD": [u"23\xc2 516"],
-        "GC": ["4500"],
-        "HD": ["23408"],
-        "HIP": ["17573"],
-        "HR": ["1149"],
-        "NSV": ["01279"],
-        "SAO": ["76155"],
-        "WDS": ["J03458+2422"],
+        "common": "Maia",
+        "flamsteed": "20 Tauri",
+        "BD": u"23\xc2 516",
+        "GC": "4500",
+        "HD": "23408",
+        "HIP": "17573",
+        "HR": "1149",
+        "NSV": "01279",
+        "SAO": "76155",
+        "WDS": "J03458+2422",
+    },
+    coordinates={
+        "ICRS": ["03", "45", "49.60656", "+24", "22", "03.8864",
+                 "2.72", "2.46", "90"],
+        "FK5": ["03", "45", "49.607", "+24", "22", "03.89",
+                 "2.72", "2.46", "90"],
+        "FK4": ["03", "42", "50.76", "+24", "12", "47.0",
+                "15.69", "14.26", "0"],
+        "Gal": ["166.1707", "-23.5145", "2.72", "2.46", "90"],
     },
 )
 

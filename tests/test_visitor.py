@@ -107,6 +107,8 @@ class TestVisitor(AssertDiffTest):
         dumped = SimpleDumper.visit(maia)
         maia2 = SimpleDumper.cast(type(maia), dumped)
         self.assertEqual(maia.diff(maia2), [])
+        self.assertEqual(maia2.coordinates['ICRS'][2], "49.60656")
+        self.assertEqual(maia2.designations['HR'], "1149")
 
     def test_complex_cast(self):
         nsl = NamedStarList(**(self.nsl_json_data))
