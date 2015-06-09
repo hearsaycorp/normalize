@@ -78,8 +78,8 @@ Features
   (*kwargs*) constructor arguments
 
 * conversion to and from JSON for all classes, regardless of whether
-  they derive ``normalize.record.json.JsonRecord``, using the visitor
-  pattern.  Support for custom functions for JSON marshal in and out.
+  they derive ``normalize.record.json.JsonRecord``.  Support for custom
+  functions for JSON marshal in and out.
 
 * conversion to primitive python types via the pickle API
   (``__getnewargs__``)
@@ -88,8 +88,7 @@ Features
   other forms.  See the documentation for the new
   ``normalize.visitor.VisitorPattern`` API.
 
-* typed collections API with item coercion (currently, only lists are
-  implemented):
+* typed collections with item coercion (currently lists and dicts only):
 
   ::
 
