@@ -210,3 +210,6 @@ class TestTypeUnionCases(AssertDiffTest):
         casted = VisitorPattern.cast(RecordList, [{}, {}])
         self.assertIsInstance(casted[0], Record)
         self.assertIsInstance(casted, RecordList)
+
+        empty_casted = VisitorPattern.cast(RecordList, [])
+        self.assertIsInstance(empty_casted, RecordList)
