@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.9.5 9th June 2015
+-------------------
+* FieldSelector and MultiFieldSelector's operations now work with
+  DictCollection containers as well as native dict's
+
 0.9.4 5th June 2015
 -------------------
 * Fixed normalize.visitor for collections of non-Record types as well.
