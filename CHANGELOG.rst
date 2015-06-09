@@ -1,6 +1,10 @@
 Normalize changelog and errata
 ==============================
 
+0.9.7 9th June 2015
+-------------------
+* the fix delivered by 0.9.6 fix now also fixes empty collections
+
 0.9.6 9th June 2015
 -------------------
 * fixed regression introduced in 0.9.4 with collections, which cleanly round
