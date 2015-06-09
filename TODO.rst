@@ -34,15 +34,8 @@ TODO
 * property traits for basic XML marshal support (in case the 90's
   calls and wants to send us some data)
 
-* the diff iterator could notice if items have moved keys in a
-  collection and emit a MOVED or RENAMED ``DiffInfo``
-
 * refactor all the ugly ``if isinstance(x, Y):`` blocks to use
   ``simplegeneric`` instead
-
-* provide a collection of ready-made typed properties; this will
-  probably involve changing the way that property types are
-  distinguished and selected
 
 * avro marshaling
 

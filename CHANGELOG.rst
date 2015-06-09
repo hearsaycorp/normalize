@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.9.6 9th June 2015
+-------------------
+* fixed regression introduced in 0.9.4 with collections, which cleanly round
+  trip using a non-specialized VisitorPattern again
+
 0.9.5 9th June 2015
 -------------------
 * FieldSelector and MultiFieldSelector's operations now work with
