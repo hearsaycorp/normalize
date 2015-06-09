@@ -631,7 +631,7 @@ class VisitorPattern(object):
         mapped_props = None
         if props:
             mapped_props = cls.map_record(visitor, props, value_type)
-        else:
+        elif not mapped_coll:
             return visitor.apply(value, None, visitor)
 
         return visitor.reduce(

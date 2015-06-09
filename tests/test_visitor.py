@@ -24,7 +24,9 @@ import types
 import unittest
 
 import normalize.exc as exc
+from normalize.coll import list_of
 from normalize.property.types import DateProperty
+from normalize.record import Record
 from normalize.visitor import VisitorPattern
 from testclasses import acent
 from testclasses import acent_attributes
@@ -202,3 +204,9 @@ class TestTypeUnionCases(AssertDiffTest):
         schema = SimpleDumper.reflect(PullRequest)
         self.assertEqual(schema['properties']['merged_at']['type'],
                          ["datetime", "NoneType"])
+
+    def test_cast_collection(self):
+        RecordList = list_of(Record)
+        casted = VisitorPattern.cast(RecordList, [{}, {}])
+        self.assertIsInstance(casted[0], Record)
+        self.assertIsInstance(casted, RecordList)
