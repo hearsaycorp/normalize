@@ -608,6 +608,12 @@ class TestStructableFieldSelector(unittest.TestCase):
         self.assertFalse(null_mfs)
         self.assertFalse(null_mfs[any])
 
+    def test_complete_mfs(self):
+        complete_mfs = MultiFieldSelector.complete_mfs()
+        fses = list(complete_mfs)
+        self.assertEqual(len(fses), 1)
+        self.assertEqual(fses[0].path, "[*]")
+
     def test_mfs_apply_ops(self):
         from copy import deepcopy
         from testclasses import wall_one
@@ -669,8 +675,28 @@ class TestStructableFieldSelector(unittest.TestCase):
         new_mfs = MultiFieldSelector.from_path(path)
         for fs in mfs:
             self.assertIn(fs, new_mfs)
+            parts = list(fs)
+            self.assertIsNotNone(parts[-1])
 
         for fs in new_mfs:
             self.assertIn(fs, mfs)
 
         self.assertEqual(len(mfs.path), len(new_mfs.path))
+
+        for path in (".foo", ".foo[*]", ".foo.bar[*]"):
+            mfs = MultiFieldSelector.from_path(path)
+            self.assertEqual(mfs.path, path)
+
+        for mfs_fs in (
+            ((),),
+            (("foo",),),
+            ((1,), (2,)),
+            ((None,)),
+            (("foo", "bar", None),),
+        ):
+            mfs = MultiFieldSelector(*mfs_fs)
+            path = mfs.path
+            mfs_loop = MultiFieldSelector.from_path(path)
+            self.assertEqual(mfs_loop.path, path)
+            self.assertEqual(list(fs.path for fs in mfs),
+                             list(fs.path for fs in mfs_loop))

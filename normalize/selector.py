@@ -623,8 +623,9 @@ class MultiFieldSelector(object):
             head_selector = self.FieldSelector((head,))
             if tail is all:
                 if head is None:
-                    yield self.FieldSelector(())
-                yield head_selector
+                    yield self.FieldSelector((None,))
+                else:
+                    yield head_selector
             else:
                 for x in tail:
                     yield head_selector + x
@@ -890,9 +891,9 @@ _MFS_PATH_TOK = re.compile(
 
 
 def _scan_mfs_path(path):
-    mfs = list()
-    fs = list()
-    stack = list()
+    mfs = list()    # a list of parsed, complete FS's
+    fs = list()     # current cursor in parsing
+    stack = list()  # resume state when parens are closed
     popping = False
     for m in re.finditer(_MFS_PATH_TOK, path):
         if m.group("branch"):
@@ -925,5 +926,8 @@ def _scan_mfs_path(path):
                 fs.append(int(idx_item))
             elif m.group('wild'):
                 fs.append(None)
+
+    if not popping and fs:
+        mfs.append(fs)
 
     return mfs
