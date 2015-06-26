@@ -320,7 +320,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         self.assertEqual(fs2.get(oo), "bar")
         fs2.delete(oo)
         self.assertRaises(AttributeError, fs2.get, mo)
-        fs2.put(oo,"hey")
+        fs2.put(oo, "hey")
 
         fs3 = FieldSelector(["objs", None, "foo"])
         self.assertEqual(fs3.get(oo), ["hey", "frop"])
@@ -347,6 +347,33 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs6 = FieldSelector(["objs", None])
         fs6.delete(oo)
         self.assertEqual(oo, OtherObj(objs=[]))
+
+    def test_dict(self):
+        from normalize.coll import dict_of
+        from testclasses import Person
+        Rolodeck = dict_of(Person)
+
+        deck = Rolodeck({
+            "bob": Person(id=123, name="Bob"),
+            "peter": Person(id=124, name="Peter"),
+            "eve": Person(id=125, name="Steve"),
+        })
+
+        fs1 = FieldSelector(["bob", "id"])
+        self.assertEqual(fs1.get(deck), 123)
+        self.assertRaisesRegexp(ValueError, r'id is required', fs1.delete, deck)
+
+        fs2 = FieldSelector(["cuthbert", "id"])
+        fs2.post(deck, 923)
+        self.assertEqual(deck['cuthbert'].id, 923)
+        FieldSelector(["ruth"]).post(deck, {"id": 523, "name": "Ruth"})
+        self.assertEqual(deck['ruth'].name, "Ruth")
+
+        FieldSelector(["bob"]).delete(deck)
+        self.assertNotIn("bob", deck)
+
+        FieldSelector([None]).delete(deck)
+        self.assertEqual(deck, {})
 
     def test_eq(self):
         fs1 = FieldSelector(["foo", "bar"])

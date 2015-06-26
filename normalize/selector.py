@@ -184,7 +184,7 @@ class FieldSelector(object):
             selector = self.selectors[0]
             if selector is None:
                 record[:] = value
-            elif isinstance(selector, (int, long)):
+            elif _try_index(record, selector):
                 try:
                     record[selector] = value
                 except LookupError:
@@ -334,7 +334,7 @@ class FieldSelector(object):
                 record = getattr(record, selector)
             i = i + 1
         to_delete = self.selectors[-1]
-        if isinstance(to_delete, (int, long, types.NoneType)):
+        if _try_index(record, to_delete):
             if to_delete is None:
                 # empty out a collection
                 if hasattr(record, "clear") and callable(record.clear):
