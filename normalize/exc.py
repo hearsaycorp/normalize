@@ -241,13 +241,6 @@ class FieldSelectorKeyError(FieldSelectorException, KeyError):
     message = "Could not find Record specified by index: {key}"
 
 
-class FieldSelectorOperationUnsupported(FieldSelectorException):
-    message = (
-        "Field Selector Operation {operation} not supported on "
-        "{target}.  Patches welcome."
-    )
-
-
 class IdentityCrisis(FeatureNotImplementedException):
     message = (
         "Can't obtain anything hashable from {val_type_name} instance "

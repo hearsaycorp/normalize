@@ -318,6 +318,14 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs4.delete(oo)
         self.assertRaises(FieldSelectorException, fs4.get, oo)
 
+        fs5 = FieldSelector(["objs", 1])
+        fs5.delete(oo)
+        self.assertEqual(oo, OtherObj(objs=[{"foo": "baz"}]))
+
+        fs6 = FieldSelector(["objs", None])
+        fs6.delete(oo)
+        self.assertEqual(oo, OtherObj(objs=[]))
+
     def test_eq(self):
         fs1 = FieldSelector(["foo", "bar"])
         fs2 = FieldSelector(["foo", "bar"])

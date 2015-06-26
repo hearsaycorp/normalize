@@ -27,7 +27,6 @@ from normalize.coll import ListCollection
 from normalize.exc import FieldSelectorAttributeError
 from normalize.exc import FieldSelectorException
 from normalize.exc import FieldSelectorKeyError
-from normalize.exc import FieldSelectorOperationUnsupported
 
 
 def _try_index(instance, selector):
@@ -316,11 +315,14 @@ class FieldSelector(object):
             i = i + 1
         to_delete = self.selectors[-1]
         if isinstance(to_delete, (int, long, types.NoneType)):
-            # can't do this until the coll types support mutation operations
-            raise FieldSelectorOperationUnsupported(
-                operation="delete",
-                target="collection",
-            )
+            if to_delete is None:
+                # empty out a collection
+                if hasattr(record, "clear") and callable(record.clear):
+                    record.clear()
+                else:
+                    record[:] = ()
+            else:
+                del record[to_delete]
         else:
             if hasattr(record, to_delete):
                 delattr(record, to_delete)
