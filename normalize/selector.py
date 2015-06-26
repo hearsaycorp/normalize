@@ -240,21 +240,38 @@ class FieldSelector(object):
            print obj.stuff[0].name  # "Bob"
         """
         i = 0
+        put_final = False
         for selector in self.selectors[:-1]:
             if selector is None:
                 sub_field_selector = type(self)(self.selectors[i + 1:])
                 return sum(sub_field_selector.post(r) for r in record)
-            elif _try_index(record, selector):
+
+            # supports the case where an item is created by setting
+            # a single required field value
+            kwarg = {}
+            if i >= len(self.selectors) - 2 and self.selectors[-1] is not None:
+                kwarg[self.selectors[-1]] = value
+
+            if _try_index(record, selector):
                 try:
                     record = record[selector]
-                except LookupError:
-                    if len(record) != selector:
-                        raise ValueError(
-                            "FieldSelector set out of order: "
-                            "[%d]" % selector
-                        )
-                    record.append(type(record).itemtype())
+                except IndexError:
+                    if isinstance(selector, (int, long)):
+                        if len(record) != selector:
+                            raise ValueError(
+                                "FieldSelector set out of order: "
+                                "[%d]" % selector
+                            )
+                        record.append(type(record).itemtype(**kwarg))
+                        if kwarg:
+                            put_final = True
+                    else:
+                        raise
                     record = record[selector]
+                except KeyError:
+                    record[selector] = type(record).itemtype(**kwarg)
+                    if kwarg:
+                        put_final = True
             else:
                 if not hasattr(record, selector):
                     prop = type(record).properties[selector]
@@ -263,10 +280,13 @@ class FieldSelector(object):
                             "Must specify default= or isa= to auto-vivify "
                             "%s" % prop
                         )
-                    setattr(record, selector, prop.valuetype())
+                    setattr(record, selector, prop.valuetype(**kwarg))
+                    if kwarg:
+                        put_final = True
                 record = getattr(record, selector)
             i = i + 1
-        type(self)([self.selectors[-1]]).put(record, value)
+        if not put_final:
+            type(self)([self.selectors[-1]]).put(record, value)
         return 1
 
     def delete(self, record):

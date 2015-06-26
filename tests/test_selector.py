@@ -277,6 +277,28 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs.put(record, "Nested")
         self.assertEqual(record.nested.name, "Nested")
 
+    def test_post_required(self):
+        class FussyRecord(Record):
+            id = Property(required=True)
+
+        class FussPot(Record):
+            fuss_list = ListProperty(of=FussyRecord)
+            fuss_map = DictProperty(of=FussyRecord)
+            top_fuss = Property(isa=FussyRecord)
+
+        fp = FussPot()
+        fs1 = FieldSelector(("top_fuss", "id"))
+        fs2 = FieldSelector(("fuss_map", "phew", "id"))
+        fs3 = FieldSelector(("fuss_list", 0, "id"))
+        fs1.post(fp, 1)
+        fs2.post(fp, 2)
+        fs3.post(fp, 3)
+        expected = FussPot(
+            top_fuss={"id": 1},
+            fuss_map={"phew": {"id": 2}},
+            fuss_list=[{"id":3}],
+        )
+
     def test_delete(self):
 
         class MyObj(Record):
