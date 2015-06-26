@@ -1,6 +1,23 @@
 Normalize changelog and errata
 ==============================
 
+0.9.8 26th June 2015
+--------------------
+* MultiFieldSelector.from_path(path) did not work if the 'path' did not
+  end with ')' (ie, there was only one FieldSelector within).
+
+* FieldSelector delete operations were updated to work with collection
+  items: previously, you could not remove items from collections, or
+  use 'None' at the end of a delete Field Selector.  This now works for
+  DictCollection and ListCollection.
+
+* Some bugs with FieldSelector.post, .put and .delete on DictCollections
+  were cleaned up.
+
+* It is now possible to use FieldSelector.post(x, y) to create a new
+  item in a collection or set a property specified as a record where 'x' is
+  the only required property.
+
 0.9.7 9th June 2015
 -------------------
 * the fix delivered by 0.9.6 fix now also fixes empty collections
