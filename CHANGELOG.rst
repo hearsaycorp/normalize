@@ -1,6 +1,33 @@
 Normalize changelog and errata
 ==============================
 
+0.9.9 8th July 2015
+-------------------
+* added a new, convenient API for creating type objects which check
+  their values against a function: ``subtype``
+
+  For example, if you want to say that a slot contains an
+  ISO8601-formatted datetime string, you could declare that like this:
+
+  ::
+
+      import re
+
+      import dateutil.parser
+      import normalize
+
+      # simplified for brevity
+      iso8601_re = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.(\d+))?$')
+
+      ISO8601 = normalize.subtype(
+           "ISO8601", of=str,
+           where=lambda x: re.match(iso8601_re, x),
+           coerce=lambda s: dateutil.parser.parse(s).isoformat(),
+      )
+
+      class SomeClass(normalize.Record):
+          created = normalize.Property(isa=ISO8601)
+
 0.9.8 26th June 2015
 --------------------
 * MultiFieldSelector.from_path(path) did not work if the 'path' did not
