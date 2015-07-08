@@ -41,7 +41,6 @@ from normalize.record.json import to_json
 from normalize.selector import FieldSelector
 from normalize.selector import FieldSelectorException
 from normalize.selector import MultiFieldSelector
-from normalize.subtype import make_subtype
 from normalize.subtype import subtype
 
 
@@ -68,7 +67,6 @@ __all__ = [
     "ListCollection",
     "ListProperty",
     "make_property_type",
-    "make_subtype",
     "MultiFieldSelector",
     "Property",
     "ROProperty",

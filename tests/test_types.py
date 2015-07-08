@@ -30,7 +30,6 @@ from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.types import *
-from normalize.subtype import make_subtype
 from normalize.subtype import subtype
 
 
@@ -96,9 +95,9 @@ class TestSubTypes(unittest2.TestCase):
     """Proof of concept test for coercing between sub-types of real types.
     """
     def test_sub_types(self):
-        NaturalNumber = make_subtype(
+        NaturalNumber = subtype(
             of=int,
-            called="NaturalNumber",
+            name="NaturalNumber",
             where=lambda i: i > 0,
         )
         self.assertIsInstance(NaturalNumber, type)
@@ -107,9 +106,9 @@ class TestSubTypes(unittest2.TestCase):
         self.assertFalse(isinstance(-50, NaturalNumber))
         self.assertEqual(str(NaturalNumber), "<subtype NaturalNumber of int>")
 
-        BigNaturalNumber = make_subtype(
+        BigNaturalNumber = subtype(
             of=long,
-            called="BigNaturalNumber",
+            name="BigNaturalNumber",
             where=lambda i: i > 0,
         )
 
@@ -136,9 +135,9 @@ class TestSubTypes(unittest2.TestCase):
             nbo.count = 0.5
 
     def test_subtype_coerce(self):
-        NaturalNumber = make_subtype(
+        NaturalNumber = subtype(
             of=int,
-            called="NaturalNumber",
+            name="NaturalNumber",
             where=lambda i: i > 0,
         )
 
@@ -146,9 +145,9 @@ class TestSubTypes(unittest2.TestCase):
         with self.assertRaises(exc.CoercionError):
             NaturalNumber(-3)
 
-        ScalarNaturalNumber = make_subtype(
+        ScalarNaturalNumber = subtype(
             of=int,
-            called="ScalarNaturalNumber",
+            name="ScalarNaturalNumber",
             where=lambda i: i > 0,
             coerce=lambda i: abs(i),
         )
@@ -158,15 +157,15 @@ class TestSubTypes(unittest2.TestCase):
         self.assertRaises(ValueError, ScalarNaturalNumber, 0)
 
     def test_subtype_subtype(self):
-        NaturalNumber = make_subtype(
+        NaturalNumber = subtype(
             of=int,
-            called="NaturalNumber",
+            name="NaturalNumber",
             where=lambda i: i > 0,
         )
 
-        SmallNaturalNumber = make_subtype(
+        SmallNaturalNumber = subtype(
             of=NaturalNumber,
-            called="SmallNaturalNumber",
+            name="SmallNaturalNumber",
             where=lambda i: i <= 100,
         )
 
@@ -187,9 +186,9 @@ class TestSubTypes(unittest2.TestCase):
             def define_me(self):
                 pass
 
-        SubAbstractClass = make_subtype(
+        SubAbstractClass = subtype(
             of=AbstractClass,
-            called="SubAbstractClass",
+            name="SubAbstractClass",
             where=lambda v: v.define_me() > 0
         )
         self.assertEqual(

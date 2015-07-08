@@ -107,6 +107,10 @@ class SubclassError(StringFormatException):
     pass
 
 
+class TypeDefinitionError(StringFormatException, TypeError):
+    pass
+
+
 class UsageException(StringFormatException):
     pass
 
@@ -394,6 +398,10 @@ class SubtypeCoerceError(CoercionError):
         "value {passed} coerces to {coerced} but this is not a valid "
         "{subtype_name}"
     )
+
+
+class SubtypeOfWhat(TypeDefinitionError):
+    message = "cannot create a subtype of non-type object {of}"
 
 
 class SubtypeNoCoerceFunc(CoercionError):

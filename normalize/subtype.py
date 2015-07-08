@@ -18,6 +18,12 @@ from . import exc
 
 
 class subtype(type):
+    """A subtype is a special type object that can be used anywhere a
+    regular type object is expected in normalize, but refers to a
+    subset of all of the possible values of the type it is created
+    from.  This allows additional checks for the value in a property
+    which apply at the type coercion stage.
+    """
     def __instancecheck__(cls, instance):
         try:
             ok = isinstance(instance, cls.of) and (
@@ -32,73 +38,64 @@ class subtype(type):
             type(cls).__name__, cls.__name__, cls.of.__name__,
         )
 
+    def __new__(typcls, name, of, where, coerce=None):
+        if not isinstance(of, type):
+            raise exc.SubtypeOfWhat(of=of)
 
-def make_subtype(of, called, where, coerce=None):
-    """Creates a new subtype constraint, and optionally associates with a
-    coerce method.
+        # for classes with a custom metaclass, we'll need to whip up a new
+        # metaclass for them, then construct that.
+        if not issubclass(typcls, type(of)):
+            typcls = type(
+                type(of).__name__ + typcls.__name__.capitalize(),
+                (typcls, type(of)), {})
+            return typcls(name, of, where, coerce)
 
-    A subtype constraint is a special type object that can be used
-    anywhere a regular type object is expected in normalize, but
-    refers to a subset of all of the possible values of the type it is
-    created from.  This allows the rules in the passed 'where'
-    function to be depended upon in calling code without writing
-    custom constructor functions.
+        cls_a = []
 
-    It's also possible to supply a 'coerce' method; this will be used
-    as a 'constructor' for the new subtype, and will be passed values
-    passed to the constructor which do not already pass the type
-    constraint.  The returned value is also checked against the type
-    constraint.
-
-    Note that the subtype object does not support the constructor
-    syntax of the restricted type.  It only supports a single
-    constructor argument.
-    """
-    if not isinstance(of, type):
-        raise exc.SubtypeOfWhat(of=of)
-    if isinstance(type(of), subtype):
-        where_funcs = type(of).where_funcs + (where,)
-        if not coerce:
-            coerce = type(of).coerce[0]
-    else:
-        where_funcs = (where,)
-
-    cls_a = []
-
-    def __new__(cls, value):
-        if isinstance(value, cls_a[0]):
-            return value
-        elif cls.coerce[0]:
-            coerced = cls.coerce[0](value)
-            if not isinstance(coerced, cls_a[0]):
-                raise exc.SubtypeCoerceError(
-                    subtype_name=called,
-                    subtype_of=of.__name__,
+        def __new__(cls, value):
+            if isinstance(value, cls_a[0]):
+                return value
+            elif cls.coerce[0]:
+                coerced = cls.coerce[0](value)
+                if not isinstance(coerced, cls_a[0]):
+                    raise exc.SubtypeCoerceError(
+                        subtype_name=name,
+                        subtype_of=of.__name__,
+                        passed=value,
+                        coerced=coerced,
+                    )
+                return coerced
+            else:
+                raise exc.SubtypeNoCoerceFunc(
                     passed=value,
-                    coerced=coerced,
+                    subtype_name=name,
+                    subtype_of=of.__name__,
                 )
-            return coerced
-        else:
-            raise exc.SubtypeNoCoerceFunc(
-                passed=value,
-                subtype_name=called,
-                subtype_of=of.__name__,
-            )
 
-    subtype_f = subtype
-    # for classes with a custom metaclass, we'll need to whip up a new
-    # metaclass for them as well.
-    if not issubclass(subtype, type(of)):
-        subtype_f = type(
-            type(of).__name__ + "Subtype", (subtype, type(of)), {})
+        cls_dict = dict(
+            coerce=(coerce,),
+            of=of,
+            where_funcs=(where,),
+            __new__=__new__,
+        )
 
-    cls_dict = dict(
-        coerce=(coerce,),
-        of=of,
-        where_funcs=where_funcs,
-        __new__=__new__,
-    )
+        cls = super(subtype, typcls).__new__(typcls, name, (of,), cls_dict)
+        cls_a.append(cls)
+        return cls
 
-    cls = subtype_f(called, (of,), cls_dict)
-    cls_a.append(cls)
-    return cls
+    def __init__(self, name, of, where, coerce=None):
+        """Creates a new subtype constraint, and optionally associates with a
+        coerce method.
+
+        It's also possible to supply a 'coerce' method; this will be used
+        as a 'constructor' for the new subtype, and will be passed values
+        passed to the constructor which do not already pass the type
+        constraint.  The returned value is also checked against the type
+        constraint.
+
+        Note that the subtype object does not support the constructor
+        syntax of the restricted type.  It only supports a single
+        constructor argument.
+        """
+        super(subtype, self).__init__(name, (of,), type(self).__dict__)
+
