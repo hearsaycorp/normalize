@@ -389,6 +389,20 @@ class ReservedPropertyName(RecordDefinitionError):
     message = "Attribute {attrname} is reserved"
 
 
+class SubtypeCoerceError(CoercionError):
+    message = (
+        "value {passed} coerces to {coerced} but this is not a valid "
+        "{subtype_name}"
+    )
+
+
+class SubtypeNoCoerceFunc(CoercionError):
+    message = (
+        "value {passed} does not pass subtype constraint {subtype_name} "
+        "of {subtype_of}, and no coerce method defined"
+    )
+
+
 class ValueCoercionError(CoercionError):
     message = (
         "Coerce function on proprety {prop} returned a bad coerced "

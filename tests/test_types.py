@@ -21,6 +21,7 @@ import re
 import sys
 import unittest2
 
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
@@ -29,6 +30,8 @@ from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.types import *
+from normalize.subtype import make_subtype
+from normalize.subtype import subtype
 
 
 class TestTypeLibrary(unittest2.TestCase):
@@ -93,19 +96,22 @@ class TestSubTypes(unittest2.TestCase):
     """Proof of concept test for coercing between sub-types of real types.
     """
     def test_sub_types(self):
-        class NaturalNumberMeta(type):
-            @classmethod
-            def __instancecheck__(cls, val):
-                return isinstance(val, (int, long)) and val > 0
-
-        class NaturalNumber(int):
-            __metaclass__ = NaturalNumberMeta
-
+        NaturalNumber = make_subtype(
+            of=int,
+            called="NaturalNumber",
+            where=lambda i: i > 0,
+        )
+        self.assertIsInstance(NaturalNumber, type)
+        self.assertTrue(issubclass(NaturalNumber, int))
         self.assertIsInstance(50, NaturalNumber)
         self.assertFalse(isinstance(-50, NaturalNumber))
+        self.assertEqual(str(NaturalNumber), "<subtype NaturalNumber of int>")
 
-        class BigNaturalNumber(long):
-            __metaclass__ = NaturalNumberMeta
+        BigNaturalNumber = make_subtype(
+            of=long,
+            called="BigNaturalNumber",
+            where=lambda i: i > 0,
+        )
 
         class NaturalBornObject(Record):
             count = Property(
@@ -128,3 +134,75 @@ class TestSubTypes(unittest2.TestCase):
         self.assertEqual(nbo.count, 10)
         with self.assertRaises(ValueError):
             nbo.count = 0.5
+
+    def test_subtype_coerce(self):
+        NaturalNumber = make_subtype(
+            of=int,
+            called="NaturalNumber",
+            where=lambda i: i > 0,
+        )
+
+        self.assertEqual(NaturalNumber(3), 3)
+        with self.assertRaises(exc.CoercionError):
+            NaturalNumber(-3)
+
+        ScalarNaturalNumber = make_subtype(
+            of=int,
+            called="ScalarNaturalNumber",
+            where=lambda i: i > 0,
+            coerce=lambda i: abs(i),
+        )
+
+        self.assertEqual(ScalarNaturalNumber(3), 3)
+        self.assertEqual(ScalarNaturalNumber(-3), 3)
+        self.assertRaises(ValueError, ScalarNaturalNumber, 0)
+
+    def test_subtype_subtype(self):
+        NaturalNumber = make_subtype(
+            of=int,
+            called="NaturalNumber",
+            where=lambda i: i > 0,
+        )
+
+        SmallNaturalNumber = make_subtype(
+            of=NaturalNumber,
+            called="SmallNaturalNumber",
+            where=lambda i: i <= 100,
+        )
+
+        self.assertTrue(issubclass(SmallNaturalNumber, NaturalNumber))
+        self.assertTrue(issubclass(SmallNaturalNumber, int))
+
+        self.assertTrue(isinstance(10, SmallNaturalNumber))
+        self.assertFalse(isinstance(101, SmallNaturalNumber))
+        self.assertFalse(isinstance(0, SmallNaturalNumber))
+
+    def test_subtype_abstract(self):
+        import abc
+
+        class AbstractClass(object):
+            __metaclass__ = abc.ABCMeta
+
+            @abc.abstractmethod
+            def define_me(self):
+                pass
+
+        SubAbstractClass = make_subtype(
+            of=AbstractClass,
+            called="SubAbstractClass",
+            where=lambda v: v.define_me() > 0
+        )
+        self.assertEqual(
+            str(SubAbstractClass),
+            "<ABCMetaSubtype SubAbstractClass of AbstractClass>",
+        )
+
+        class ConcreteClass(AbstractClass):
+            def __init__(self, what):
+                self.what = what
+
+            def define_me(self):
+                return self.what
+
+        self.assertIsInstance(ConcreteClass(1), SubAbstractClass)
+        self.assertNotIsInstance(ConcreteClass(-1), SubAbstractClass)
