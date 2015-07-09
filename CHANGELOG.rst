@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+0.9.10 9th July 2015
+--------------------
+* the implicit squashing of attributes which coerce to None now also
+  works for subtype coerce functions
+
 0.9.9 8th July 2015
 -------------------
 * added a new, convenient API for creating type objects which check
