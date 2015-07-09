@@ -208,6 +208,10 @@ class Property(object):
         if self.valuetype and not isinstance(value, self.valuetype):
             try:
                 new_value = self.coerce(value)
+            except exc.SubtypeCoerceError as e:
+                # this particular coerce error will be re-caught below,
+                # unless the coerce method returned None
+                new_value = e.coerced
             except Exception as e:
                 raise exc.CoerceError(
                     prop=self.fullname,

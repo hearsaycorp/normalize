@@ -205,3 +205,18 @@ class TestSubTypes(unittest2.TestCase):
 
         self.assertIsInstance(ConcreteClass(1), SubAbstractClass)
         self.assertNotIsInstance(ConcreteClass(-1), SubAbstractClass)
+
+    def test_squash_coerce(self):
+
+        # tests that coerce to None on initialization works
+        MaybeNaturalNumber = subtype(
+            "MaybeNaturalNumber", int, where=lambda i: i > 0,
+            coerce=lambda i: abs(int(i)) or None,
+        )
+
+        class Squasher(Record):
+            number_or_none = Property(isa=MaybeNaturalNumber)
+
+        s = Squasher(number_or_none=0)
+        with self.assertRaises(AttributeError):
+            s.number_or_none
