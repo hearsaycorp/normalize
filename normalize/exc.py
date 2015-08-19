@@ -128,13 +128,6 @@ class AmbiguousConstruction(UsageException):
     message = "only init_dict or kwargs may be specified"
 
 
-class AttributeEmptyFault(PropertyDefinitionError, AttributeError):
-    message = (
-        "{prop_fullname} ('empty' function raised {exc_type_name}: "
-        "{exception})"
-    )
-
-
 class BadAssignment(EmptyAttributeError, TypeError):
     message = (
         "Can't assign to the empty placeholder for ({typenames})"
