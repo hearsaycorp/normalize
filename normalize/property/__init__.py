@@ -242,8 +242,9 @@ class Property(object):
             else:
                 value = new_value
         if self.check and not self.check(value):
-            raise ValueError(
-                "%s value '%r' failed type check" % (self.fullname, value)
+            raise exc.ValueCheckError(
+                prop=self,
+                passed=value,
             )
         return value
 

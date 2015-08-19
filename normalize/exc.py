@@ -419,6 +419,10 @@ class SubtypeNoCoerceFunc(CoercionError):
     )
 
 
+class ValueCheckError(AttributeValueError):
+    message = "value {passed!r} failed value check for {prop.fullname}"
+
+
 class ValueCoercionError(CoercionError):
     message = (
         "Coerce function on proprety {prop} returned a bad coerced "
