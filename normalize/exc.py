@@ -466,5 +466,6 @@ class VisitorTooSimple(VisitorException):
 
 class VisitorUnpackError(VisitorException, TypeError):
     message = (
-        "Can't unpack collection at {fs}; expected {colltype}, got {value}"
+        "Can't unpack collection at {context.field_selector}; expected "
+        "{colltype.__name__}, got {passed!r}"
     )

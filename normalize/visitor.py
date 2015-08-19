@@ -231,9 +231,9 @@ class VisitorPattern(object):
                     generator = value_type.coll_to_tuples(value)
                 else:
                     raise exc.VisitorUnpackError(
-                        value=repr(value),
+                        passed=value,
                         colltype=value_type.colltype.__name__,
-                        fs=visitor.field_selector,
+                        context=visitor,
                     )
         else:
             generator = None
