@@ -215,7 +215,7 @@ class Property(object):
             except Exception as e:
                 raise exc.CoerceError(
                     prop=self,
-                    value=repr(value),
+                    passed=value,
                     exc=e,
                     func=(
                         "%s constructor" % self.coerce.__name__ if
@@ -235,9 +235,9 @@ class Property(object):
                     return _none
                 else:
                     raise exc.ValueCoercionError(
-                        prop=self.fullname,
-                        value=repr(value),
-                        coerced=repr(new_value),
+                        prop=self,
+                        passed=value,
+                        coerced=new_value,
                     )
             else:
                 value = new_value

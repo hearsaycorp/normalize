@@ -117,8 +117,8 @@ def from_json(record_type, json_struct):
         return instance
     else:
         raise exc.JsonRecordCoerceError(
-            given=repr(json_struct),
-            type=record_type.__name__,
+            passed=json_struct,
+            recordtype=record_type,
         )
 
 

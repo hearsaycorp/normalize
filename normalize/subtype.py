@@ -59,8 +59,8 @@ class subtype(type):
                 coerced = cls.coerce[0](value)
                 if not isinstance(coerced, cls_a[0]):
                     raise exc.SubtypeCoerceError(
-                        subtype_name=name,
-                        subtype_of=of.__name__,
+                        subtype=cls_a[0],
+                        subtype_of=of,
                         passed=value,
                         coerced=coerced,
                     )
@@ -68,8 +68,8 @@ class subtype(type):
             else:
                 raise exc.SubtypeNoCoerceFunc(
                     passed=value,
-                    subtype_name=name,
-                    subtype_of=of.__name__,
+                    subtype=cls_a[0],
+                    subtype_of=of,
                 )
 
         cls_dict = dict(

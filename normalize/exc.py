@@ -136,7 +136,7 @@ class BadAssignment(EmptyAttributeError, TypeError):
 
 class CoerceError(CoercionError):
     message = (
-        "coerce to {valuetype} for {prop.fullname} failed with value {value}: "
+        "coerce to {valuetype} for {prop.fullname} failed with value {passed!r}: "
         "{func} raised: {exc}"
     )
 
@@ -149,13 +149,16 @@ class CoerceWithoutType(PropertyDefinitionError):
 
 
 class CollectionCoerceError(CoercionError):
-    message = "Cannot interpret {giventype} as a {fortype} constructor"
+    message = (
+        "Cannot interpret {passed!r} as a {colltype.__name__} "
+        "constructor"
+    )
 
 
 class CollectionItemCoerceError(CoercionError):
     message = (
-        "coerce to {valuetype} for insertion to {colltype} failed for "
-        "value {value}: {exc}"
+        "coerce to {itemtype.__name__} for insertion to "
+        "{colltype.__name__} failed for value {passed!r}: {exc}"
     )
 
 
@@ -387,7 +390,10 @@ class ReadOnlyAttributeError(StringFormatException, AttributeError):
 
 
 class JsonRecordCoerceError(CoercionError):
-    message = "Cannot interpret {given} as a {typename} constructor"
+    message = (
+        "Cannot interpret {passed!r} as a {recordtype.__name__} "
+        "constructor"
+    )
 
 
 class ReservedPropertyName(RecordDefinitionError):
@@ -396,8 +402,8 @@ class ReservedPropertyName(RecordDefinitionError):
 
 class SubtypeCoerceError(CoercionError):
     message = (
-        "value {passed} coerces to {coerced} but this is not a valid "
-        "{subtype_name}"
+        "value {passed!r} coerces to {coerced!r} but this is not a valid "
+        "{subtype.__name__}"
     )
 
 
@@ -407,8 +413,8 @@ class SubtypeOfWhat(TypeDefinitionError):
 
 class SubtypeNoCoerceFunc(CoercionError):
     message = (
-        "value {passed} does not pass subtype constraint {subtype_name} "
-        "of {subtype_of}, and no coerce method defined"
+        "value {passed!r} does not pass subtype constraint "
+        "{subtype.__name__} of {subtype_of.__name__}, and no coerce method defined"
     )
 
 
@@ -418,8 +424,8 @@ class ValueCheckError(AttributeValueError):
 
 class ValueCoercionError(CoercionError):
     message = (
-        "Coerce function on proprety {prop} returned a bad coerced "
-        "value {coerced} from input {value}"
+        "Coerce function on {prop.fullname} returned a bad coerced "
+        "value {coerced!r} from input {passed!r}"
     )
 
 

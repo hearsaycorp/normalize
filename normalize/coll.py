@@ -139,9 +139,9 @@ class Collection(Record):
                 return cls.coerceitem(v)
             except Exception as e:
                 raise exc.CollectionItemCoerceError(
-                    valuetype=cls.itemtype.__name__,
-                    colltype=cls.__name__,
-                    value=repr(v),
+                    itemtype=cls.itemtype,
+                    colltype=cls,
+                    passed=v,
                     exc=e,
                 )
 
@@ -215,8 +215,8 @@ class DictCollection(KeyedCollection):
     def coll_to_tuples(cls, coll):
         if isinstance(coll, basestring):
             raise exc.CollectionCoerceError(
-                giventype=type(coll).__name__,
-                fortype=cls.__name__,
+                passed=coll,
+                colltype=cls,
             )
         if isinstance(coll, collections.Mapping):
             for k, v in coll.iteritems():
@@ -311,8 +311,8 @@ class ListCollection(KeyedCollection):
         """
         if isinstance(coll, basestring):
             raise exc.CollectionCoerceError(
-                giventype=type(coll).__name__,
-                fortype=cls.__name__,
+                passed=coll,
+                colltype=cls,
             )
         if isinstance(coll, collections.Mapping):
             i = 0
@@ -331,8 +331,8 @@ class ListCollection(KeyedCollection):
             return
         else:
             raise exc.CollectionCoerceError(
-                giventype=type(coll).__name__,
-                fortype=cls.__name__,
+                passed=coll,
+                colltype=cls,
             )
 
     def append(self, item):

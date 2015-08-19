@@ -57,6 +57,7 @@ class Record(object):
             if meta_prop is None:
                 raise exc.PropertyNotKnown(
                     propname=prop,
+                    recordtype=type(self),
                     typename=type(self).__name__,
                 )
             meta_prop.init_prop(self, val)
