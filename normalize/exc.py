@@ -75,7 +75,7 @@ class AttributeValueError(StringFormatException, ValueError):
     pass
 
 
-class CoercionError(StringFormatException, ValueError):
+class CoercionError(StringFormatException, TypeError):
     pass
 
 

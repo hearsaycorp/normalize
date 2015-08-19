@@ -417,26 +417,26 @@ class TestProperties(unittest2.TestCase):
         with self.assertRaises(AttributeError):
             mixer.num
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             mixer.num = "-2"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             mixer.id = "-3"
 
         for i in 1, 2:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 mixer.what
         mixer.what = 2
         self.assertEqual(mixer.what, 2)
 
         mixer.num = "3"
         self.assertEqual(mixer.num, 3)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             mixer.num = "-4"
 
         mixer.what = -5
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             mixer.hmm
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             mixer.huh
 
         mixer.what = 4

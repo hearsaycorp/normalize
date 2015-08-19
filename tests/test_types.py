@@ -85,7 +85,7 @@ class TestTypeLibrary(unittest2.TestCase):
 
         p.integer = 123
         p.integer = "123125"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             p.integer = "foo"
         p.integer = 1e20
         self.assertEqual(p.integer, 100000000000000000000L)
@@ -131,7 +131,7 @@ class TestSubTypes(unittest2.TestCase):
         # type matches, but subtype doesn't
         nbo.count = -10
         self.assertEqual(nbo.count, 10)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             nbo.count = 0.5
 
     def test_subtype_coerce(self):
@@ -154,7 +154,7 @@ class TestSubTypes(unittest2.TestCase):
 
         self.assertEqual(ScalarNaturalNumber(3), 3)
         self.assertEqual(ScalarNaturalNumber(-3), 3)
-        self.assertRaises(ValueError, ScalarNaturalNumber, 0)
+        self.assertRaises(TypeError, ScalarNaturalNumber, 0)
 
     def test_subtype_subtype(self):
         NaturalNumber = subtype(
