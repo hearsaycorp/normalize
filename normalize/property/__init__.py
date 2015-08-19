@@ -204,7 +204,7 @@ class Property(object):
 
     def type_safe_value(self, value, _none_ok=False):
         if value is None and self.required and not self.valuetype:
-            raise ValueError("%s is required" % self.fullname)
+            raise exc.PropertyRequired(prop=self)
         if self.valuetype and not isinstance(value, self.valuetype):
             try:
                 new_value = self.coerce(value)
@@ -269,7 +269,7 @@ class Property(object):
 
         if new_value is _none:
             if self.required:
-                raise ValueError("%s is required" % self.fullname)
+                raise exc.PropertyRequired(prop=self)
         else:
             obj.__dict__[self.name] = new_value
 
@@ -412,7 +412,7 @@ class SafeProperty(Property):
         """Checks the property's ``required`` setting, and allows the delete if
         it is false"""
         if self.required:
-            raise ValueError("%s is required" % self.fullname)
+            raise exc.PropertyRequired(prop=self)
         del obj.__dict__[self.name]
 
 

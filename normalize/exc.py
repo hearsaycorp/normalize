@@ -71,6 +71,10 @@ class StringFormatException(Exception):
 
 
 # exception base classes
+class AttributeValueError(StringFormatException, ValueError):
+    pass
+
+
 class CoercionError(StringFormatException, ValueError):
     pass
 
@@ -347,6 +351,10 @@ class PropertyNotUnique(PropertyTypeDefinitionError):
         "same module.  Both end up being called {key} in my global map.  "
         "I'm sorry Dave, I'm afraid I can't let you do that."
     )
+
+
+class PropertyRequired(AttributeValueError):
+    message = "attribute {prop.fullname} is required"
 
 
 class PropertyTypeClash(StringFormatException):
