@@ -214,7 +214,7 @@ class Property(object):
                 new_value = e.coerced
             except Exception as e:
                 raise exc.CoerceError(
-                    prop=self.fullname,
+                    prop=self,
                     value=repr(value),
                     exc=e,
                     func=(

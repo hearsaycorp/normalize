@@ -143,7 +143,7 @@ class BadAssignment(EmptyAttributeError, TypeError):
 
 class CoerceError(CoercionError):
     message = (
-        "coerce to {valuetype} for {prop} failed with value {value}: "
+        "coerce to {valuetype} for {prop.fullname} failed with value {value}: "
         "{func} raised: {exc}"
     )
 
@@ -289,7 +289,7 @@ class ListPropertyMustDeriveListCollection(PropertyDefinitionError):
 
 class MultipleInheritanceClash(SubclassError):
     message = (
-        "Property {propname} defined by multiple base "
+        "Property {prop.name} defined by multiple base "
         "classes of {typename}"
     )
 

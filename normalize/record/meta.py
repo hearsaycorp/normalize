@@ -39,7 +39,7 @@ class RecordMeta(type):
                 for propname, prop in base.properties.iteritems():
                     if propname in properties:
                         raise exc.MultipleInheritanceClash(
-                            propname=propname,
+                            prop=prop,
                             typename=name,
                         )
                     else:
