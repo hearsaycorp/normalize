@@ -62,8 +62,9 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
     if json_struct is None:
         json_struct = {}
     if not isinstance(json_struct, dict):
-        raise TypeError(
-            "dict expected, found %s" % type(json_struct).__name__
+        raise exc.JsonRecordCoerceError(
+            passed=json_struct,
+            recordtype=record_type,
         )
     unknown_keys = set(json_struct.keys())
     for propname, prop in record_type.properties.iteritems():
@@ -116,10 +117,7 @@ def from_json(record_type, json_struct):
         instance = record_type(**init_kwargs)
         return instance
     else:
-        raise exc.JsonRecordCoerceError(
-            passed=json_struct,
-            recordtype=record_type,
-        )
+        raise exc.CastTypeError(badtype=record_type)
 
 
 # caches for _json_data

@@ -134,6 +134,10 @@ class BadAssignment(EmptyAttributeError, TypeError):
     )
 
 
+class CastTypeError(UsageException, TypeError):
+    message = "Cannot cast to {badtype}; not a record type"
+
+
 class CoerceError(CoercionError):
     message = (
         "coerce to {valuetype} for {prop.fullname} failed with value {passed!r}: "
