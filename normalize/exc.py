@@ -393,6 +393,12 @@ class ReadOnlyAttributeError(StringFormatException, AttributeError):
     message = "{attrname} is read-only"
 
 
+class JsonConversionError(CoercionError):
+    message = (
+        "Json conversion failed at {error_fs.path}; {sub_exception}"
+    )
+
+
 class JsonCollectionCoerceError(CoercionError):
     message = (
         "Cannot interpret {passed!r} as a {colltype.__name__} "

@@ -32,6 +32,7 @@ import normalize.exc as exc
 from normalize.property.json import JsonProperty
 from normalize.record import OhPickle
 from normalize.record import Record
+from normalize.selector import FieldSelector
 
 
 def _json_to_value_initializer(json_val, proptype):
@@ -44,6 +45,18 @@ def _json_to_value_initializer(json_val, proptype):
             return from_json(proptype, json_val)
 
     return json_val
+
+
+def _box_ingress_error(context, exception):
+    error_fs = FieldSelector([context])
+    if hasattr(exception, "error_fs"):
+        error_fs.extend(exception.error_fs)
+    if hasattr(exception, "sub_exception"):
+        exception = exception.sub_exception
+    return exc.JsonConversionError(
+        error_fs=error_fs,
+        sub_exception=exception,
+    )
 
 
 def json_to_initkwargs(record_type, json_struct, kwargs=None):
@@ -75,12 +88,15 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
             if json_name is not None:
                 if json_name in json_struct:
                     if propname not in kwargs:
-                        kwargs[propname] = _json_to_value_initializer(
-                            prop.from_json(
-                                json_struct[json_name]
-                            ),
-                            prop.valuetype,
-                        )
+                        try:
+                            kwargs[propname] = _json_to_value_initializer(
+                                prop.from_json(
+                                    json_struct[json_name]
+                                ),
+                                prop.valuetype,
+                            )
+                        except Exception as e:
+                            raise _box_ingress_error(json_name, e)
                     unknown_keys.remove(json_name)
         elif prop.name in json_struct:
             json_val = json_struct[prop.name]
@@ -355,11 +371,18 @@ class JsonRecordList(RecordList, JsonRecord):
                 )
 
             if hasattr(member_type, "from_json"):
-                for x in json_struct:
-                    values.append(member_type.from_json(x))
+                for i, x in cls.coll_to_tuples(json_struct):
+                    try:
+                        values.append(member_type.from_json(x))
+                    except Exception as e:
+                        raise _box_ingress_error(i, e)
+
             elif issubclass(member_type, Record):
-                for x in json_struct:
-                    values.append(from_json(member_type, x))
+                for i, x in cls.coll_to_tuples(json_struct):
+                    try:
+                        values.append(from_json(member_type, x))
+                    except Exception as e:
+                        raise _box_ingress_error(i, e)
             else:
                 raise exc.CollectionDefinitionError(
                     coll="JsonRecordList",
@@ -414,11 +437,17 @@ class JsonRecordDict(RecordDict, JsonRecord):
                 )
 
             if hasattr(member_type, "from_json"):
-                for x in json_struct:
-                    values[x] = member_type.from_json(json_struct[x])
+                for k, x in cls.coll_to_tuples(json_struct):
+                    try:
+                        values[k] = member_type.from_json(json_struct[k])
+                    except Exception as e:
+                        raise _box_ingress_error(k, e)
             elif issubclass(member_type, Record):
-                for x in json_struct:
-                    values[x] = from_json(member_type, json_struct[x])
+                for k, x in cls.coll_to_tuples(json_struct):
+                    try:
+                        values[x] = from_json(member_type, json_struct[k])
+                    except Exception as e:
+                        raise _box_ingress_error(k, e)
             else:
                 raise exc.CollectionDefinitionError(
                     coll="JsonRecordDict",

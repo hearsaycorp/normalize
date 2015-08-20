@@ -431,11 +431,49 @@ class TestRecordMarshaling(unittest2.TestCase):
             some_map = JsonDictProperty(of=CheeseRecord)
 
         with self.assertRaisesRegexp(
-                exc.JsonCollectionCoerceError, r'array expected',
+                exc.JsonConversionError, r'\.some_list\b.*array expected',
         ):
             SomeRecord({"some_list": {"foo": "bar"}})
 
         with self.assertRaisesRegexp(
-                exc.JsonCollectionCoerceError, r'object expected',
+                exc.JsonConversionError, r'\.some_map\b.*object expected',
         ):
             SomeRecord({"some_map": [1, 2, 3]})
+
+        class SomeOtherRecord(JsonRecord):
+            foo_bar = Property(isa=SomeRecord, json_name="fooBar")
+
+        with self.assertRaisesRegexp(
+                exc.JsonConversionError, r'\.fooBar\.some_list\b.*array expected',
+        ):
+            SomeOtherRecord({"fooBar": {"some_list": {"foo": "bar"}}})
+
+        class WayRecord(JsonRecord):
+            down = JsonListProperty(of=SomeOtherRecord)
+
+        try:
+            WayRecord(
+                {"down": [
+                    {"fooBar": {"some_list": {"foo": "bar"}}},
+                ]}
+            )
+        except exc.JsonConversionError as e:
+            self.assertEqual(e.error_fs.path, ".down[0].fooBar.some_list")
+
+        class TurtlesRecord(JsonRecord):
+            all_the = JsonDictProperty(json_name="allThe", of=WayRecord)
+
+        try:
+            TurtlesRecord(
+                {"allThe": {"way": {"down": [
+                    {"fooBar": {"some_list": {"foo": "bar"}}},
+                ]}}}
+            )
+        except exc.JsonConversionError as e:
+            self.assertEqual(
+                e.error_fs.path,
+                ".allThe.way.down[0].fooBar.some_list",
+            )
+            self.assertEqual(
+                e.sub_exception.passed, {"foo": "bar"},
+            )
