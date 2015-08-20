@@ -490,7 +490,7 @@ def _fmt_selector_path(selector):
         return "[%d]" % selector
     elif selector is None:
         return "[*]"
-    elif re.search(r'[^a-z_]', selector):
+    elif not re.match(r'^[a-zA-Z_]\w*$', selector):
         return u"['%s']" % selector.replace("\\", "\\\\").replace("'", "\\'")
     else:
         return ".%s" % selector

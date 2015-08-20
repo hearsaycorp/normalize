@@ -125,7 +125,7 @@ class TestRecordComparison(unittest.TestCase):
                               {"Kentucky": "Goldenrod",
                                "Louisiana": "Magnolia",
                                "Minnesota": "Pink and white lady's-slipper"}),
-            ("REMOVED ['FL']", "ADDED ['Kentucky']"),
+            ("REMOVED .FL", "ADDED .Kentucky"),
         )
 
         a = {

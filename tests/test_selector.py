@@ -107,6 +107,8 @@ class TestStructableFieldSelector(unittest.TestCase):
             ("foo", "bar"),
             (None, ),
             (None, "bob", 6, "frop"),
+            ("window", "setTimeout", "100"),
+            ("wind0w", "setT1meout", "_100"),
             (),
             ("Bob", "one flew over the cuckoo's nest"),
             ("Leaning", "toothpick", "syndrome", "\\/\"/"),
