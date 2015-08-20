@@ -69,13 +69,14 @@ class SafeCollectionProperty(CollectionProperty, SafeProperty):
 
 class ListProperty(CollectionProperty):
     __trait__ = "list"
+    coll_type = ListCollection
 
     def __init__(self, list_of=None, **kwargs):
         if list_of is None:
             list_of = kwargs.pop("of", None)
         if not list_of:
             raise exc.ListOfWhat()
-        colltype = kwargs.pop('coll', ListCollection)
+        colltype = kwargs.pop('coll', self.coll_type)
         if not issubclass(colltype, ListCollection):
             raise exc.ListPropertyMustDeriveListCollection(
                 got=colltype.__name__,
@@ -88,13 +89,14 @@ class ListProperty(CollectionProperty):
 
 class DictProperty(CollectionProperty):
     __trait__ = "dict"
+    coll_type = DictCollection
 
     def __init__(self, dict_of=None, **kwargs):
         if dict_of is None:
             dict_of = kwargs.pop("of", None)
         if not dict_of:
             raise exc.DictOfWhat()
-        colltype = kwargs.pop('coll', DictCollection)
+        colltype = kwargs.pop('coll', self.coll_type)
         if not issubclass(colltype, DictCollection):
             raise exc.DictPropertyMustDeriveDictCollection(
                 got=colltype.__name__,

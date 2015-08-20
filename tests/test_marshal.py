@@ -37,6 +37,8 @@ from normalize.property import SafeProperty
 from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
+from normalize.property.json import JsonDictProperty
+from normalize.property.json import JsonListProperty
 
 
 class CheeseRecord(Record):
@@ -423,3 +425,17 @@ class TestRecordMarshaling(unittest2.TestCase):
                 exc.JsonCollectionCoerceError, r'object expected',
         ):
             SomeRecordMap([1, 2, 3])
+
+        class SomeRecord(JsonRecord):
+            some_list = JsonListProperty(of=CheeseRecord)
+            some_map = JsonDictProperty(of=CheeseRecord)
+
+        with self.assertRaisesRegexp(
+                exc.JsonCollectionCoerceError, r'array expected',
+        ):
+            SomeRecord({"some_list": {"foo": "bar"}})
+
+        with self.assertRaisesRegexp(
+                exc.JsonCollectionCoerceError, r'object expected',
+        ):
+            SomeRecord({"some_map": [1, 2, 3]})

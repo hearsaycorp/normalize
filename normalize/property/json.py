@@ -98,6 +98,11 @@ class SafeJsonProperty(JsonProperty, SafeProperty):
     pass
 
 
+# late imports to allow circular dependencies to proceed
+from normalize.record.json import JsonRecordDict
+from normalize.record.json import JsonRecordList
+
+
 class JsonListProperty(ListProperty, JsonProperty):
     """A property which map to a list of a known item type in JSON.
 
@@ -105,7 +110,7 @@ class JsonListProperty(ListProperty, JsonProperty):
     information) and a key with the actual list contents.  See
     :py:mod:`normalize.record.json` for more details.
     """
-    pass
+    coll_type = JsonRecordList
 
 
 class JsonDictProperty(DictProperty, JsonProperty):
@@ -113,7 +118,7 @@ class JsonDictProperty(DictProperty, JsonProperty):
 
     Currently the key type is not enforced.
     """
-    pass
+    coll_type = JsonRecordDict
 
 
 # deprecated compatibility exports
