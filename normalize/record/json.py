@@ -17,6 +17,7 @@
 
 from __future__ import absolute_import
 
+import collections
 from copy import deepcopy
 import inspect
 import json
@@ -319,6 +320,8 @@ class JsonRecord(Record):
 
 class JsonRecordList(RecordList, JsonRecord):
     """Version of a RecordList which deals primarily in JSON"""
+    json_coll_name = "array"
+
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
 
@@ -343,8 +346,13 @@ class JsonRecordList(RecordList, JsonRecord):
         member_type = cls.itemtype
         if kwargs.get('values', None) is None:
             kwargs['values'] = values = []
-            if not json_struct:
+            if json_struct is None:
                 json_struct = tuple()
+            if not isinstance(json_struct, (list, tuple)):  # sigh
+                raise exc.JsonCollectionCoerceError(
+                    passed=json_struct,
+                    colltype=cls,
+                )
 
             if hasattr(member_type, "from_json"):
                 for x in json_struct:
@@ -371,6 +379,8 @@ class JsonRecordList(RecordList, JsonRecord):
 
 class JsonRecordDict(RecordDict, JsonRecord):
     """Version of a RecordDict which deals primarily in JSON"""
+    json_coll_name = "object"
+
     def __init__(self, json_data=None, **kwargs):
         """Build a new JsonRecord sub-class.
 
@@ -388,15 +398,20 @@ class JsonRecordDict(RecordDict, JsonRecord):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
-        super(JsonRecordList, self).__init__(**kwargs)
+        super(JsonRecordDict, self).__init__(**kwargs)
 
     @classmethod
     def json_to_initkwargs(cls, json_struct, kwargs):
         member_type = cls.itemtype
         if kwargs.get('values', None) is None:
             kwargs['values'] = values = {}
-            if not json_struct:
+            if json_struct is None:
                 json_struct = {}
+            if not isinstance(json_struct, collections.Mapping):
+                raise exc.JsonCollectionCoerceError(
+                    passed=json_struct,
+                    colltype=cls,
+                )
 
             if hasattr(member_type, "from_json"):
                 for x in json_struct:

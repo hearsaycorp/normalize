@@ -393,6 +393,13 @@ class ReadOnlyAttributeError(StringFormatException, AttributeError):
     message = "{attrname} is read-only"
 
 
+class JsonCollectionCoerceError(CoercionError):
+    message = (
+        "Cannot interpret {passed!r} as a {colltype.__name__} "
+        "collection; {colltype.json_coll_name} expected"
+    )
+
+
 class JsonRecordCoerceError(CoercionError):
     message = (
         "Cannot interpret {passed!r} as a {recordtype.__name__} "

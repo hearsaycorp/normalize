@@ -24,6 +24,7 @@ import unittest2
 
 from normalize.diff import compare_record_iter
 from normalize.diff import DiffOptions
+import normalize.exc as exc
 from normalize.record import Record
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
@@ -405,3 +406,20 @@ class TestRecordMarshaling(unittest2.TestCase):
             Banana(banana.json_data(extraneous=True)),
             banana
         )
+
+    def test_marshall_exceptions(self):
+        class SomeRecordList(JsonRecordList):
+            itemtype = CheeseRecord
+
+        with self.assertRaisesRegexp(
+                exc.JsonCollectionCoerceError, r'array expected',
+        ):
+            SomeRecordList({"foo": "bar"})
+
+        class SomeRecordMap(JsonRecordDict):
+            itemtype = CheeseRecord
+
+        with self.assertRaisesRegexp(
+                exc.JsonCollectionCoerceError, r'object expected',
+        ):
+            SomeRecordMap([1, 2, 3])
