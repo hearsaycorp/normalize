@@ -24,6 +24,8 @@ from normalize.diff import DiffTypes
 import normalize.exc as exc
 from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
+from normalize.property.json import JsonDictProperty
+from normalize.property.json import JsonListProperty
 
 
 class Item(Record):
@@ -248,5 +250,23 @@ class TestCollections(unittest2.TestCase):
         self.assertEqual(len(diffs), 1)
         self.assertEqual(diffs[0].other.path, ".bob[2]")
         self.assertEqual(diffs[0].diff_type, DiffTypes.ADDED)
+
+    def test_json_coll(self):
+        class JLR(Record):
+            item_list = JsonListProperty(of=Item)
+            string_list = JsonListProperty(of=basestring)
+
+        class JDR(Record):
+            item_map= JsonDictProperty(of=Item)
+            int_map = JsonDictProperty(of=int)
+
+        jlr = JLR({"item_list": [{"name": "Bob"}],
+                   "string_list": ["one", "two", "three"]})
+
+        self.assertEqual(jlr.item_list[0].name, "Bob")
+        self.assertEqual(jlr.string_list, ["one", "two", "three"])
+
+        jdr = JDR({"item_map": {"bob": {"name": "Bob"}},
+                   "int_map": {"one": 1, "two": 2, "three": 3}})
 
     #TODO type unions for item types

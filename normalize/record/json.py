@@ -103,9 +103,12 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
             unknown_keys.remove(prop.name)
             if prop.name not in kwargs:
                 proptype = prop.valuetype
-                kwargs[propname] = _json_to_value_initializer(
-                    json_val, proptype,
-                )
+                try:
+                    kwargs[propname] = _json_to_value_initializer(
+                        json_val, proptype,
+                    )
+                except Exception as e:
+                    raise _box_ingress_error(prop.name, e)
     if unknown_keys:
         kwargs["unknown_json_keys"] = dict(
             (k, deepcopy(json_struct[k])) for k in unknown_keys
@@ -360,6 +363,11 @@ class JsonRecordList(RecordList, JsonRecord):
     @classmethod
     def json_to_initkwargs(cls, json_struct, kwargs):
         member_type = cls.itemtype
+        if not member_type:
+            raise exc.CollectionDefinitionError(
+                coll="JsonRecordList",
+                property='itemtype',
+            )
         if kwargs.get('values', None) is None:
             kwargs['values'] = values = []
             if json_struct is None:
@@ -384,10 +392,7 @@ class JsonRecordList(RecordList, JsonRecord):
                     except Exception as e:
                         raise _box_ingress_error(i, e)
             else:
-                raise exc.CollectionDefinitionError(
-                    coll="JsonRecordList",
-                    property='itemtype',
-                )
+                kwargs['values'] = json_struct
         return kwargs
 
     def json_data(self, extraneous=False):
@@ -426,6 +431,11 @@ class JsonRecordDict(RecordDict, JsonRecord):
     @classmethod
     def json_to_initkwargs(cls, json_struct, kwargs):
         member_type = cls.itemtype
+        if not member_type:
+            raise exc.CollectionDefinitionError(
+                coll="JsonRecordDict",
+                property='itemtype',
+            )
         if kwargs.get('values', None) is None:
             kwargs['values'] = values = {}
             if json_struct is None:
@@ -439,20 +449,17 @@ class JsonRecordDict(RecordDict, JsonRecord):
             if hasattr(member_type, "from_json"):
                 for k, x in cls.coll_to_tuples(json_struct):
                     try:
-                        values[k] = member_type.from_json(json_struct[k])
+                        values[k] = member_type.from_json(x)
                     except Exception as e:
                         raise _box_ingress_error(k, e)
             elif issubclass(member_type, Record):
                 for k, x in cls.coll_to_tuples(json_struct):
                     try:
-                        values[x] = from_json(member_type, json_struct[k])
+                        values[k] = from_json(member_type, x)
                     except Exception as e:
                         raise _box_ingress_error(k, e)
             else:
-                raise exc.CollectionDefinitionError(
-                    coll="JsonRecordDict",
-                    property='itemtype',
-                )
+                kwargs['values'] = json_struct
         return kwargs
 
     def json_data(self, extraneous=False):
