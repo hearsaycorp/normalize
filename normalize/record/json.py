@@ -381,14 +381,20 @@ class JsonRecordList(RecordList, JsonRecord):
             if hasattr(member_type, "from_json"):
                 for i, x in cls.coll_to_tuples(json_struct):
                     try:
-                        values.append(member_type.from_json(x))
+                        values.append(
+                            x if isinstance(x, member_type) else
+                            member_type.from_json(x)
+                        )
                     except Exception as e:
                         raise _box_ingress_error(i, e)
 
             elif issubclass(member_type, Record):
                 for i, x in cls.coll_to_tuples(json_struct):
                     try:
-                        values.append(from_json(member_type, x))
+                        values.append(
+                            x if isinstance(x, member_type) else
+                            from_json(member_type, x)
+                        )
                     except Exception as e:
                         raise _box_ingress_error(i, e)
             else:
@@ -449,13 +455,19 @@ class JsonRecordDict(RecordDict, JsonRecord):
             if hasattr(member_type, "from_json"):
                 for k, x in cls.coll_to_tuples(json_struct):
                     try:
-                        values[k] = member_type.from_json(x)
+                        values[k] = (
+                            x if isinstance(x, member_type) else
+                            member_type.from_json(x)
+                        )
                     except Exception as e:
                         raise _box_ingress_error(k, e)
             elif issubclass(member_type, Record):
                 for k, x in cls.coll_to_tuples(json_struct):
                     try:
-                        values[k] = from_json(member_type, x)
+                        values[k] = (
+                            x if isinstance(x, member_type) else
+                            from_json(member_type, x)
+                        )
                     except Exception as e:
                         raise _box_ingress_error(k, e)
             else:

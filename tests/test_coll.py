@@ -269,4 +269,7 @@ class TestCollections(unittest2.TestCase):
         jdr = JDR({"item_map": {"bob": {"name": "Bob"}},
                    "int_map": {"one": 1, "two": 2, "three": 3}})
 
+        jdr.item_map = {"bill": jlr.item_list[0]}
+        jlr.item_list = jdr.item_map.values()
+
     #TODO type unions for item types
