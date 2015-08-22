@@ -1,6 +1,30 @@
 Normalize changelog and errata
 ==============================
 
+0.10.0 21st August 2015
+-----------------------
+* Exceptions raised while marshalling JSON are now wrapped by a new
+  exception which exposes the path within the input document that the
+  problem occurred.
+
+* Various structured exceptions had attribute names changed.  They're
+  now more consistent across varying exception types.
+
+* Using ``JsonListProperty()`` makes the type of the inner collection
+  a ``JsonRecordList`` subclass instead of previously it was a
+  ``RecordList``, enabling the context above.  Beware that this has
+  implications to input marshalling; previously skipped marshalling
+  will now be called.
+
+* When using ``JsonListProperty``, previously if it encountered a
+  different type of collection (or even a string), it would build with
+  just the keys.  This now raises an exception.  Similarly with
+  ``JsonDictProperty`` if you pass something other than a mapping.
+
+* Field selectors with upper case and digits in attribute names will
+  be converted to paths via ``.path`` without using quoting if they
+  are valid JavaScript/C tokens.
+
 0.9.10 9th July 2015
 --------------------
 * the implicit squashing of attributes which coerce to None now also
