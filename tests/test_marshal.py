@@ -22,6 +22,9 @@ import pickle
 import re
 import unittest2
 
+from richenum import RichEnum
+from richenum import RichEnumValue
+
 from normalize.diff import compare_record_iter
 from normalize.diff import DiffOptions
 import normalize.exc as exc
@@ -477,3 +480,33 @@ class TestRecordMarshaling(unittest2.TestCase):
             self.assertEqual(
                 e.sub_exception.passed, {"foo": "bar"},
             )
+
+    def test_rich_enum(self):
+        class MyEnum(RichEnum):
+            class EnumValue(RichEnumValue):
+                def json_data(self):
+                    return self.canonical_name
+
+                @classmethod
+                def from_json(self, string):
+                    return MyEnum.from_canonical(string)
+
+            ONE = EnumValue('one', "One")
+            TWO = EnumValue('two', "Two")
+
+        class EnumsGalore(JsonRecord):
+            my_enum = JsonProperty(isa=MyEnum.EnumValue)
+            enum_list = JsonListProperty(of=MyEnum.EnumValue)
+            enum_map = JsonDictProperty(of=MyEnum.EnumValue)
+
+        json = {"my_enum": "one",
+                "enum_list": ["one", "two", "one"],
+                "enum_map": {"x": "one", "y": "two", "z": "two"}}
+
+        eg = EnumsGalore(json)
+        self.assertEqual(eg.my_enum, MyEnum.ONE)
+        self.assertEqual(eg.enum_list[2], MyEnum.ONE)
+        self.assertEqual(eg.enum_map["z"], MyEnum.TWO)
+
+        eg_json = eg.json_data()
+        self.assertEqual(eg_json, json)
