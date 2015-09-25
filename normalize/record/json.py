@@ -21,11 +21,13 @@ import collections
 from copy import deepcopy
 import inspect
 import json
+import re
 import types
 
 from normalize.coll import Collection
 from normalize.coll import DictCollection as RecordDict
 from normalize.coll import ListCollection as RecordList
+from normalize.coll import list_of
 from normalize.diff import Diff
 from normalize.diff import DiffInfo
 import normalize.exc as exc
@@ -313,7 +315,7 @@ class JsonRecord(Record):
             if extraneous or not prop.extraneous:
                 for k, v in self.unknown_json_keys.iteritems():
                     if k not in jd:
-                        jd[k] = v
+                        jd[k] = to_json(v, extraneous)
         return jd
 
     def diff_iter(self, other, **kwargs):
@@ -497,3 +499,111 @@ class JsonDiffInfo(DiffInfo, JsonRecord):
 class JsonDiff(Diff, JsonRecordList):
     """Version of 'Diff' that supports ``.json_data()``"""
     itemtype = JsonDiffInfo
+
+
+class AutoJsonRecord(JsonRecord):
+    unknown_json_keys = JsonProperty(
+        json_name=None, extraneous=False, default=lambda: {},
+    )
+
+    @classmethod
+    def auto_upgrade_dict(cls, thing):
+        return AutoJsonRecord(thing)
+
+    @classmethod
+    def auto_upgrade_list(cls, thing):
+        if len(thing) and isinstance(thing[0], dict):
+            return list_of(AutoJsonRecord)(thing)
+        else:
+            return thing
+
+    @classmethod
+    def auto_upgrade_any(cls, thing):
+        if isinstance(thing, dict):
+            return cls.auto_upgrade_dict(thing)
+        elif isinstance(thing, list):
+            return cls.auto_upgrade_list(thing)
+        else:
+            return thing
+
+    @classmethod
+    def convert_json_key_in(cls, key):
+        return re.sub(
+            r'([a-z])([A-Z])',
+            lambda m: "%s_%s" % (m.group(1), m.group(2).lower()),
+            key,
+        )
+
+    @classmethod
+    def convert_json_key_out(cls, key):
+        return re.sub(
+            r'([a-z])_([a-z])',
+            lambda m: "%s%s" % (m.group(1), m.group(2).upper()),
+            key,
+        )
+
+    @classmethod
+    def json_to_initkwargs(cls, json_data, kwargs):
+        kwargs = super(AutoJsonRecord, cls).json_to_initkwargs(
+            json_data, kwargs,
+        )
+        # upgrade any dictionaries to AutoJsonRecord, and
+        # any lists of dictionaries to list_of(AutoJsonRecord)
+        if 'unknown_json_keys' in kwargs:
+            kwargs['unknown_json_keys'] = {
+                cls.convert_json_key_in(k): cls.auto_upgrade_any(v) for
+                k, v in kwargs['unknown_json_keys'].items()
+            }
+        return kwargs
+
+    def json_data(self, extraneous=False):
+        jd = to_json(self, extraneous)
+        if hasattr(self, "unknown_json_keys"):
+            prop = type(self).properties['unknown_json_keys']
+            if extraneous or not prop.extraneous:
+                for k, v in self.unknown_json_keys.iteritems():
+                    k = cls.convert_json_key_out(k)
+                    if k not in jd:
+                        jd[k] = to_json(v, extraneous)
+        return jd
+
+    def __getattr__(self, attr):
+        if attr in type(self).properties:
+            return type(self).properties[attr].__get__(self)
+        else:
+            return self.unknown_json_keys[attr]
+
+    def __setattr__(self, attr, value):
+        if attr in type(self).properties:
+            return type(self).properties[attr].__set__(self)
+        else:
+            self.unknown_json_keys[attr]
+
+    def __delattr__(self, attr, value):
+        if attr in type(self).properties:
+            return type(self).properties[attr].__del__(self)
+        else:
+            del self.unknown_json_keys[attr]
+
+
+class NCAutoJsonRecord(AutoJsonRecord):
+    """A version of AutoJsonRecord which does not convert keys from
+    camelCase to python_form"""
+    @classmethod
+    def convert_json_key_in(cls, key):
+        return key
+
+    @classmethod
+    def convert_json_key_out(cls, key):
+        return key
+
+    @classmethod
+    def auto_upgrade_dict(cls, thing):
+        return NCAutoJsonRecord(thing)
+
+    @classmethod
+    def auto_upgrade_list(cls, thing):
+        if len(thing) and isinstance(thing[0], dict):
+            return list_of(NCAutoJsonRecord)(thing)
+        else:
+            return thing
