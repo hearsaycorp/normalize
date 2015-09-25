@@ -34,9 +34,11 @@ from normalize.property.json import JsonCollectionProperty
 from normalize.property.json import SafeJsonProperty
 from normalize.record import Record
 from normalize.record.meta import RecordMeta
+from normalize.record.json import AutoJsonRecord
 from normalize.record.json import from_json
 from normalize.record.json import JsonRecord
 from normalize.record.json import JsonRecordList
+from normalize.record.json import NCAutoJsonRecord
 from normalize.record.json import to_json
 from normalize.selector import FieldSelector
 from normalize.selector import FieldSelectorException
