@@ -27,6 +27,7 @@ from normalize import ListProperty
 from normalize import Property
 from normalize import Record
 from normalize import AutoJsonRecord
+from normalize import NCAutoJsonRecord
 import normalize.exc as exc
 
 
@@ -61,3 +62,32 @@ class TestAutoRecords(unittest2.TestCase):
         self.assertEqual(my_record.krunch.eee_yow.whap, "aiee")
         self.assertEqual(my_record.ouch_eth[0], "bap")
         self.assertEqual(my_record.wham_eth[0].rip, "bloop")
+
+    def test_nc_auto_json(self):
+
+        class MyRecord(NCAutoJsonRecord):
+            blah_blah = Property(json_name="blahBlah")
+
+        my_record = MyRecord(
+            {
+                "blahBlah": {"blah": "blah"},
+                "kerSploosh": "zlonk",
+                "krunch": {
+                    "crrAaack": "kapow",
+                    "eeeYow": {"whap": "aiee"},
+                },
+                "ouchEth": ["bap", "bonk"],
+                "whamEth": [
+                    {
+                        "rip": "bloop",
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(my_record.blah_blah['blah'], "blah")
+        self.assertEqual(my_record.kerSploosh, "zlonk")
+        self.assertEqual(my_record.krunch.crrAaack, "kapow")
+        self.assertEqual(my_record.krunch.eeeYow.whap, "aiee")
+        self.assertEqual(my_record.ouchEth[0], "bap")
+        self.assertEqual(my_record.whamEth[0].rip, "bloop")

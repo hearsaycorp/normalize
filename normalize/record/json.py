@@ -596,3 +596,14 @@ class NCAutoJsonRecord(AutoJsonRecord):
     @classmethod
     def convert_json_key_out(cls, key):
         return key
+
+    @classmethod
+    def auto_upgrade_dict(cls, thing):
+        return NCAutoJsonRecord(thing)
+
+    @classmethod
+    def auto_upgrade_list(cls, thing):
+        if len(thing) and isinstance(thing[0], dict):
+            return list_of(NCAutoJsonRecord)(thing)
+        else:
+            return thing
