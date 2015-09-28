@@ -98,4 +98,3 @@ class subtype(type):
         constructor argument.
         """
         super(subtype, self).__init__(name, (of,), type(self).__dict__)
-

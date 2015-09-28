@@ -35,7 +35,6 @@ from normalize.property import ROLazyProperty
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
-from normalize.property.meta import create_property_type_from_traits
 from normalize.property.meta import _merge_camel_case_names
 from normalize.property.meta import MetaProperty
 
@@ -55,7 +54,7 @@ class TestProperties(unittest2.TestCase):
         self.assertIsInstance(roprop, ROProperty)
         self.assertIsInstance(type(prop), MetaProperty)
 
-        name = ROProperty()
+        roprop = ROProperty()
         self.assertIsNotNone(roprop)
         self.assertIsInstance(roprop, ROProperty)
 
@@ -315,10 +314,10 @@ class TestProperties(unittest2.TestCase):
             for x in seq:
                 yield x
 
-        mtr2 = ManyThingsRecord(generator(mtr))
+        ManyThingsRecord(generator(mtr))
 
         # ...iterators...
-        mtr2 = ManyThingsRecord(mtr)
+        ManyThingsRecord(mtr)
 
     def test_subclassing(self):
         """Test that Record subclasses work"""
@@ -328,7 +327,7 @@ class TestProperties(unittest2.TestCase):
         class NamedThing(Thing):
             name = Property()
 
-        nt = NamedThing(id=123, name="adam")
+        NamedThing(id=123, name="adam")
 
     def test_property_meta_names(self):
         """Test the property metaclass creates new property names OK"""
@@ -370,10 +369,10 @@ class TestProperties(unittest2.TestCase):
             def __init__(self, hero_name=None, **kwargs):
                 super(SuperProperty, self).__init__(**kwargs)
 
-        sp = Property(hero_name="Bruce Wayne")
+        Property(hero_name="Bruce Wayne")
 
         with self.assertRaises(exc.PropertyTypeMixinNotPossible):
-            sp = Property(hero_name="Bruce Wayne", traits=['unsafe'])
+            Property(hero_name="Bruce Wayne", traits=['unsafe'])
 
     def test_make_property_type(self):
         """Test that make_property_type can morph types"""
@@ -397,7 +396,12 @@ class TestProperties(unittest2.TestCase):
             def get_what(self):
                 return "I'm Mixed %d" % self.id
 
-            what = Property(required=True, isa=int, lazy=True, default=get_what)
+            what = Property(
+                default=get_what,
+                isa=int,
+                lazy=True,
+                required=True,
+            )
 
             def get_hmm(self):
                 return positive_int_or_none(self.what)

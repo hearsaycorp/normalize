@@ -257,7 +257,7 @@ class TestCollections(unittest2.TestCase):
             string_list = JsonListProperty(of=basestring)
 
         class JDR(Record):
-            item_map= JsonDictProperty(of=Item)
+            item_map = JsonDictProperty(of=Item)
             int_map = JsonDictProperty(of=int)
 
         jlr = JLR({"item_list": [{"name": "Bob"}],
@@ -272,4 +272,4 @@ class TestCollections(unittest2.TestCase):
         jdr.item_map = {"bill": jlr.item_list[0]}
         jlr.item_list = jdr.item_map.values()
 
-    #TODO type unions for item types
+    # TODO type unions for item types

@@ -3,11 +3,11 @@ import normalize
 
 
 EMPTY_VALS = dict()
-        
+
 
 def placeholder(type_):
     """Returns the EmptyVal instance for the given type"""
-    typetuple = type_ if isinstance(type_, tuple) else (type_,) 
+    typetuple = type_ if isinstance(type_, tuple) else (type_,)
     if any in typetuple:
         typetuple = any
     if typetuple not in EMPTY_VALS:
@@ -67,7 +67,7 @@ class EmptyVal(object):
                         attrs_found.append(None)
                 else:
                     attrs_found.append(prop)
-        
+
             if not attrs_found:
                 raise self._exc(
                     "NoSuchAttribute",
@@ -128,8 +128,7 @@ class EmptyVal(object):
 
     def _typelist(self):
         return "any" if self._typetuple is any else ",".join(
-             str(t.__name__) for t in self._typetuple
-            if isinstance(t, type)
+            str(t.__name__) for t in self._typetuple if isinstance(t, type)
         )
 
     def __repr__(self):

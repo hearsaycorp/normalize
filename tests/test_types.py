@@ -17,17 +17,12 @@
 
 from datetime import date
 from datetime import datetime
-import re
 import sys
 import unittest2
 
 import normalize.exc as exc
 from normalize.record import Record
-from normalize.property import LazyProperty
-from normalize.property import LazySafeProperty
 from normalize.property import Property
-from normalize.property import ROLazyProperty
-from normalize.property import ROProperty
 from normalize.property import SafeProperty
 from normalize.property.types import *
 from normalize.subtype import subtype

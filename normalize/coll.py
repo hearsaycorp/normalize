@@ -115,7 +115,8 @@ class Collection(Record):
         and ``colltype``, and equal ``values``
         """
         # coerce collections derived from simple python collection types
-        if not isinstance(other, type(self)) and isinstance(other, self.colltype):
+        if not isinstance(other, type(self)) and \
+                isinstance(other, self.colltype):
             other = type(self)(other)
         return self.itemtype == getattr(other, "itemtype", None) and \
             self._values == getattr(other, "_values", None)
@@ -417,7 +418,8 @@ class ListCollection(KeyedCollection):
         return property_info.replace("(", "(" + list_info + optional_comma, 1)
 
     def __add__(self, other):
-        if not isinstance(other, type(self)) and isinstance(other, self.colltype):
+        if not isinstance(other, type(self)) and \
+                isinstance(other, self.colltype):
             other = type(self)(other)
         return type(self)(self._values + other._values)
 

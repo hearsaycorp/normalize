@@ -140,8 +140,8 @@ class CastTypeError(UsageException, TypeError):
 
 class CoerceError(CoercionError):
     message = (
-        "coerce to {valuetype} for {prop.fullname} failed with value {passed!r}: "
-        "{func} raised: {exc}"
+        "coerce to {valuetype} for {prop.fullname} failed with value "
+        "{passed!r}: {func} raised: {exc}"
     )
 
 
@@ -175,11 +175,13 @@ class CollectionItemTypeUnsupported(FeatureNotImplementedException):
         "Collections with type union itemtype are not supported"
     )
 
+
 class CollectionDiffUnsupported(FeatureNotImplementedException):
     message = (
         "Custom collections with simple item type {item_type_name} are "
         "not supported for diff"
     )
+
 
 class CollRequiredError(PropertyDefinitionError):
     message = (
@@ -431,7 +433,8 @@ class SubtypeOfWhat(TypeDefinitionError):
 class SubtypeNoCoerceFunc(CoercionError):
     message = (
         "value {passed!r} does not pass subtype constraint "
-        "{subtype.__name__} of {subtype_of.__name__}, and no coerce method defined"
+        "{subtype.__name__} of {subtype_of.__name__}, and no coerce "
+        "method defined"
     )
 
 

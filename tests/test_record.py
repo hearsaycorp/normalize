@@ -19,7 +19,6 @@
 from __future__ import absolute_import
 
 from datetime import datetime
-import os.path
 import unittest2
 import warnings
 
@@ -34,7 +33,8 @@ class TestRecords(unittest2.TestCase):
     """Test that the new data descriptor classes work"""
 
     def test_false_emptiness(self):
-        """Test that Properties with falsy empty values don't throw exceptions"""
+        """Test that Properties with falsy empty values don't throw
+        exceptions"""
 
         class SophiesRecord(Record):
             placeholder = Property()
@@ -85,17 +85,17 @@ class TestRecords(unittest2.TestCase):
                          "empty values don't persist")
 
         with self.assertRaisesRegexp(AttributeError, r'BlahRecord.*blha0'):
-            ph = lambda_.objective0.blha0
+            lambda_.objective0.blha0
 
         with self.assertRaisesRegexp(
             exc.EmptyAttributeError, r"Can't assign.*BlahRecord"
         ):
-            ph = lambda_.objective0.blah = 42
+            lambda_.objective0.blah = 42
 
         with self.assertRaisesRegexp(
             exc.EmptyAttributeError, r"Can't assign.*BlahRecord"
         ):
-            ph = lambda_.objective0[0] = 42
+            lambda_.objective0[0] = 42
 
     def test_bad_constructor(self):
         """Test that 'empty' definition errors are no longer possible"""
@@ -173,13 +173,17 @@ class TestRecords(unittest2.TestCase):
 
         self.assertFalse(lr.this0.date)
         self.assertFalse(lr.this0.foo.real)
-        with self.assertRaisesRegexp(exc.NoSuchAttribute, r"TwoRecord,datetime"):
+        with self.assertRaisesRegexp(
+            exc.NoSuchAttribute, r"TwoRecord,datetime",
+        ):
             lr.this0.dote
         with self.assertRaisesRegexp(exc.NoSuchAttribute, r"None"):
             self.assertFalse(lr.this0.bar.real)
 
         self.assertFalse(lr.that0.date)
-        with self.assertRaisesRegexp(exc.NotSubscriptable, r"MagicRecord"):
+        with self.assertRaisesRegexp(
+            exc.NotSubscriptable, r"MagicRecord",
+        ):
             lr.that0[7]
 
         self.assertFalse(lr.other0[0].foo.bar())

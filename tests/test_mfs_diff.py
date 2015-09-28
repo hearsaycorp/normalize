@@ -20,14 +20,7 @@ from datetime import date
 import re
 import unittest2
 
-from normalize import FieldSelector
-from normalize import FieldSelectorException
-from normalize import JsonCollectionProperty
-from normalize import JsonProperty
-from normalize import JsonRecord
-from normalize import JsonRecordList
 from normalize import Property
-from normalize import Record
 from normalize import Record
 from normalize import RecordList
 from normalize.diff import DiffOptions

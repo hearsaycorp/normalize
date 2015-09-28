@@ -16,7 +16,6 @@
 
 from __future__ import absolute_import
 
-from datetime import date
 from datetime import datetime
 import json
 from time import time
@@ -25,7 +24,6 @@ import unittest
 
 import normalize.exc as exc
 from normalize.coll import list_of
-from normalize.property.types import DateProperty
 from normalize.record import Record
 from normalize.visitor import VisitorPattern
 from testclasses import acent
@@ -121,7 +119,10 @@ class TestVisitor(AssertDiffTest):
 
     def test_dump_types(self):
         typeinfo = SimpleDumper.reflect(NamedStarList)
-        self.assertEqual(typeinfo['itemtype']['properties']['hip_id']['type'], 'int')
+        self.assertEqual(
+            typeinfo['itemtype']['properties']['hip_id']['type'],
+            'int',
+        )
         typeinfo = SimpleDumper.reflect(Wall)
         self.assertEqual(typeinfo['properties']['owner']['name'], 'Person')
         self.assertEqual(
@@ -182,11 +183,15 @@ class TestTypeUnionCases(AssertDiffTest):
     def test_type_union_dump(self):
         dumped = SimpleDumper.visit(self.open_pr, ignore_none=False)
         self.assertIn("created_at", dumped)
-        self.assertRegexpMatches(dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*')
+        self.assertRegexpMatches(
+            dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*',
+        )
         self.assertEqual(dumped['merged_at'], None)
 
         dumped = SimpleDumper.visit(self.closed_pr)
-        self.assertRegexpMatches(dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*')
+        self.assertRegexpMatches(
+            dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*',
+        )
         self.assertIn("created_at", dumped)
         self.assertIn('merged_at', dumped)
 

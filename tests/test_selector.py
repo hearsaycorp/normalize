@@ -28,7 +28,6 @@ from normalize import JsonRecord
 from normalize import JsonRecordList
 from normalize import Property
 from normalize import Record
-from normalize import Record
 from normalize import RecordList
 from normalize.coll import list_of
 from normalize.property.coll import DictProperty
@@ -295,10 +294,10 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs1.post(fp, 1)
         fs2.post(fp, 2)
         fs3.post(fp, 3)
-        expected = FussPot(
+        FussPot(
             top_fuss={"id": 1},
             fuss_map={"phew": {"id": 2}},
-            fuss_list=[{"id":3}],
+            fuss_list=[{"id": 3}],
         )
 
     def test_delete(self):
@@ -363,7 +362,9 @@ class TestStructableFieldSelector(unittest.TestCase):
 
         fs1 = FieldSelector(["bob", "id"])
         self.assertEqual(fs1.get(deck), 123)
-        self.assertRaisesRegexp(ValueError, r'id is required', fs1.delete, deck)
+        self.assertRaisesRegexp(
+            ValueError, r'id is required', fs1.delete, deck,
+        )
 
         fs2 = FieldSelector(["cuthbert", "id"])
         fs2.post(deck, 923)

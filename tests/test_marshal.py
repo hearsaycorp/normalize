@@ -25,8 +25,6 @@ import unittest2
 from richenum import RichEnum
 from richenum import RichEnumValue
 
-from normalize.diff import compare_record_iter
-from normalize.diff import DiffOptions
 import normalize.exc as exc
 from normalize.record import Record
 from normalize.record.json import from_json
@@ -86,7 +84,7 @@ class TestRecordMarshaling(unittest2.TestCase):
                 "Dorothy": dict(variety="Stracchinata", smelliness="28"),
                 "Walter": dict(variety="Caciobufala", smelliness="32"),
                 "Albert": dict(variety="Quartirolo Lombardo", smelliness="53"),
-           },
+            },
         }
 
     def assertDataOK(self, ccr):
@@ -209,7 +207,7 @@ class TestRecordMarshaling(unittest2.TestCase):
         self.assertDataOK(ccr)
 
         json_data = ccr.json_data()
-        json_text = json.dumps(json_data)
+        json.dumps(json_data)
 
         self.assertJsonDataEqual(json_data, self.primitive)
 
@@ -447,7 +445,7 @@ class TestRecordMarshaling(unittest2.TestCase):
             foo_bar = Property(isa=SomeRecord, json_name="fooBar")
 
         with self.assertRaisesRegexp(
-                exc.JsonConversionError, r'\.fooBar\.some_list\b.*array expected',
+            exc.JsonConversionError, r'\.fooBar\.some_list\b.*array expected',
         ):
             SomeOtherRecord({"fooBar": {"some_list": {"foo": "bar"}}})
 

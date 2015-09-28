@@ -16,8 +16,6 @@
 
 from __future__ import absolute_import
 
-import copy
-from datetime import datetime
 import unittest
 
 from normalize.coll import Collection
@@ -25,7 +23,6 @@ from normalize.diff import *
 from normalize.record import Record
 from normalize.record.json import JsonRecord
 from normalize.property import Property
-from normalize.property import SafeProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonListProperty
@@ -98,8 +95,14 @@ class TestRecordComparison(unittest.TestCase):
         class CompoundListHolder(Record):
             parts = ListProperty(of=Compound)
 
-        first = Compound(part_a=Component(ident='a'), part_b=Component(ident='b'))
-        second = Compound(part_a=Component(ident='a'), part_b=Component(ident='b'))
+        first = Compound(
+            part_a=Component(ident='a'),
+            part_b=Component(ident='b'),
+        )
+        second = Compound(
+            part_a=Component(ident='a'),
+            part_b=Component(ident='b'),
+        )
         holder = CompoundListHolder(parts=[first])
         other_holder = CompoundListHolder(parts=[second])
         diff_a = holder.diff(other_holder)
@@ -318,9 +321,11 @@ class TestRecordComparison(unittest.TestCase):
         # test function to show father and uncle swapping places
         self.assertDifferences(
             compare_collection_iter(
-                person_a.family, person_b.family, options=DiffOptions(moved=True),
+                person_a.family, person_b.family,
+                options=DiffOptions(moved=True),
             ),
-            expected_a_to_b | {"MOVED (.father/.uncle)", "MOVED (.uncle/.father)"}
+            expected_a_to_b |
+            {"MOVED (.father/.uncle)", "MOVED (.uncle/.father)"}
         )
 
         sparta = dict()
@@ -596,15 +601,18 @@ class TestRecordComparison(unittest.TestCase):
             ".posts[0].comments[2]/.posts[0].comments[1]",
             ".posts[0].comments[1]/.posts[0].comments[0]",
             ".owner.interests[2]/.owner.interests[1]",
-            ".posts[0].comments[1].poster.interests[2]/.posts[0].comments[0].poster.interests[1]",
+            ".posts[0].comments[1].poster.interests[2]/"
+            ".posts[0].comments[0].poster.interests[1]",
         )
         for path in moves:
             expected_differences.remove("UNCHANGED (%s)" % path)
             expected_differences.add("MOVED (%s)" % path)
 
         self.assertDifferences(
-            compare_record_iter(wall_one, wall_two,
-                                options=DiffOptions(unchanged=True, moved=True)),
+            compare_record_iter(
+                wall_one, wall_two,
+                options=DiffOptions(unchanged=True, moved=True),
+            ),
             expected_differences,
         )
 
