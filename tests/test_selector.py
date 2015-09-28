@@ -299,11 +299,12 @@ class TestStructableFieldSelector(unittest.TestCase):
         fs1.post(fp, 1)
         fs2.post(fp, 2)
         fs3.post(fp, 3)
-        FussPot(
+        fp2 = FussPot(
             top_fuss={"id": 1},
             fuss_map={"phew": {"id": 2}},
             fuss_list=[{"id": 3}],
         )
+        self.assertEqual(fp, fp2)
 
     def test_delete(self):
 
