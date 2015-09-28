@@ -112,6 +112,10 @@ class TestTypeLibrary(unittest2.TestCase):
         p.integer = 1e20
         self.assertEqual(p.integer, 100000000000000000000L)
 
+        from normalize import from_json, to_json
+        p2 = from_json(Props, to_json(p))
+        self.assertEqual(p, p2)
+
 
 class TestSubTypes(unittest2.TestCase):
     """Proof of concept test for coercing between sub-types of real types.

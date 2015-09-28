@@ -145,6 +145,7 @@ date = subtype(
 DateProperty = make_property_type(
     "DateProperty",
     trait_name="date", isa=date, coerce=coerce_date,
+    json_out=lambda dt: dt.isoformat(),
     attrs={
         "__doc__": "A property which must hold a python date; coercion "
                    "from string is provided via ``dateutil.parse``.  "
@@ -157,6 +158,7 @@ DatetimeProperty = make_property_type(
     "DatetimeProperty",
     trait_name="datetime", isa=datetime.datetime,
     coerce=coerce_datetime,
+    json_out=lambda dt: dt.isoformat(),
     attrs={
         "__doc__": "A property which must holds a python datetime.  "
                    "Correct timezone handling is currently TODO and "
