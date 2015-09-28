@@ -17,12 +17,12 @@
 """``normalize.property.types`` provides an assortment of pre-generated
 types"""
 
-from datetime import date
-from datetime import datetime
+import datetime
 import numbers
 from sys import maxint
 
 from . import make_property_type
+from ..subtype import subtype
 
 try:
     from dateutil.parser import parse as parse_datetime
@@ -40,7 +40,7 @@ except ImportError:
         datetime_stripped = not_a_datetime.replace(
             "-", "").replace("T", "").replace(" ", "")
         if len(datetime_stripped) in formats:
-            return datetime.strptime(
+            return datetime.datetime.strptime(
                 datetime_stripped, formats[len(datetime_stripped)],
             )
         else:
@@ -107,7 +107,7 @@ UnicodeProperty = make_property_type(
 def coerce_datetime(not_a_datetime):
     if isinstance(not_a_datetime, date):
         tt = not_a_datetime.timetuple()
-        return datetime(*(tt[0:6]))
+        return datetime.datetime(*(tt[0:6]))
     elif isinstance(not_a_datetime, basestring):
         return parse_datetime(not_a_datetime)
     else:
@@ -117,7 +117,7 @@ def coerce_datetime(not_a_datetime):
 
 
 def coerce_date(not_a_date):
-    if isinstance(not_a_date, datetime) or (
+    if isinstance(not_a_date, datetime.datetime) or (
         hasattr(not_a_date, "date") and callable(not_a_date.date)
     ):
         return not_a_date.date()
@@ -135,20 +135,27 @@ def coerce_number(not_a_number):
         return float(not_a_number)
 
 
+date = subtype(
+    "date",
+    of=datetime.date,
+    where=lambda x: not isinstance(x, datetime.datetime),
+)
+
+
 DateProperty = make_property_type(
     "DateProperty",
     trait_name="date", isa=date, coerce=coerce_date,
     attrs={
-        "__doc__": "A property which must hold a python date (or "
-                   "datetime); coercion from string is provided via "
-                   "``dateutil.parse``.  Note that datetime is a date "
-                   "subclass, and supports all its methods, so a "
-                   "DateProperty might contain a datetime instance.",
+        "__doc__": "A property which must hold a python date; coercion "
+                   "from string is provided via ``dateutil.parse``.  "
+                   "As of normalize v1, if a ``datetime.datetime`` "
+                   "instance is assigned to a ``DateProperty``, it will "
+                   "be truncated to a ``datetime.date``.",
     },
 )
 DatetimeProperty = make_property_type(
     "DatetimeProperty",
-    trait_name="datetime", isa=datetime,
+    trait_name="datetime", isa=datetime.datetime,
     coerce=coerce_datetime,
     attrs={
         "__doc__": "A property which must holds a python datetime.  "

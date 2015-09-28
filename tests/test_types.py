@@ -103,6 +103,7 @@ class TestTypeLibrary(unittest2.TestCase):
         self.assertIsInstance(p.isadatetime, datetime)
         p.isadate = p.isadatetime
         self.assertIsInstance(p.isadate, date)
+        self.assertFalse(isinstance(p.isadate, datetime))
 
         p.integer = 123
         p.integer = "123125"
