@@ -39,6 +39,10 @@ in a nutshell, the new features are:
 * New type ``NumberProperty`` which will hold any numeric type (as
   decided by ``numbers.Number``)
 
+* FieldSelector got a new function ``get_or_none`` which is like
+  ``get`` but returns ``None`` instead of throwing a
+  ``FieldSelectorException``.
+
 There are also some minor backwards incompatibilities:
 
 * setting ``default=None`` (or any other false, immutable value) on a

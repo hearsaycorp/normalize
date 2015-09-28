@@ -170,6 +170,18 @@ class FieldSelector(object):
             i = i + 1
         return record
 
+    def get_or_none(self, record):
+        """Evaluate the FieldSelector's path and return the value, like
+        ``.get``.
+
+        If there is a problem, such as the attribute does not exist,
+        this method will return ``None``.
+        """
+        try:
+            return self.get(record)
+        except FieldSelectorException:
+            return None
+
     def put(self, record, value):
         """
         Sets the field referenced by this field selector for the given Record

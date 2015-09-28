@@ -202,12 +202,14 @@ class TestStructableFieldSelector(unittest.TestCase):
             "by name: bad_name"
         ):
             fs.get(record)
+        self.assertIsNone(fs.get_or_none(record))
         fs = FieldSelector(["children", 10])  # bad index
         with self.assertRaisesRegexp(
             FieldSelectorException, "Could not find Record specified by "
             "index: 10"
         ):
             fs.get(record)
+        self.assertIsNone(fs.get_or_none(record))
         # bad nested property name
         fs = FieldSelector(["children", 1, "bad_name"])
         with self.assertRaisesRegexp(
@@ -215,11 +217,13 @@ class TestStructableFieldSelector(unittest.TestCase):
             "by name: bad_name"
         ):
             fs.get(record)
+        self.assertIsNone(fs.get_or_none(record))
 
         # bad property name
         fs = FieldSelector(["bad_name"])
         with self.assertRaises(AttributeError):
             fs.get(record)
+        self.assertIsNone(fs.get_or_none(record))
         # bad index
         fs = FieldSelector(["children", 10])
         with self.assertRaises(KeyError):
@@ -230,6 +234,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         )
         with self.assertRaises(AttributeError):
             fs.get(record)
+        self.assertIsNone(fs.get_or_none(record))
 
     def test_put(self):
         record = MockJsonRecord()
