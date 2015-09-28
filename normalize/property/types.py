@@ -71,10 +71,10 @@ IntegerProperty = make_property_type(
     },
 )
 StringProperty = make_property_type(
-    "StringProperty", isa=basestring, coerce=str, trait_name="str",
+    "StringProperty", isa=basestring, trait_name="str",
     attrs={
-        "__doc__": "A property which must be a ``basestring``, and if "
-                   "not, it is coerced using ``str``",
+        "__doc__": "A property which must be a ``basestring`` or "
+                   "``unicode``, and if not, throws a coerce error",
     },
 )
 FloatProperty = make_property_type(
@@ -85,10 +85,12 @@ FloatProperty = make_property_type(
 )
 UnicodeProperty = make_property_type(
     "UnicodeProperty", base_type=StringProperty,
-    isa=unicode, coerce=unicode, trait_name="unicode",
+    isa=unicode, coerce=lambda s: unicode(s) if isinstance(s, str) else s,
+    trait_name="unicode",
     attrs={
-        "__doc__": "A property which must be a ``unicode``, and if "
-                   "not, it is coerced using ``unicode``",
+        "__doc__": "A property which must be a ``unicode`` or ``str`` "
+                   "(it is upgraded to ``unicode`` if it is passed in as "
+                   "a ``str``)",
     },
 )
 

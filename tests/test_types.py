@@ -56,6 +56,20 @@ class TestTypeLibrary(unittest2.TestCase):
         self.assertEqual(demo.fullname, "Foo Bar")
         self.assertIsInstance(demo.fullname, unicode)
 
+        # FIXME: the actual errors returned in this situation are obtuse
+        with self.assertRaises(TypeError):
+            demo.name = 1
+        with self.assertRaises(TypeError):
+            demo.fullname = 123
+
+        # test upgrade
+        demo.fullname = str("foo")
+        self.assertIsInstance(demo.fullname, unicode)
+
+        # no downgrade is attempted (or desirable tbh)
+        demo.name = u"Bob"
+        self.assertIsInstance(demo.name, unicode)
+
     def test_dates_and_integer_types(self):
         class Props(Record):
             isadate = DateProperty()
