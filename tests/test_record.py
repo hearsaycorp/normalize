@@ -208,6 +208,13 @@ class TestRecords(unittest2.TestCase):
             maybe_int = V1Property(isa=int)
             maybe_str = V1Property(isa=basestring, json_name="maybeStr")
 
+        self.assertEqual(type(SafeRecord.maybe_int).__name__, "V1Property")
+        # FIXME: the name combination code should know that 'Safe' is
+        # not needed in this combination
+        self.assertEqual(
+            type(SafeRecord.maybe_str).__name__, "V1SafeJsonProperty",
+        )
+
         sr = SafeRecord(maybe_int=4, maybe_str="hey")
 
         del sr.maybe_int

@@ -531,7 +531,7 @@ class AutoJsonRecord(JsonRecord):
     @classmethod
     def convert_json_key_in(cls, key):
         return re.sub(
-            r'([a-z])([A-Z])',
+            r'([a-z\d])([A-Z])',
             lambda m: "%s_%s" % (m.group(1), m.group(2).lower()),
             key,
         )
@@ -539,7 +539,7 @@ class AutoJsonRecord(JsonRecord):
     @classmethod
     def convert_json_key_out(cls, key):
         return re.sub(
-            r'([a-z])_([a-z])',
+            r'([a-z\d])_([a-z])',
             lambda m: "%s%s" % (m.group(1), m.group(2).upper()),
             key,
         )

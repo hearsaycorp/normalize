@@ -116,12 +116,12 @@ def has(selfie, self, args, kwargs):
 def _merge_camel_case_names(base_name, new_name):
     import re
     name_parts = re.sub(
-        r'([a-z])([A-Z])', lambda m: "%s,%s" % m.groups(), base_name,
+        r'([a-z\d])([A-Z])', lambda m: "%s,%s" % m.groups(), base_name,
     ).split(",")
 
     other_parts = list(
         x for x in re.sub(
-            r'([a-z])([A-Z])', lambda m: "%s,%s" % m.groups(), new_name,
+            r'([a-z\d])([A-Z])', lambda m: "%s,%s" % m.groups(), new_name,
         ).split(",") if x not in name_parts
     )
 
