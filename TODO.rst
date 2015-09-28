@@ -9,11 +9,6 @@ TODO
 * ``FieldSelector`` should define ``__or__()`` to return a
   ``MultiFieldSelector``
 
-* exceptions:
-
-  * should return context information when marshaling in (perhaps
-    containing ``FieldSelector`` objects)
-
 * dealing with unexpectedly bad input data:
 
   * ``from_json`` variant/option which scrubs data which fails in any
