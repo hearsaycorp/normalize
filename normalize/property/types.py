@@ -19,6 +19,7 @@ types"""
 
 from datetime import date
 from datetime import datetime
+import numbers
 from sys import maxint
 
 from . import make_property_type
@@ -62,12 +63,20 @@ LongProperty = make_property_type(
     },
 )
 IntegerProperty = make_property_type(
-    "IntegerProperty", isa=(int, long), trait_name="integer",
+    "IntegerProperty", isa=numbers.Integral, trait_name="integer",
     coerce=lambda x: (
         int(x) if abs(float(x)) < maxint else long(x)
     ),
     attrs={
-        "__doc__": "A property which may be either an int or a long",
+        "__doc__": "A property which holds an integer, int or long",
+    },
+)
+NumberProperty = make_property_type(
+    "NumberProperty", isa=numbers.Number, trait_name="number",
+    coerce=lambda x: coerce_number(x),
+    attrs={
+        "__doc__": "A property which holds a number type (eg float, int) "
+                   "with automatic cast from string",
     },
 )
 StringProperty = make_property_type(
@@ -114,6 +123,16 @@ def coerce_date(not_a_date):
         return not_a_date.date()
     else:
         return coerce_datetime(not_a_date).date()
+
+
+def coerce_number(not_a_number):
+    if isinstance(not_a_number, basestring):
+        try:
+            return long(not_a_number)
+        except ValueError:
+            return float(not_a_number)
+    else:
+        return float(not_a_number)
 
 
 DateProperty = make_property_type(

@@ -41,6 +41,7 @@ class TestTypeLibrary(unittest2.TestCase):
             id = IntProperty(required=True)
             name = StringProperty()
             seq = IntProperty(lazy=True, default=_seq)
+            num = NumberProperty()
             fullname = UnicodeProperty(
                 default=lambda self: self.name,
                 lazy=True,
@@ -69,6 +70,17 @@ class TestTypeLibrary(unittest2.TestCase):
         # no downgrade is attempted (or desirable tbh)
         demo.name = u"Bob"
         self.assertIsInstance(demo.name, unicode)
+
+        demo.num = "123"
+        self.assertIsInstance(demo.num, long)
+        demo.num = "123.0"
+        self.assertIsInstance(demo.num, float)
+
+        with self.assertRaises(exc.CoerceError):
+            demo.num = "123.0a"
+
+        demo.num = "nan"
+        self.assertIsInstance(demo.num, float)
 
     def test_dates_and_integer_types(self):
         class Props(Record):
