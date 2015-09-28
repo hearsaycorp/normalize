@@ -216,6 +216,8 @@ def to_json(record, extraneous=True, prop=None):
         for propname, prop in type(record).properties.iteritems():
             if not extraneous and prop.extraneous:
                 pass
+            elif prop.slot_is_empty(record):
+                pass
             elif not hasattr(prop, "json_name") or prop.json_name is not None:
                 json_name = getattr(prop, "json_name", prop.name)
                 try:

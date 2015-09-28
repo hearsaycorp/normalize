@@ -25,6 +25,7 @@ import warnings
 from normalize import ListProperty
 from normalize import Property
 from normalize import Record
+from normalize import V1Property
 import normalize.exc as exc
 from normalize.visitor import VisitorPattern
 
@@ -38,32 +39,43 @@ class TestRecords(unittest2.TestCase):
 
         class SophiesRecord(Record):
             placeholder = Property()
-            aux_placeholder = Property(empty='')
-            age = Property(empty=0)
-            name = Property(empty=None)
+            aux_placeholder = Property(default='')
+            age = Property(default=0)
+            name = V1Property(isa=basestring)
 
         sophie = SophiesRecord()
         with self.assertRaises(AttributeError):
             sophie.placeholder
-        with self.assertRaises(AttributeError):
-            sophie.aux_placeholder
-
-        self.assertFalse(sophie.aux_placeholder0)
-        self.assertFalse(sophie.age0)
-        self.assertFalse(sophie.name0)
         self.assertFalse(sophie.placeholder0)
 
-        # the properties aren't really set...
-        self.assertEqual(VisitorPattern.visit(sophie), {})
+        self.assertEqual(sophie.aux_placeholder, '')
+        self.assertFalse(sophie.aux_placeholder0)
+
+        self.assertEqual(sophie.age, 0)
+        self.assertFalse(sophie.age0)
+
+        self.assertEqual(sophie.name, None)
+        with self.assertRaises(AttributeError):
+            sophie.name0
+        sophie.name = "Sophie"
+        self.assertEqual(sophie.name, "Sophie")
+        sophie.name = None
+        self.assertEqual(sophie.name, None)
+
+        # the properties aren't really set, but VisitorPattern sees them.
+        expected = {"age": 0, "aux_placeholder": ""}
+        self.assertEqual(VisitorPattern.visit(sophie), expected)
 
         sophie.age = 1
-        self.assertEqual(VisitorPattern.visit(sophie), {"age": 1})
+        expected['age'] = 1
+        self.assertEqual(VisitorPattern.visit(sophie), expected)
 
         sophie.age = 0
-        self.assertEqual(VisitorPattern.visit(sophie), {"age": 0})
+        expected['age'] = 0
+        self.assertEqual(VisitorPattern.visit(sophie), expected)
 
         del sophie.age
-        self.assertEqual(VisitorPattern.visit(sophie), {})
+        self.assertEqual(VisitorPattern.visit(sophie), expected)
 
     def test_functional_emptiness(self):
         """Test that functional empty values are transient"""
@@ -189,3 +201,24 @@ class TestRecords(unittest2.TestCase):
         self.assertFalse(lr.other0[0].foo.bar())
         with self.assertRaisesRegexp(exc.NoSuchAttribute, r"MagicList"):
             lr.other0.anything
+
+    def test_v1_none(self):
+
+        class SafeRecord(Record):
+            maybe_int = V1Property(isa=int)
+            maybe_str = V1Property(isa=basestring, json_name="maybeStr")
+
+        sr = SafeRecord(maybe_int=4, maybe_str="hey")
+
+        del sr.maybe_int
+        self.assertEqual(sr.maybe_int, None)
+
+        del sr.maybe_str
+        self.assertEqual(sr.maybe_str, None)
+
+        sr = SafeRecord(maybe_int=4, maybe_str="hey")
+        sr.maybe_int = None
+        self.assertEqual(sr.maybe_int, None)
+
+        sr.maybe_str = None
+        self.assertEqual(sr.maybe_str, None)

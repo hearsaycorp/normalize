@@ -25,6 +25,7 @@ from normalize.property import make_property_type
 from normalize.property import Property
 from normalize.property import ROProperty
 from normalize.property import SafeProperty
+from normalize.property import V1Property
 from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
@@ -79,4 +80,5 @@ __all__ = [
     "SafeProperty",
     "subtype",
     "to_json",
+    "V1Property",
 ]

@@ -117,7 +117,6 @@ def coerce_date(not_a_date):
 DateProperty = make_property_type(
     "DateProperty",
     trait_name="date", isa=date, coerce=coerce_date,
-    empty=None,
     attrs={
         "__doc__": "A property which must hold a python date (or "
                    "datetime); coercion from string is provided via "
@@ -130,7 +129,6 @@ DatetimeProperty = make_property_type(
     "DatetimeProperty",
     trait_name="datetime", isa=datetime,
     coerce=coerce_datetime,
-    empty=None,
     attrs={
         "__doc__": "A property which must holds a python datetime.  "
                    "Correct timezone handling is currently TODO and "

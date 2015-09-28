@@ -32,6 +32,7 @@ import weakref
 
 import normalize.empty as empty
 import normalize.exc as exc
+from normalize.property.meta import looks_like_v1_none
 from normalize.property.meta import MetaProperty
 
 
@@ -54,7 +55,7 @@ class Property(object):
     def __init__(self, isa=None,  coerce=None, check=None,
                  required=False, default=_none, traits=None,
                  extraneous=False, empty_attr=_none,
-                 empty=None, doc=None):
+                 doc=None):
         """Declares a new standard Property.  Note: if you pass arguments which
         are not understood by this constructor, or pass extra property traits
         to ``traits``, then the call will be redirected to a sub-class; see
@@ -97,16 +98,12 @@ class Property(object):
                 extra traits on.
 
             ``empty_attr=``\ *METHODNAME*
-                Specify an auxiliary method name which returns the value if the
-                attribute is set, otherwise an ``empty`` proxy value.  Defaults
-                to the name of the attribute with a ``0`` appended, or ``None``
-                if the attribute already ends with a number (disabling the
+                (deprecated) Specify an auxiliary method name which
+                returns the value if the attribute is set, otherwise
+                an ``empty`` proxy value.  Defaults to the name of the
+                attribute with a ``0`` appended, or ``None`` if the
+                attribute already ends with a number (disabling the
                 accessor)
-
-            ``empty=``\ *IGNORED*
-                For partial compatibility with normalize 0.7.x.  This used to
-                specify the value returned by the ``empty_attr`` attribute;
-                now that attribute always returns a Falsy placeholder.
 
             ``extraneous=``\ *BOOL*
                 This Property is considered *denormalized* and does not affect
@@ -116,6 +113,7 @@ class Property(object):
 
             ``doc=``\ *STR*
                 Specify a docstring for the property.
+
         """
         self.name = None
         self.class_ = None
@@ -277,14 +275,20 @@ class Property(object):
     def eager_init(self):
         return self.required or self.default is not _none
 
+    def attribute_error_hook(self):
+        raise AttributeError(self.fullname)
+
     def __get__(self, obj, type_=None):
         """Default getter; does NOT fall back to regular descriptor behavior
         """
         if obj is None:
             return self
         if self.name not in obj.__dict__:
-            raise AttributeError(self.fullname)
+            return self.attribute_error_hook()
         return obj.__dict__[self.name]
+
+    def slot_is_empty(self, obj):
+        return self.name not in obj.__dict__
 
     def __str__(self):
         metaclass = str(type(self).__name__)
@@ -365,8 +369,8 @@ class LazyProperty(Property):
 
         return super(LazyProperty, self).__get__(obj, type_)
 
-    def __hasattr__(self, obj):
-        return True
+    def slot_is_empty(self, obj):
+        return False
 
 
 class ROProperty(Property):
@@ -426,6 +430,46 @@ class LazySafeProperty(SafeProperty, LazyProperty):
         if self.name in obj.__dict__:
             return obj.__dict__[self.name]
         return super(LazySafeProperty, self).__get__(obj, type_)
+
+
+class V1Property(SafeProperty):
+    __trait__ = "v1"
+
+    def __init__(self, v1_none=_none, **kwargs):
+        """Passing 'v1_none=None' or declaring with 'V1Property' will
+        suppress AttributeError when the attribute is not set.
+        """
+        if not v1_none.__hash__:
+            raise exc.NoneMutable(passed=v1_none)
+        self.v1_upgraded = False
+        if v1_none is _none and 'default' in kwargs and \
+               looks_like_v1_none(kwargs['default']):
+            v1_none = kwargs['default']
+            del kwargs['default']
+            self.v1_upgraded = True
+        super(V1Property, self).__init__(**kwargs)
+        self.v1_none = None if v1_none is _none else v1_none
+        if self.empty_attr is _none and not self.v1_upgraded:
+            self.empty_attr = None
+
+    def slot_is_empty(self, obj):
+        if self.v1_upgraded:
+            return False
+        return super(V1Property, obj).slot_is_empty(obj)
+
+    def attribute_error_hook(self):
+        return self.v1_none
+
+    def __set__(self, obj, value):
+        """This setter checks the type of the value before allowing it to be
+        set."""
+        try:
+            super(V1Property, self).__set__(obj, value)
+        except exc.CoercionError:
+            if value is None or value == self.v1_none:
+                self.__delete__(obj)
+            else:
+                raise
 
 
 class DiffasProperty(Property):

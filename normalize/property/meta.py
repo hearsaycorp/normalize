@@ -27,6 +27,12 @@ PROPERTY_TYPES = dict()
 DUCKWARGS = defaultdict(set)
 
 
+# a test for whether a value passed to 'default' is sufficient to qualify the
+# attribute for v1 upgrade
+def looks_like_v1_none(value):
+    return not value and value.__hash__ and not callable(value)
+
+
 def has(selfie, self, args, kwargs):
     """This is called 'has' but is called indirectly.  Each Property sub-class
     is installed with this function which replaces their __new__.
@@ -86,6 +92,12 @@ def has(selfie, self, args, kwargs):
         all_traits.remove("unsafe")
     elif "ro" not in all_traits and safe_unless_ro:
         all_traits.add("safe")
+
+    if "v1" not in all_traits:
+        if 'default' in kwargs and looks_like_v1_none(kwargs['default']):
+            all_traits.add("v1")
+            if 'safe' not in all_traits:
+                all_traits.add("safe")
 
     trait_set_key = tuple(sorted(all_traits))
 
