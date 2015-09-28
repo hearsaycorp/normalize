@@ -18,6 +18,8 @@ from __future__ import absolute_import
 
 from normalize.coll import DictCollection
 from normalize.coll import ListCollection
+from normalize.diff import DiffOptions
+from normalize.diff import DiffTypes
 import normalize.exc as exc
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
@@ -33,6 +35,15 @@ from normalize.property.json import JsonDictProperty
 from normalize.property.json import JsonListProperty
 from normalize.property.json import JsonCollectionProperty
 from normalize.property.json import SafeJsonProperty
+from normalize.property.types import DateProperty
+from normalize.property.types import DatetimeProperty
+from normalize.property.types import FloatProperty
+from normalize.property.types import IntegerProperty
+from normalize.property.types import IntProperty
+from normalize.property.types import LongProperty
+from normalize.property.types import NumberProperty
+from normalize.property.types import StringProperty
+from normalize.property.types import UnicodeProperty
 from normalize.record import Record
 from normalize.record.meta import RecordMeta
 from normalize.record.json import AutoJsonRecord
@@ -45,6 +56,8 @@ from normalize.selector import FieldSelector
 from normalize.selector import FieldSelectorException
 from normalize.selector import MultiFieldSelector
 from normalize.subtype import subtype
+from normalize.visitor import Visitor
+from normalize.visitor import VisitorPattern
 
 
 RecordList = ListCollection
@@ -52,12 +65,20 @@ JsonCollection = ListCollection
 
 
 __all__ = [
+    "AutoJsonRecord",
+    "DateProperty",
+    "DatetimeProperty",
     "DictCollection",
     "DictProperty",
+    "DiffOptions",
+    "DiffTypes",
     "exc",
     "FieldSelector",
     "FieldSelectorException",
+    "FloatProperty",
     "from_json",
+    "IntegerProperty",
+    "IntProperty",
     "JsonCollection",  # deprecated - use JsonRecordList
     "JsonCollectionProperty",  # deprecated
     "JsonDictProperty",
@@ -69,8 +90,11 @@ __all__ = [
     "LazySafeProperty",
     "ListCollection",
     "ListProperty",
+    "LongProperty",
     "make_property_type",
     "MultiFieldSelector",
+    "NCAutoJsonRecord",
+    "NumberProperty",
     "Property",
     "ROProperty",
     "Record",
@@ -78,7 +102,11 @@ __all__ = [
     "RecordMeta",
     "SafeJsonProperty",
     "SafeProperty",
+    "StringProperty",
     "subtype",
     "to_json",
+    "UnicodeProperty",
     "V1Property",
+    "Visitor",
+    "VisitorPattern",
 ]
