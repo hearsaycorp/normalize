@@ -1,6 +1,69 @@
 Normalize changelog and errata
 ==============================
 
+1.0.0 28th September 2015
+-------------------------
+As a hint to the stability of the code, I've decided to call this
+release 1.0.
+
+But with a major version comes a major new feature.  The 0.x approach
+was one of type safety and strictness.  The 1.0 approach will be one
+of convenience and added pythonicity, layered on top of an inner
+strictness.  To allow for backwards compatibility, in general you must
+specify the new behavior in the class declaration.
+
+The details will be documented in the manual, tests and tutorial, but
+in a nutshell, the new features are:
+
+* unset V1 attributes return something false (usually ``None``)
+  instead of ``AttributeError``.  You can override the type of
+  ``None`` returned with ``v1_none=''``.  This value can be assigned
+  to the slot, and if it doesn't pass the type constraint, instead of
+  raising ``normalize.exc.CoercionError`` it will behave the same as
+  deleting the attribute.
+
+* there's a new base class called ``AutoJsonRecord`` which allows you
+  to access attributes of the input JSON, previously accessed via
+  ``.unknown_json_keys['attribute']``, by regular attribute access.
+  This feature is recursive, so you can quickly work with new APIs
+  without having to pre-write a bunch of API definitions.
+
+* Much more is available via a direct ``from normalize import Foo``,
+  including all of the typed property declarations, the visitor API,
+  and diff types.
+
+* ``DatetimeProperty`` and ``DateProperty`` now ship with a
+  ``json_out`` function which uses ``isoformat()`` to convert to a
+  string as you'd expect them to.
+
+* New type ``NumberProperty`` which will hold any numeric type (as
+  decided by ``numbers.Number``)
+
+There are also some minor backwards incompatibilities:
+
+* setting ``default=None`` (or any other false, immutable value) on a
+  property will select a V1 property.  The benefit of this is it makes
+  the class instance dictionary lighter, for classes which specify a
+  lot of ``default=None`` or ``default=''`` properties.
+
+* ``DateTimeProperty`` now ships with default JSON IO functions which
+  use ``datetime.datetime.strptime`` and
+  ``datetime.datetime.isoformat()`` to convert to and from a string.
+  This is an improvement, but technically an API change you might need
+  to consider if you were expecting it to fail.
+
+* ``DateProperty`` will now force the value type to be a date, and
+  will truncate datetimes to dates as originally envisioned.
+
+* ``StringProperty`` and ``UnicodeProperty`` no longer will convert
+  anything you pass to them to a string or unicode string.  This is
+  actually a new feature, because before the declaration was unusable;
+  just about everything in python can be converted to a string, so
+  you'd end up with string representations of objects in the slots.
+  Now you get type errors.
+
+* The ``empty`` property parameter has been removed completely.
+
 0.10.0 21st August 2015
 -----------------------
 * Exceptions raised while marshalling JSON are now wrapped by a new
