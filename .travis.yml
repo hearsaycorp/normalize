@@ -21,3 +21,5 @@ script:
     done
     test $fails -eq 0
   - cd doc && make text
+notifications:
+  email: false
