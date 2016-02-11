@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from setuptools import find_packages, setup
 
 
@@ -18,8 +20,8 @@ objects to see if they have changed in meaningful ways.
 
 
 setup(
-    author='Hearsay Labs, Inc',
-    author_email='svilain@hearsaylabs.com',
+    author='Hearsay Social',
+    author_email='opensource@hearsaysocial.com',
     description="Declarative Python meta-model system and visitor utilities",
     license='MIT',
     long_description=long_description,
@@ -29,4 +31,13 @@ setup(
     test_suite="run_tests",
     version='1.0.0',
     url="http://hearsaycorp.github.io/normalize",
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ],
 )
