@@ -24,7 +24,11 @@ easy to change without affecting downstream users.
 """
 
 
-class StringFormatException(Exception):
+class NormalizeError(Exception):
+    pass
+
+
+class StringFormatException(NormalizeError):
     message = "(uncustomized exception!)"
 
     def __init__(self, *args, **kwargs):
