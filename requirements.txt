@@ -1,1 +1,3 @@
-richenum>=1.0.4
+richenum>=1.1.1
+six
+future

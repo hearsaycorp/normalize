@@ -20,7 +20,7 @@ from normalize.coll import DictCollection
 from normalize.coll import ListCollection
 from normalize.diff import DiffOptions
 from normalize.diff import DiffTypes
-import normalize.exc as exc
+from normalize import exc
 from normalize.property import LazyProperty
 from normalize.property import LazySafeProperty
 from normalize.property import make_property_type

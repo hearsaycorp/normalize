@@ -4,3 +4,4 @@
 /dist
 .ropeproject
 .eggs
+*.bak

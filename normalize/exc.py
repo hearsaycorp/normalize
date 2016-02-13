@@ -41,7 +41,7 @@ class StringFormatException(NormalizeError):
                 typename=type(self).__name__,
                 received=repr(args),
             )
-        except KeyError, e:
+        except KeyError as e:
             raise KeywordExceptionFormatError(
                 typename=type(self).__name__,
                 missing=e[0],
