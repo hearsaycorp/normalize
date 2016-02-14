@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 
 import normalize
 
 
-EMPTY_VALS = dict()
+EMPTY_VALS = {}
 
 
 def placeholder(type_):

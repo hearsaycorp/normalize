@@ -14,12 +14,14 @@
 # http://github.com/hearsaycorp/normalize
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import json
 from os import environ
 import pickle
 import re
+import six
+from six.moves import range, zip
 import unittest2
 
 from richenum import RichEnum
@@ -42,6 +44,10 @@ from normalize.property.json import JsonDictProperty
 from normalize.property.json import JsonListProperty
 
 
+if six.PY3:
+    long = int
+
+
 class CheeseRecord(Record):
     variety = SafeProperty(isa=str)
     smelliness = SafeProperty(isa=float, check=lambda x: 0 < x < 100)
@@ -55,12 +61,12 @@ class CheeseCupboardRecord(Record):
     favorites = DictProperty(of=CheeseRecord)
 
 
-json_data_number_types = (basestring, int, long, float)
+json_data_number_types = (six.string_types, int, long, float)
 
 
 def decode_json_number(str_or_num):
     """Returns a precise number object from a string or number"""
-    if isinstance(str_or_num, basestring):
+    if isinstance(str_or_num, six.string_types):
         if re.match(r'-?\d+$', str_or_num):
             return long(str_or_num)
         if not re.match(r'-?\d+(\.\d+)?([eE][\-+]?\d+)?$', str_or_num):
@@ -98,10 +104,10 @@ class TestRecordMarshaling(unittest2.TestCase):
     def assertJsonDataEqual(self, got, wanted, path=""):
         """Test that two JSON-data structures are the same.  We can't use
         simple assertEqual, because '23' and 23 should compare the same."""
-        if isinstance(got, basestring):
-            got = unicode(got)
-        if isinstance(wanted, basestring):
-            wanted = unicode(wanted)
+        if isinstance(got, six.string_types):
+            got = six.text_type(got)
+        if isinstance(wanted, six.string_types):
+            wanted = six.text_type(wanted)
 
         pdisp = path or "top level"
 
@@ -148,7 +154,7 @@ class TestRecordMarshaling(unittest2.TestCase):
                 )
             )
         elif "SHOW_JSON_TESTS" in environ:
-            print "%s: ok (%r)" % (pdisp, got)
+            print("%s: ok (%r)" % (pdisp, got))
 
     def test_assertJsonDataEqual(self):
         """Answering the koan, "Who will test the tests themselves?"

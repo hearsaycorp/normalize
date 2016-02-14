@@ -18,6 +18,8 @@ from __future__ import absolute_import
 
 from datetime import datetime
 import re
+import six
+from six.moves import zip
 import unittest
 
 from normalize import FieldSelector
@@ -94,7 +96,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             ValueError, "FieldSelectors can only contain ints/longs, "
             "strings, and None"
         ):
-            FieldSelector({"foo": "bar"}.iteritems())
+            FieldSelector(six.iteritems({"foo": "bar"}))
         with self.assertRaisesRegexp(
             ValueError, "FieldSelectors can only contain ints/longs, "
             "strings, and None"
@@ -529,7 +531,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             foo = Property(isa=Caret)
             baz = Property()
             quux = DictProperty(of=str)
-            frop = DictProperty(of=list_of(unicode))
+            frop = DictProperty(of=list_of(six.text_type))
 
         full = Pilcrow(
             bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],

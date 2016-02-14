@@ -17,12 +17,19 @@
 """``normalize.property.types`` provides an assortment of pre-generated
 types"""
 
+from __future__ import absolute_import
 import datetime
 import numbers
-from sys import maxint
+import six
+from sys import maxsize
 
 from . import make_property_type
 from ..subtype import subtype
+
+
+if six.PY3:
+    long = int
+
 
 try:
     from dateutil.parser import parse as parse_datetime
@@ -65,7 +72,7 @@ LongProperty = make_property_type(
 IntegerProperty = make_property_type(
     "IntegerProperty", isa=numbers.Integral, trait_name="integer",
     coerce=lambda x: (
-        int(x) if abs(float(x)) < maxint else long(x)
+        int(x) if abs(float(x)) < maxsize else long(x)
     ),
     attrs={
         "__doc__": "A property which holds an integer, int or long",
@@ -80,7 +87,7 @@ NumberProperty = make_property_type(
     },
 )
 StringProperty = make_property_type(
-    "StringProperty", isa=basestring, trait_name="str",
+    "StringProperty", isa=six.string_types, trait_name="str",
     attrs={
         "__doc__": "A property which must be a ``basestring`` or "
                    "``unicode``, and if not, throws a coerce error",
@@ -94,7 +101,7 @@ FloatProperty = make_property_type(
 )
 UnicodeProperty = make_property_type(
     "UnicodeProperty", base_type=StringProperty,
-    isa=unicode, coerce=lambda s: unicode(s) if isinstance(s, str) else s,
+    isa=six.text_type, coerce=lambda s: six.text_type(s) if isinstance(s, str) else s,
     trait_name="unicode",
     attrs={
         "__doc__": "A property which must be a ``unicode`` or ``str`` "
@@ -108,7 +115,7 @@ def coerce_datetime(not_a_datetime):
     if isinstance(not_a_datetime, date):
         tt = not_a_datetime.timetuple()
         return datetime.datetime(*(tt[0:6]))
-    elif isinstance(not_a_datetime, basestring):
+    elif isinstance(not_a_datetime, six.string_types):
         return parse_datetime(not_a_datetime)
     else:
         raise ValueError(
@@ -126,7 +133,7 @@ def coerce_date(not_a_date):
 
 
 def coerce_number(not_a_number):
-    if isinstance(not_a_number, basestring):
+    if isinstance(not_a_number, six.string_types):
         try:
             return long(not_a_number)
         except ValueError:

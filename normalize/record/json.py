@@ -22,7 +22,7 @@ from copy import deepcopy
 import inspect
 import json
 import re
-import types
+import six
 
 from normalize.coll import Collection
 from normalize.coll import DictCollection as RecordDict
@@ -35,6 +35,10 @@ from normalize.property.json import JsonProperty
 from normalize.record import OhPickle
 from normalize.record import Record
 from normalize.selector import FieldSelector
+
+
+if six.PY3:
+    long = int
 
 
 def _json_to_value_initializer(json_val, proptype):
@@ -83,7 +87,7 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
             recordtype=record_type,
         )
     unknown_keys = set(json_struct.keys())
-    for propname, prop in record_type.properties.iteritems():
+    for propname, prop in six.iteritems(record_type.properties):
         # think "does" here rather than "is"; the slot does JSON
         if isinstance(prop, JsonProperty):
             json_name = prop.json_name
@@ -195,7 +199,7 @@ def to_json(record, extraneous=True, prop=None):
             ``AttributeError`` that is raised by the property not being set.
     """
     if prop:
-        if isinstance(prop, basestring):
+        if isinstance(prop, six.string_types):
             prop = type(record).properties[prop]
         val = prop.__get__(record)
         if hasattr(prop, "to_json"):
@@ -213,7 +217,7 @@ def to_json(record, extraneous=True, prop=None):
 
     elif isinstance(record, Record):
         rv_dict = {}
-        for propname, prop in type(record).properties.iteritems():
+        for propname, prop in six.iteritems(type(record).properties):
             if not extraneous and prop.extraneous:
                 pass
             elif prop.slot_is_empty(record):
@@ -231,13 +235,13 @@ def to_json(record, extraneous=True, prop=None):
 
     elif isinstance(record, dict):
         return dict(
-            (k, _json_data(v, extraneous)) for k, v in record.iteritems()
+            (k, _json_data(v, extraneous)) for k, v in six.iteritems(record)
         )
 
     elif isinstance(record, (list, tuple, set, frozenset)):
         return list(_json_data(x, extraneous) for x in record)
 
-    elif isinstance(record, (basestring, int, float, types.NoneType)):
+    elif isinstance(record, (six.string_types, int, float, type(None))):
         return record
 
     else:
@@ -281,7 +285,7 @@ class JsonRecord(Record):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, six.string_types):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
@@ -291,7 +295,7 @@ class JsonRecord(Record):
     def json_to_initkwargs(self, json_data, kwargs):
         """Subclassing hook to specialize how JSON data is converted
         to keyword arguments"""
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, six.string_types):
             json_data = json.loads(json_data)
         return json_to_initkwargs(self, json_data, kwargs)
 
@@ -315,7 +319,7 @@ class JsonRecord(Record):
         if hasattr(self, "unknown_json_keys"):
             prop = type(self).properties['unknown_json_keys']
             if extraneous or not prop.extraneous:
-                for k, v in self.unknown_json_keys.iteritems():
+                for k, v in six.iteritems(self.unknown_json_keys):
                     if k not in jd:
                         jd[k] = to_json(v, extraneous)
         return jd
@@ -358,7 +362,7 @@ class JsonRecordList(RecordList, JsonRecord):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, six.string_types):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
@@ -432,7 +436,7 @@ class JsonRecordDict(RecordDict, JsonRecord):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, six.string_types):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
@@ -563,7 +567,7 @@ class AutoJsonRecord(JsonRecord):
         if hasattr(self, "unknown_json_keys"):
             prop = type(self).properties['unknown_json_keys']
             if extraneous or not prop.extraneous:
-                for k, v in self.unknown_json_keys.iteritems():
+                for k, v in six.iteritems(self.unknown_json_keys):
                     k = type(self).convert_json_key_out(k)
                     if k not in jd:
                         jd[k] = to_json(v, extraneous)

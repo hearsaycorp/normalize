@@ -24,6 +24,8 @@ easy to change without affecting downstream users.
 """
 
 
+from __future__ import absolute_import
+import six
 class NormalizeError(Exception):
     pass
 
@@ -45,7 +47,7 @@ class StringFormatException(NormalizeError):
             raise KeywordExceptionFormatError(
                 typename=type(self).__name__,
                 missing=e[0],
-                passed=repr(kwargs.keys()),
+                passed=repr(list(kwargs.keys())),
             )
 
     def __str__(self):
@@ -69,7 +71,7 @@ class StringFormatException(NormalizeError):
             "exc." if self.__module__.endswith(".exc") else "",
             type(self).__name__, ", ".join(
                 tuple("%r" % x for x in self.args) +
-                tuple("%s=%r" % (k, v) for k, v in self.kwargs.iteritems())
+                tuple("%s=%r" % (k, v) for k, v in six.iteritems(self.kwargs))
             )
         )
 

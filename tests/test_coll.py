@@ -15,6 +15,8 @@
 #
 
 
+from __future__ import absolute_import
+import six
 import unittest2
 
 from normalize import Property
@@ -168,14 +170,14 @@ class TestCollections(unittest2.TestCase):
         self.assertEqual(dp2, dp)
 
         self.assertEqual(
-            set(dp.iterkeys()),
+            set(six.iterkeys(dp)),
             {"bob", "bert", "ernest", "leonard"},
         )
 
         del dp['bob']
 
         self.assertEqual(
-            set(dp.itervalues()),
+            set(six.itervalues(dp)),
             {Item(name='Bert'),
              Item(name='Leonard'), Item(name='Ernest')}
         )
@@ -254,7 +256,7 @@ class TestCollections(unittest2.TestCase):
     def test_json_coll(self):
         class JLR(Record):
             item_list = JsonListProperty(of=Item)
-            string_list = JsonListProperty(of=basestring)
+            string_list = JsonListProperty(of=six.string_types[0])
 
         class JDR(Record):
             item_map = JsonDictProperty(of=Item)
@@ -270,6 +272,6 @@ class TestCollections(unittest2.TestCase):
                    "int_map": {"one": 1, "two": 2, "three": 3}})
 
         jdr.item_map = {"bill": jlr.item_list[0]}
-        jlr.item_list = jdr.item_map.values()
+        jlr.item_list = list(jdr.item_map.values())
 
     # TODO type unions for item types

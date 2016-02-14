@@ -36,9 +36,11 @@ from testclasses import StarList
 from testclasses import StarSystem
 from testclasses import Wall
 from testclasses import wall_one
+import six
+from six.moves import range
 
 
-JSON_CAN_DUMP = (basestring, int, float, long, dict, list, types.NoneType)
+JSON_CAN_DUMP = (six.string_types, int, float, int, dict, list, type(None))
 
 
 class SimpleDumper(VisitorPattern):

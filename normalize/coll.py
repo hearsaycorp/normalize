@@ -23,6 +23,8 @@ import types
 
 import normalize.exc as exc
 from normalize.record import Record
+import six
+from six.moves import range
 
 """This class contains container classes which can act like collections but
 conform to this package's metaclass API"""
@@ -214,13 +216,13 @@ class DictCollection(KeyedCollection):
 
     @classmethod
     def coll_to_tuples(cls, coll):
-        if isinstance(coll, basestring):
+        if isinstance(coll, six.string_types):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
             )
         if isinstance(coll, collections.Mapping):
-            for k, v in coll.iteritems():
+            for k, v in six.iteritems(coll):
                 yield k, v
         elif isinstance(coll, collections.Sequence):
             i = 0
@@ -237,7 +239,7 @@ class DictCollection(KeyedCollection):
                 i += 1
 
     def itertuples(self):
-        return self._values.iteritems()
+        return six.iteritems(self._values)
 
     def iteritems(self):
         return self.itertuples()
@@ -255,10 +257,10 @@ class DictCollection(KeyedCollection):
         return (v for k, v in self.itertuples())
 
     def keys(self):
-        return self._values.keys()
+        return list(self._values.keys())
 
     def values(self):
-        return self._values.values()
+        return list(self._values.values())
 
     def pop(self, k):
         return self._values.pop(k)
@@ -310,7 +312,7 @@ class ListCollection(KeyedCollection):
         sequences and iterators.  Returns ``(*int*, Value)``.  Does not coerce
         items.
         """
-        if isinstance(coll, basestring):
+        if isinstance(coll, six.string_types):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
@@ -362,7 +364,7 @@ class ListCollection(KeyedCollection):
             j += len_
             if j < 0:
                 j = 0
-        for k in xrange(i, j):
+        for k in range(i, j):
             if self[k] == x:
                 return k
         raise ValueError("%r is not in list" % x)

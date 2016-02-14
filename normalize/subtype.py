@@ -14,6 +14,7 @@
 # http://github.com/hearsaycorp/normalize
 #
 
+from __future__ import absolute_import
 from . import exc
 
 
