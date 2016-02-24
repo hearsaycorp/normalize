@@ -14,7 +14,10 @@
 # http://github.com/hearsaycorp/normalize
 #
 
+import inspect
+import sys
 import unittest2
+
 import normalize.exc as exc
 
 
@@ -47,3 +50,12 @@ class TestExceptionSystem(unittest2.TestCase):
             exc.PositionalExceptionFormatError, TestException,
             keywords="ok",
         )
+
+    def test_all_exceptions_inherit_from_base(self):
+        """
+        Verify that all exceptions really do subclass NormalizeError so that no end user breaks.
+        """
+        # https://stackoverflow.com/questions/1796180/how-can-i-get-a-list-of-all-classes-within-current-module-in-python
+        for _, obj in inspect.getmembers(sys.modules['normalize.exc'], inspect.isclass):
+            if issubclass(obj, Exception):
+                self.assertTrue(issubclass(obj, exc.NormalizeError))

@@ -1,6 +1,11 @@
 Normalize changelog and errata
 ==============================
 
+1.0.1 10th February 2016
+------------------------
+* Added new base class for all exceptions to subclass. This will
+  ensure that users of normalize will be able to catch all exceptions.
+
 1.0.0 28th September 2015
 -------------------------
 As a hint to the stability of the code, I've decided to call this
