@@ -1,5 +1,7 @@
 language: python
-python: "2.7"
+python:
+  - "2.7"
+  - "pypy"
 install:
   - sudo apt-get install python-docutils lynx-cur
   - pip install pep8 pyflakes nose unittest2 sphinx
