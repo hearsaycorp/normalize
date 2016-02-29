@@ -99,8 +99,8 @@ class SafeJsonProperty(JsonProperty, SafeProperty):
 
 
 # late imports to allow circular dependencies to proceed
-from normalize.record.json import JsonRecordDict
-from normalize.record.json import JsonRecordList
+from normalize.record.json import JsonRecordDict  # noqa
+from normalize.record.json import JsonRecordList  # noqa
 
 
 class JsonListProperty(ListProperty, JsonProperty):
