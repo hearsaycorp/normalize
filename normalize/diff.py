@@ -19,6 +19,7 @@ from __future__ import absolute_import
 import collections
 from itertools import chain
 from itertools import product
+import logging
 import re
 import six
 from six.moves import range
@@ -38,13 +39,20 @@ from normalize.selector import FieldSelector
 from normalize.selector import MultiFieldSelector
 
 
+logger = logging.getLogger(__name__)
+
+
 class DiffTypes(OrderedRichEnum):
     """
     A :py:class:`richenum.OrderedRichEnum` type to denote the type of an
     individual difference.
     """
     class EnumValue(OrderedRichEnumValue):
-        pass
+        def __hash__(self):
+            """
+            This is temporary until we can use richenum>=1.1.2
+            """
+            return hash(self.canonical_name + str(self.index))
 
     NO_CHANGE = EnumValue(1, "none", "UNCHANGED")
     ADDED = EnumValue(2, "added", "ADDED")
@@ -497,16 +505,16 @@ def collection_generator(collection):
 
     elif hasattr(collection, "itertuples"):
         return collection.itertuples()
+    elif hasattr(collection, "iteritems"):
+        return collection.iteritems()
+    elif hasattr(collection, "items"):
+        return collection.items()
     elif hasattr(collection, "keys"):
 
         def generator():
             for key in collection.keys():
                 yield (key, collection[key])
 
-    elif hasattr(collection, "items"):
-        return list(collection.items())
-    elif hasattr(collection, "iteritems"):
-        return six.iteritems(collection)
     elif hasattr(collection, "__getitem__"):
 
         def generator():

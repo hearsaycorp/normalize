@@ -46,7 +46,7 @@ class StringFormatException(NormalizeError):
         except KeyError as e:
             raise KeywordExceptionFormatError(
                 typename=type(self).__name__,
-                missing=e[0],
+                missing=e.args[0],
                 passed=repr(list(kwargs.keys())),
             )
 

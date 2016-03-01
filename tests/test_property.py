@@ -19,6 +19,7 @@
 from __future__ import absolute_import
 
 import re
+import six
 from six.moves import range, zip
 import unittest2
 
@@ -262,7 +263,7 @@ class TestProperties(unittest2.TestCase):
         class CustomColl(ListCollection):
             @classmethod
             def coll_to_tuples(cls, values):
-                if isinstance(values, bytes):
+                if isinstance(values, six.binary_type):
                     values = values.split(',')
                     for i, v in zip(range(0, len(values)), values):
                         yield i, {'name': v}

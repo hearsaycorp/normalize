@@ -20,15 +20,14 @@ import collections
 from copy import deepcopy
 import functools
 import re
-import types
+import six
+from six.moves import range
 
 from normalize.coll import DictCollection
 from normalize.coll import ListCollection
 from normalize.exc import FieldSelectorAttributeError
 from normalize.exc import FieldSelectorException
 from normalize.exc import FieldSelectorKeyError
-import six
-from six.moves import range
 
 
 def _try_index(instance, selector):
@@ -370,6 +369,9 @@ class FieldSelector(object):
             )
         return self.selectors == other.selectors
 
+    def __hash__(self):
+        return hash(tuple(self.selectors))
+
     def __ne__(self, other):
         """
         functools.total_ordering() currently doesn't take care of __ne__().
@@ -639,6 +641,9 @@ class MultiFieldSelector(object):
 
     def __nonzero__(self):
         return bool(len(self.heads))
+
+    def __bool__(self):
+        return self.__nonzero__()
 
     def __iter__(self):
         """Generator for all FieldSelectors this MultiFieldSelector

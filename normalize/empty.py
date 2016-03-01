@@ -127,6 +127,9 @@ class EmptyVal(object):
     def __nonzero__(self):
         return False
 
+    def __bool__(self):
+        return self.__nonzero__()
+
     def _typelist(self):
         return "any" if self._typetuple is any else ",".join(
             str(t.__name__) for t in self._typetuple if isinstance(t, type)
