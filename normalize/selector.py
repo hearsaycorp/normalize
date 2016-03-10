@@ -889,7 +889,7 @@ class MultiFieldSelector(object):
                 raise
 
         if copy and not callable(copy):
-            copy = lambda x: deepcopy(x)
+            copy = deepcopy
 
         for fs, val in fs_val:
             if val is _None:

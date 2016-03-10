@@ -52,7 +52,7 @@ class Property(object):
     __metaclass__ = MetaProperty
     __safe_unless_ro__ = False
 
-    def __init__(self, isa=None,  coerce=None, check=None,
+    def __init__(self, isa=None, coerce=None, check=None,
                  required=False, default=_none, traits=None,
                  extraneous=False, empty_attr=_none,
                  doc=None):
@@ -443,7 +443,7 @@ class V1Property(SafeProperty):
             raise exc.NoneMutable(passed=v1_none)
         self.v1_upgraded = False
         if v1_none is _none and 'default' in kwargs and \
-               looks_like_v1_none(kwargs['default']):
+           looks_like_v1_none(kwargs['default']):
             v1_none = kwargs['default']
             del kwargs['default']
             self.v1_upgraded = True
