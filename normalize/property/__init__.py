@@ -27,6 +27,7 @@ documentation.
 from __future__ import absolute_import
 
 import inspect
+import six
 import warnings
 import weakref
 
@@ -44,12 +45,11 @@ class _Default(object):
 _none = _Default()
 
 
-class Property(object):
+class Property(six.with_metaclass(MetaProperty, object)):
     """This is the base class for all property types.  It is a data descriptor,
     so care should be taken before adding any ``SPECIALMETHODS`` which might
     change the way it behaves.
     """
-    __metaclass__ = MetaProperty
     __safe_unless_ro__ = False
 
     def __init__(self, isa=None, coerce=None, check=None,
@@ -551,7 +551,7 @@ def make_property_type(name, base_type=Property,
         trait_name = "trait%d" % trait_num
 
     def __init__(self, **kwargs):
-        for arg, val in default_kwargs.iteritems():
+        for arg, val in six.iteritems(default_kwargs):
             if arg not in kwargs:
                 kwargs[arg] = val
         return super(self_type[0], self).__init__(**kwargs)

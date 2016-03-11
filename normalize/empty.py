@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 
 import normalize
 
 
-EMPTY_VALS = dict()
+EMPTY_VALS = {}
 
 
 def placeholder(type_):
@@ -125,6 +126,9 @@ class EmptyVal(object):
 
     def __nonzero__(self):
         return False
+
+    def __bool__(self):
+        return self.__nonzero__()
 
     def _typelist(self):
         return "any" if self._typetuple is any else ",".join(

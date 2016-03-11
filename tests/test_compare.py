@@ -16,7 +16,7 @@
 
 from __future__ import absolute_import
 
-import unittest
+import unittest2
 
 from normalize.coll import Collection
 from normalize.diff import *
@@ -26,10 +26,10 @@ from normalize.property import Property
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonListProperty
-from testclasses import *
+from .testclasses import *
 
 
-class TestRecordComparison(unittest.TestCase):
+class TestRecordComparison(unittest2.TestCase):
     def setUp(self):
         self.minimal = LegalPerson(id=7)
         self.foo1 = LegalPerson(id="2", name="foo")
@@ -309,10 +309,12 @@ class TestRecordComparison(unittest.TestCase):
                     "uncle": self.bob2},
         )
         self.assertIsInstance(person_a.family, Collection)
+        self.assertIsInstance(person_b.family, Collection)
 
         expected_a_to_b = {
             "REMOVED .brother",
         }
+        import ipdb; ipdb.set_trace()
         self.assertDifferences(
             compare_collection_iter(person_a.family, person_b.family),
             expected_a_to_b

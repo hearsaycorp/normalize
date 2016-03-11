@@ -19,26 +19,27 @@ from __future__ import absolute_import
 from datetime import datetime
 import json
 from time import time
-import types
-import unittest
+import six
+from six.moves import range
+import unittest2
 
 import normalize.exc as exc
 from normalize.coll import list_of
 from normalize.record import Record
 from normalize.visitor import VisitorPattern
-from testclasses import acent
-from testclasses import acent_attributes
-from testclasses import JsonStarList
-from testclasses import maia
-from testclasses import NamedStarList
-from testclasses import PullRequest
-from testclasses import StarList
-from testclasses import StarSystem
-from testclasses import Wall
-from testclasses import wall_one
+from .testclasses import acent
+from .testclasses import acent_attributes
+from .testclasses import JsonStarList
+from .testclasses import maia
+from .testclasses import NamedStarList
+from .testclasses import PullRequest
+from .testclasses import StarList
+from .testclasses import StarSystem
+from .testclasses import Wall
+from .testclasses import wall_one
 
 
-JSON_CAN_DUMP = (basestring, int, float, long, dict, list, types.NoneType)
+JSON_CAN_DUMP = (six.string_types, int, float, int, dict, list, type(None))
 
 
 class SimpleDumper(VisitorPattern):
@@ -54,7 +55,7 @@ class SimpleDumper(VisitorPattern):
         return dumpable
 
 
-class AssertDiffTest(unittest.TestCase):
+class AssertDiffTest(unittest2.TestCase):
     def assertDiffs(self, a, b, expected, **kwargs):
         differences = set(str(x) for x in a.diff(b, **kwargs))
         self.assertEqual(

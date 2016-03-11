@@ -15,6 +15,7 @@
 #
 
 
+from __future__ import absolute_import
 from normalize.coll import DictCollection
 from normalize.coll import ListCollection
 from normalize.coll import _make_generic

@@ -18,7 +18,9 @@ from __future__ import absolute_import
 
 from datetime import datetime
 import re
-import unittest
+import six
+from six.moves import zip
+import unittest2
 
 from normalize import FieldSelector
 from normalize import FieldSelectorException
@@ -70,7 +72,7 @@ class MockComplexJsonRecord(MockJsonRecord):
     nested = MockJsonRecord()
 
 
-class TestStructableFieldSelector(unittest.TestCase):
+class TestStructableFieldSelector(unittest2.TestCase):
 
     def test_init(self):
         # create valid FieldSelectors
@@ -94,7 +96,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             ValueError, "FieldSelectors can only contain ints/longs, "
             "strings, and None"
         ):
-            FieldSelector({"foo": "bar"}.iteritems())
+            FieldSelector(six.iteritems({"foo": "bar"}))
         with self.assertRaisesRegexp(
             ValueError, "FieldSelectors can only contain ints/longs, "
             "strings, and None"
@@ -357,7 +359,7 @@ class TestStructableFieldSelector(unittest.TestCase):
 
     def test_dict(self):
         from normalize.coll import dict_of
-        from testclasses import Person
+        from .testclasses import Person
         Rolodeck = dict_of(Person)
 
         deck = Rolodeck({
@@ -442,17 +444,10 @@ class TestStructableFieldSelector(unittest.TestCase):
                          [fs1, fs2, fs3, fs4, fs5, fs6, fs7])
 
     def test_multi_selector(self):
-        selectors = set(
-            (
-                ("bar", ),
-                ("foo", "bar", 0, "boo"),
-                ("foo", "bar", 0, "hiss"),
-                ("foo", "bar", 1),
-            )
-        )
+        selectors = {("bar",), ("foo", "bar", 0, "boo"), ("foo", "bar", 0, "hiss"), ("foo", "bar", 1)}
 
         mfs = MultiFieldSelector(*selectors)
-        emitted = set(tuple(x.selectors) for x in mfs)
+        emitted = {tuple(x.selectors) for x in mfs}
         self.assertEqual(emitted, selectors)
         # match, eg <MultiFieldSelector: (.foo.bar([0](.hiss|.boo)|[1])|.bar)>
         #  but also <MultiFieldSelector: (.bar|.foo.bar([1]|[0](.boo|.hiss)))>
@@ -473,7 +468,7 @@ class TestStructableFieldSelector(unittest.TestCase):
         )
         self.assertRegexpMatches(str(mfs), regexp)
         mfs_dupe = eval(repr(mfs))
-        emitted = set(tuple(x.selectors) for x in mfs_dupe)
+        emitted = {tuple(x.selectors) for x in mfs_dupe}
         self.assertEqual(emitted, selectors)
 
         # test various dict-like functions
@@ -490,8 +485,8 @@ class TestStructableFieldSelector(unittest.TestCase):
         # if you add a higher level selector, then more specific paths
         # disappear from the MFS
         mfs2 = MultiFieldSelector(mfs, ["foo", "bar"])
-        emitted = set(tuple(x.selectors) for x in mfs2)
-        self.assertEqual(emitted, set((("bar",), ("foo", "bar"))))
+        emitted = {tuple(x.selectors) for x in mfs2}
+        self.assertEqual(emitted, {("bar",), ("foo", "bar")})
 
         data = {
             "bar": [1, 2, 3],
@@ -529,7 +524,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             foo = Property(isa=Caret)
             baz = Property()
             quux = DictProperty(of=str)
-            frop = DictProperty(of=list_of(unicode))
+            frop = DictProperty(of=list_of(six.text_type))
 
         full = Pilcrow(
             bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],
@@ -682,7 +677,7 @@ class TestStructableFieldSelector(unittest.TestCase):
 
     def test_mfs_apply_ops(self):
         from copy import deepcopy
-        from testclasses import wall_one
+        from .testclasses import wall_one
         from normalize.diff import DiffTypes
 
         selectors = (

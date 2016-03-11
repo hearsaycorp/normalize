@@ -19,6 +19,7 @@ from __future__ import absolute_import
 
 import normalize.exc as exc
 from normalize.property import Property
+import six
 
 
 class RecordMeta(type):
@@ -36,7 +37,7 @@ class RecordMeta(type):
 
         for base in bases:
             if hasattr(base, "properties"):
-                for propname, prop in base.properties.iteritems():
+                for propname, prop in six.iteritems(base.properties):
                     if propname in properties:
                         raise exc.MultipleInheritanceClash(
                             prop=prop,
@@ -68,7 +69,7 @@ class RecordMeta(type):
             good_props = []
             if proplist:
                 for prop in proplist:
-                    if isinstance(prop, basestring):
+                    if isinstance(prop, six.string_types):
                         prop = properties[prop]
                     if not isinstance(prop, Property) or (
                         prop not in all_properties
@@ -88,12 +89,12 @@ class RecordMeta(type):
             key=lambda x: x.name,
         )
         attrs['eager_properties'] = frozenset(
-            k for k, v in properties.iteritems() if v.eager_init()
+            k for k, v in six.iteritems(properties) if v.eager_init()
         )
 
         self = super(RecordMeta, mcs).__new__(mcs, name, bases, attrs)
 
-        for propname, prop in local_props.iteritems():
+        for propname, prop in six.iteritems(local_props):
             prop.bind(self)
 
         return self

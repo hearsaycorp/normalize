@@ -27,7 +27,7 @@ setup(
     long_description=long_description,
     name='normalize',
     packages=find_packages(),
-    install_requires=('richenum>=1.0.0',),
+    install_requires=('richenum>=1.1.1', 'six', 'future'),
     tests_require=('nose', 'unittest2'),
     test_suite="run_tests",
     version='1.0.1',

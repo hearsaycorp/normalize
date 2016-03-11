@@ -13,9 +13,10 @@
 # normalize.  If not, refer to the upstream repository at
 # http://github.com/hearsaycorp/normalize
 
+from __future__ import absolute_import
 import copy
 from datetime import datetime
-import types
+import six
 
 from normalize import RecordList
 from normalize.coll import list_of
@@ -32,7 +33,7 @@ from normalize.property.types import StringProperty
 
 class LegalPerson(Record):
     id = Property(required=True, isa=int)
-    name = Property(isa=basestring, coerce=str)
+    name = Property(isa=six.string_types[0], coerce=str)
 
 
 class Person(LegalPerson):
@@ -74,7 +75,7 @@ class Wall(Record):
 # for testing comparison with "alien" classes
 class Spartan(object):
     def __init__(self, data):
-        for k, v in data.iteritems():
+        for k, v in six.iteritems(data):
             setattr(self, k, v)
 
 
@@ -144,7 +145,7 @@ wall_two = Wall(
 
 
 def fix_id(val):
-    if isinstance(val, basestring) and val.upper().startswith("HIP"):
+    if isinstance(val, six.string_types) and val.upper().startswith("HIP"):
         return int(val.upper().lstrip("HIP "))
     else:
         return int(val)
@@ -156,8 +157,8 @@ class Star(Record):
                       check=lambda i: 0 < i < 120000)
     name = Property(isa=str)
     spectral_type = Property(isa=str)
-    designations = DictProperty(of=basestring)
-    coordinates = DictProperty(of=list_of(basestring))
+    designations = DictProperty(of=six.string_types[0])
+    coordinates = DictProperty(of=list_of(six.string_types[0]))
 
 
 class Binary(Record):
@@ -234,4 +235,4 @@ acent = StarSystem(
 class PullRequest(Record):
     number = Property()
     created_at = DatetimeProperty(default=lambda: datetime.now())
-    merged_at = DatetimeProperty(isa=(datetime, types.NoneType))
+    merged_at = DatetimeProperty(isa=(datetime, type(None)))

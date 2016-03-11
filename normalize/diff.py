@@ -19,8 +19,10 @@ from __future__ import absolute_import
 import collections
 from itertools import chain
 from itertools import product
+import logging
 import re
-import types
+import six
+from six.moves import range
 import unicodedata
 
 from richenum import OrderedRichEnum
@@ -37,13 +39,20 @@ from normalize.selector import FieldSelector
 from normalize.selector import MultiFieldSelector
 
 
+logger = logging.getLogger(__name__)
+
+
 class DiffTypes(OrderedRichEnum):
     """
     A :py:class:`richenum.OrderedRichEnum` type to denote the type of an
     individual difference.
     """
     class EnumValue(OrderedRichEnumValue):
-        pass
+        def __hash__(self):
+            """
+            This is temporary until we can use richenum>=1.1.2
+            """
+            return hash(self.canonical_name + str(self.index))
 
     NO_CHANGE = EnumValue(1, "none", "UNCHANGED")
     ADDED = EnumValue(2, "added", "ADDED")
@@ -54,7 +63,7 @@ class DiffTypes(OrderedRichEnum):
 
 def _coerce_diff(dt):
     if not isinstance(dt, OrderedRichEnumValue):
-        if isinstance(dt, (int, long)):
+        if isinstance(dt, six.integer_types):
             dt = DiffTypes.from_index(dt)
         else:
             dt = DiffTypes.from_canonical(dt)
@@ -194,7 +203,7 @@ class DiffOptions(object):
         self.moved = moved
         self.duck_type = duck_type
         self.extraneous = extraneous
-        if isinstance(compare_filter, (MultiFieldSelector, types.NoneType)):
+        if isinstance(compare_filter, (MultiFieldSelector, type(None))):
             self.compare_filter = compare_filter
         else:
             self.compare_filter = MultiFieldSelector(*compare_filter)
@@ -206,7 +215,7 @@ class DiffOptions(object):
 
     def normalize_whitespace(self, value):
         """Normalizes whitespace; called if ``ignore_ws`` is true."""
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             return u" ".join(
                 x for x in re.split(r'\s+', value, flags=re.UNICODE) if
                 len(x)
@@ -217,7 +226,7 @@ class DiffOptions(object):
     def normalize_unf(self, value):
         """Normalizes Unicode Normal Form (to NFC); called if
         ``unicode_normal`` is true."""
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             return unicodedata.normalize('NFC', value)
         else:
             return value
@@ -235,7 +244,7 @@ class DiffOptions(object):
         as not specified.  Called if ``ignore_empty_slots`` is true.  Checking
         the value for emptiness happens *after* all other normalization.
         """
-        return (not value and isinstance(value, (basestring, types.NoneType)))
+        return (not value and isinstance(value, (six.string_types[0], type(None))))
 
     def normalize_text(self, value):
         """This hook is called by :py:meth:`DiffOptions.normalize_val` if the
@@ -255,7 +264,7 @@ class DiffOptions(object):
         return the scrubbed value or ``self._nothing`` to indicate that the
         value is not set.
         """
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             value = self.normalize_text(value)
         if self.ignore_empty_slots and self.value_is_empty(value):
             value = _nothing
@@ -496,16 +505,16 @@ def collection_generator(collection):
 
     elif hasattr(collection, "itertuples"):
         return collection.itertuples()
+    elif hasattr(collection, "iteritems"):
+        return collection.iteritems()
+    elif hasattr(collection, "items"):
+        return collection.items()
     elif hasattr(collection, "keys"):
 
         def generator():
             for key in collection.keys():
                 yield (key, collection[key])
 
-    elif hasattr(collection, "items"):
-        return collection.items()
-    elif hasattr(collection, "iteritems"):
-        return collection.iteritems()
     elif hasattr(collection, "__getitem__"):
 
         def generator():
@@ -973,7 +982,7 @@ def diff_iter(base, other, options=None, **kwargs):
 def _diff_iter(base, other, fs_a, fs_b, options):
     generators = []
 
-    for type_union, func in COMPARE_FUNCTIONS.iteritems():
+    for type_union, func in six.iteritems(COMPARE_FUNCTIONS):
         matches = (isinstance(base, type_union) if base is not _nothing else
                    isinstance(other, type_union))
         if matches:
