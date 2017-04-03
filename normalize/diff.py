@@ -128,7 +128,8 @@ class DiffOptions(object):
                  unicode_normal=True, unchanged=False,
                  ignore_empty_slots=False, ignore_empty_items=False,
                  duck_type=False, extraneous=False,
-                 compare_filter=None, fuzzy_match=True, moved=False):
+                 compare_filter=None, fuzzy_match=True, moved=False,
+                 recurse=False):
         """Create a new ``DiffOptions`` instance.
 
         args:
@@ -183,6 +184,11 @@ class DiffOptions(object):
                 Restrict comparison to the fields described by the passed
                 :py:class:`MultiFieldSelector` (or list of FieldSelector
                 lists/objects)
+
+            ``recurse=``\ *BOOL* During diff operations, do a deeper
+                comparison via recursion. This may be potentially very
+                expensive computationally if your records are large or
+                very nested.
         """
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
@@ -194,6 +200,7 @@ class DiffOptions(object):
         self.moved = moved
         self.duck_type = duck_type
         self.extraneous = extraneous
+        self.recurse = recurse
         if isinstance(compare_filter, (MultiFieldSelector, types.NoneType)):
             self.compare_filter = compare_filter
         else:
@@ -659,6 +666,22 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
             vals.add((pk, seen[pk]))
             rev_key[(pk, seen[pk])] = k
             seen[pk] += 1
+
+    if options.recurse:
+        # we can be sure that both records have these keys
+        set_a = set(rev_keys["a"].values())
+        set_b = set(rev_keys["b"].values())
+        shared_keys = set_a.intersection(set_b)
+        for key in shared_keys:
+            if (isinstance(propval_a, collections.Iterable) and
+               isinstance(propval_b, collections.Iterable)):
+
+                diffs = _diff_iter(propval_a[key], propval_b[key],
+                                   fs_a + [key], fs_b + [key], options)
+                for diff in diffs:
+                    yield diff
+            # early exit
+            return
 
     removed = values['a'] - values['b']
     added = values['b'] - values['a']
