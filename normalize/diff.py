@@ -666,7 +666,9 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
     if options.recurse:
         # we can be sure that both records have these keys
-        shared_keys = set(rev_keys["a"].values()).intersection(rev_keys["b"].values())
+        set_a = set(rev_keys["a"].values())
+        set_b = set(rev_keys["b"].values())
+        shared_keys = set_a.intersection(set_b)
         for key in shared_keys:
             if (isinstance(propval_a, collections.Iterable) and
                isinstance(propval_b, collections.Iterable)):
