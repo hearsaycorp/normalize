@@ -185,7 +185,10 @@ class DiffOptions(object):
                 :py:class:`MultiFieldSelector` (or list of FieldSelector
                 lists/objects)
 
-            ``recurse=``\ *BOOL* Do a deeper comparison via recursion
+            ``recurse=``\ *BOOL* During diff operations, do a deeper
+                comparison via recursion. This may be potentially very
+                expensive computationally if your records are large or
+                very nested.
         """
         self.ignore_ws = ignore_ws
         self.ignore_case = ignore_case
