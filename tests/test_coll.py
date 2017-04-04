@@ -15,6 +15,7 @@
 #
 
 
+from __future__ import absolute_import
 import unittest2
 
 from normalize import Property
@@ -26,6 +27,7 @@ from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonDictProperty
 from normalize.property.json import JsonListProperty
+import six
 
 
 class Item(Record):
@@ -254,7 +256,7 @@ class TestCollections(unittest2.TestCase):
     def test_json_coll(self):
         class JLR(Record):
             item_list = JsonListProperty(of=Item)
-            string_list = JsonListProperty(of=basestring)
+            string_list = JsonListProperty(of=six.string_types)
 
         class JDR(Record):
             item_map = JsonDictProperty(of=Item)

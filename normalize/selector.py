@@ -27,10 +27,11 @@ from normalize.coll import ListCollection
 from normalize.exc import FieldSelectorAttributeError
 from normalize.exc import FieldSelectorException
 from normalize.exc import FieldSelectorKeyError
+import six
 
 
 def _try_index(instance, selector):
-    if isinstance(instance, basestring):
+    if isinstance(instance, six.string_types):
         return False
     if isinstance(selector, (long, int)):
         return True
@@ -72,7 +73,7 @@ class FieldSelector(object):
             # Validate the selector
             if any(
                 e for e in expr_selectors if not (
-                    isinstance(e, basestring) or
+                    isinstance(e, six.string_types) or
                     isinstance(e, (int, long)) or e is None
                 )
             ):
@@ -86,7 +87,7 @@ class FieldSelector(object):
     def add_property(self, prop):
         """Extends the selector, adding a new attribute property lookup at the
         end, specified by name."""
-        if not isinstance(prop, basestring):
+        if not isinstance(prop, six.string_types):
             raise ValueError(
                 "properties must be specified by their string name"
             )
@@ -425,7 +426,7 @@ class FieldSelector(object):
             print fs + bar  # <FieldSelector: .foo.bar>
             print fs + [0]  # <FieldSelector: .foo[0]>
         """
-        if isinstance(other, (basestring, int, long)):
+        if isinstance(other, (six.string_types, int, long)):
             return type(self)(self.selectors + [other])
         elif isinstance(other, collections.Iterable):
             return type(self)(self.selectors + list(other))
@@ -599,7 +600,7 @@ class MultiFieldSelector(object):
         # sanity assertions follow
         head_types = set(type(x) for x in self.heads)
         self.has_int = int in head_types or long in head_types
-        self.has_string = any(issubclass(x, basestring) for x in head_types)
+        self.has_string = any(issubclass(x, six.string_types) for x in head_types)
         self.has_none = types.NoneType in head_types
         self.complete = self.has_none and self.heads[None] is all
         if self.has_none and (self.has_int or self.has_string):
@@ -750,7 +751,7 @@ class MultiFieldSelector(object):
             False
             >>>
         """
-        if isinstance(index, (basestring, types.IntType, types.NoneType)):
+        if isinstance(index, (six.string_types, types.IntType, types.NoneType)):
             return self.has_none or index in self.heads
         elif index is any:
             return True if len(self.heads) else False
