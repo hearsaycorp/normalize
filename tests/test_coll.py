@@ -256,7 +256,7 @@ class TestCollections(unittest2.TestCase):
     def test_json_coll(self):
         class JLR(Record):
             item_list = JsonListProperty(of=Item)
-            string_list = JsonListProperty(of=six.string_types)
+            string_list = JsonListProperty(of=six.string_types[0])
 
         class JDR(Record):
             item_map = JsonDictProperty(of=Item)

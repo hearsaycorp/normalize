@@ -34,7 +34,7 @@ import six
 
 class LegalPerson(Record):
     id = Property(required=True, isa=int)
-    name = Property(isa=six.string_types, coerce=str)
+    name = Property(isa=six.string_types[0], coerce=str)
 
 
 class Person(LegalPerson):
@@ -158,8 +158,8 @@ class Star(Record):
                       check=lambda i: 0 < i < 120000)
     name = Property(isa=str)
     spectral_type = Property(isa=str)
-    designations = DictProperty(of=six.string_types)
-    coordinates = DictProperty(of=list_of(six.string_types))
+    designations = DictProperty(of=six.string_types[0])
+    coordinates = DictProperty(of=list_of(six.string_types[0]))
 
 
 class Binary(Record):
