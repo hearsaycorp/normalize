@@ -30,7 +30,7 @@ setup(
     install_requires=('richenum>=1.0.0',),
     tests_require=('nose', 'unittest2'),
     test_suite="run_tests",
-    version='1.0.2',
+    version='1.0.3',
     url="http://hearsaycorp.github.io/normalize",
     classifiers=[
         'Development Status :: 5 - Production/Stable',

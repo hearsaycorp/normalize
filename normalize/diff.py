@@ -675,109 +675,107 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         for key in shared_keys:
             if (isinstance(propval_a, collections.Iterable) and
                isinstance(propval_b, collections.Iterable)):
-
                 diffs = _diff_iter(propval_a[key], propval_b[key],
                                    fs_a + [key], fs_b + [key], options)
+
                 for diff in diffs:
                     yield diff
-            # early exit
-            return
+    else:
+        removed = values['a'] - values['b']
+        added = values['b'] - values['a']
+        common = values['a'].intersection(values['b'])
 
-    removed = values['a'] - values['b']
-    added = values['b'] - values['a']
-    common = values['a'].intersection(values['b'])
+        if compare_values or force_descent:
+            descendable = (removed | added) if force_descent else common
 
-    if compare_values or force_descent:
-        descendable = (removed | added) if force_descent else common
-
-        for pk, seq in descendable:
-            if not force_descent or propval_a is not _nothing:
-                a_key = rev_keys['a'][pk, seq]
-                a_val = propval_a[a_key]
-            if not force_descent or propval_b is not _nothing:
-                b_key = rev_keys['b'][pk, seq]
-                b_val = propval_b[b_key]
-            if force_descent:
-                if propval_a is _nothing:
-                    a_key = b_key
-                    a_val = _nothing
-                else:
-                    b_key = a_key
-                    b_val = _nothing
-            selector_a = fs_a + a_key
-            selector_b = fs_b + b_key
-            for diff in _diff_iter(
-                a_val, b_val, selector_a, selector_b, options,
-            ):
-                yield diff
-
-        if not force_descent and options.fuzzy_match:
-            for a_pk_seq, b_pk_seq in _fuzzy_match(removed, added):
-                removed.remove(a_pk_seq)
-                added.remove(b_pk_seq)
-                a_key = rev_keys['a'][a_pk_seq]
-                a_val = propval_a[a_key]
-                b_key = rev_keys['b'][b_pk_seq]
-                b_val = propval_b[b_key]
+            for pk, seq in descendable:
+                if not force_descent or propval_a is not _nothing:
+                    a_key = rev_keys['a'][pk, seq]
+                    a_val = propval_a[a_key]
+                if not force_descent or propval_b is not _nothing:
+                    b_key = rev_keys['b'][pk, seq]
+                    b_val = propval_b[b_key]
+                if force_descent:
+                    if propval_a is _nothing:
+                        a_key = b_key
+                        a_val = _nothing
+                    else:
+                        b_key = a_key
+                        b_val = _nothing
                 selector_a = fs_a + a_key
                 selector_b = fs_b + b_key
-                any_diffs = False
                 for diff in _diff_iter(
                     a_val, b_val, selector_a, selector_b, options,
                 ):
-                    if diff.diff_type != DiffTypes.NO_CHANGE:
-                        any_diffs = True
                     yield diff
 
+            if not force_descent and options.fuzzy_match:
+                for a_pk_seq, b_pk_seq in _fuzzy_match(removed, added):
+                    removed.remove(a_pk_seq)
+                    added.remove(b_pk_seq)
+                    a_key = rev_keys['a'][a_pk_seq]
+                    a_val = propval_a[a_key]
+                    b_key = rev_keys['b'][b_pk_seq]
+                    b_val = propval_b[b_key]
+                    selector_a = fs_a + a_key
+                    selector_b = fs_b + b_key
+                    any_diffs = False
+                    for diff in _diff_iter(
+                        a_val, b_val, selector_a, selector_b, options,
+                    ):
+                        if diff.diff_type != DiffTypes.NO_CHANGE:
+                            any_diffs = True
+                        yield diff
+
+                    if options.moved and a_key != b_key:
+                        yield DiffInfo(
+                            diff_type=DiffTypes.MOVED,
+                            base=fs_a + [a_key],
+                            other=fs_b + [b_key],
+                        )
+                    elif options.unchanged and not any_diffs:
+                        yield DiffInfo(
+                            diff_type=DiffTypes.NO_CHANGE,
+                            base=fs_a + [a_key],
+                            other=fs_b + [b_key],
+                        )
+
+        if options.unchanged or options.moved:
+            unchanged = values['a'] & values['b']
+            for pk, seq in unchanged:
+                a_key = rev_keys['a'][pk, seq]
+                b_key = rev_keys['b'][pk, seq]
                 if options.moved and a_key != b_key:
                     yield DiffInfo(
                         diff_type=DiffTypes.MOVED,
                         base=fs_a + [a_key],
                         other=fs_b + [b_key],
                     )
-                elif options.unchanged and not any_diffs:
+                elif options.unchanged:
                     yield DiffInfo(
                         diff_type=DiffTypes.NO_CHANGE,
                         base=fs_a + [a_key],
                         other=fs_b + [b_key],
                     )
 
-    if options.unchanged or options.moved:
-        unchanged = values['a'] & values['b']
-        for pk, seq in unchanged:
-            a_key = rev_keys['a'][pk, seq]
-            b_key = rev_keys['b'][pk, seq]
-            if options.moved and a_key != b_key:
+        if not force_descent:
+            for pk, seq in removed:
+                a_key = rev_keys['a'][pk, seq]
+                selector = fs_a + [a_key]
                 yield DiffInfo(
-                    diff_type=DiffTypes.MOVED,
-                    base=fs_a + [a_key],
-                    other=fs_b + [b_key],
-                )
-            elif options.unchanged:
-                yield DiffInfo(
-                    diff_type=DiffTypes.NO_CHANGE,
-                    base=fs_a + [a_key],
-                    other=fs_b + [b_key],
+                    diff_type=DiffTypes.REMOVED,
+                    base=selector,
+                    other=fs_b,
                 )
 
-    if not force_descent:
-        for pk, seq in removed:
-            a_key = rev_keys['a'][pk, seq]
-            selector = fs_a + [a_key]
-            yield DiffInfo(
-                diff_type=DiffTypes.REMOVED,
-                base=selector,
-                other=fs_b,
-            )
-
-        for pk, seq in added:
-            b_key = rev_keys['b'][pk, seq]
-            selector = fs_b + [b_key]
-            yield DiffInfo(
-                diff_type=DiffTypes.ADDED,
-                base=fs_a,
-                other=selector,
-            )
+            for pk, seq in added:
+                b_key = rev_keys['b'][pk, seq]
+                selector = fs_b + [b_key]
+                yield DiffInfo(
+                    diff_type=DiffTypes.ADDED,
+                    base=fs_a,
+                    other=selector,
+                )
 
 
 def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
