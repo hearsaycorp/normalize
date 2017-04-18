@@ -18,11 +18,12 @@ from __future__ import absolute_import
 
 import unittest
 
-from normalize.coll import Collection
+from normalize.coll import list_of
 from normalize.diff import *
 from normalize.record import Record
 from normalize.record.json import JsonRecord
 from normalize.property import Property
+from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonListProperty
@@ -645,3 +646,25 @@ class TestRecordComparison(unittest.TestCase):
             ignore_empty_slots=True,
         )
         self.assertEqual(len(diffs), 1)
+
+    def test_recurse_remove_field(self):
+        class FakeSite(JsonRecord):
+            slug = Property()
+            _custom_tags = DictProperty(of=list_of(str))
+
+        fake1 = FakeSite(slug="my_site", _custom_tags={'languages': ['English']})
+        fake2 = FakeSite(slug="my_site", _custom_tags={})
+
+        diffs = fake1.diff(fake2, recurse=True)
+        self.assertDifferences(diffs, {"REMOVED ._custom_tags.languages"})
+
+    def test_recurse_add_field(self):
+        class FakeSite(JsonRecord):
+            slug = Property()
+            _custom_tags = DictProperty(of=list_of(str))
+
+        fake1 = FakeSite(slug="my_site", _custom_tags={})
+        fake2 = FakeSite(slug="my_site", _custom_tags={'languages': ['English']})
+
+        diffs = fake1.diff(fake2, recurse=True)
+        self.assertDifferences(diffs, {"ADDED ._custom_tags.languages"})
