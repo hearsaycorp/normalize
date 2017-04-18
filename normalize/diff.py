@@ -672,6 +672,8 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         set_a = set(rev_keys["a"].values())
         set_b = set(rev_keys["b"].values())
         shared_keys = set_a.intersection(set_b)
+        removed = set_a - set_b
+        added = set_b - set_a
         for key in shared_keys:
             if (isinstance(propval_a, collections.Iterable) and
                isinstance(propval_b, collections.Iterable)):
@@ -680,6 +682,16 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
 
                 for diff in diffs:
                     yield diff
+
+        for key in removed:
+            yield DiffInfo(diff_type=DiffTypes.REMOVED,
+                           base=fs_a + [key],
+                           other=fs_b)
+
+        for key in added:
+            yield DiffInfo(diff_type=DiffTypes.ADDED,
+                           base=fs_a,
+                           other=fs_b + [key])
     else:
         removed = values['a'] - values['b']
         added = values['b'] - values['a']
