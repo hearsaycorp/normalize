@@ -30,6 +30,7 @@ from normalize.property.types import IntProperty
 from normalize.property.types import StringProperty
 from normalize.property.types import UnicodeProperty
 from normalize.selector import MultiFieldSelector
+import six
 
 
 class Name(Record):
@@ -225,7 +226,7 @@ class TestDiffWithMultiFieldSelector(unittest2.TestCase):
 
         class MyDiffOptions(DiffOptions):
             def normalize_slot(self, val, prop):
-                if "phone" in prop.name and isinstance(val, basestring):
+                if "phone" in prop.name and isinstance(val, six.string_types):
                     val = normalize_phone(val)
                 return super(MyDiffOptions, self).normalize_slot(val, prop)
 

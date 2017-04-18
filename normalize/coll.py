@@ -23,6 +23,7 @@ import types
 
 import normalize.exc as exc
 from normalize.record import Record
+import six
 
 """This class contains container classes which can act like collections but
 conform to this package's metaclass API"""
@@ -214,7 +215,7 @@ class DictCollection(KeyedCollection):
 
     @classmethod
     def coll_to_tuples(cls, coll):
-        if isinstance(coll, basestring):
+        if isinstance(coll, six.string_types):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
@@ -310,7 +311,7 @@ class ListCollection(KeyedCollection):
         sequences and iterators.  Returns ``(*int*, Value)``.  Does not coerce
         items.
         """
-        if isinstance(coll, basestring):
+        if isinstance(coll, six.string_types):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,

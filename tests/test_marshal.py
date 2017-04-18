@@ -40,6 +40,7 @@ from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonDictProperty
 from normalize.property.json import JsonListProperty
+import six
 
 
 class CheeseRecord(Record):
@@ -55,12 +56,12 @@ class CheeseCupboardRecord(Record):
     favorites = DictProperty(of=CheeseRecord)
 
 
-json_data_number_types = (basestring, int, long, float)
+json_data_number_types = (six.string_types, int, long, float)
 
 
 def decode_json_number(str_or_num):
     """Returns a precise number object from a string or number"""
-    if isinstance(str_or_num, basestring):
+    if isinstance(str_or_num, six.string_types):
         if re.match(r'-?\d+$', str_or_num):
             return long(str_or_num)
         if not re.match(r'-?\d+(\.\d+)?([eE][\-+]?\d+)?$', str_or_num):
@@ -98,9 +99,9 @@ class TestRecordMarshaling(unittest2.TestCase):
     def assertJsonDataEqual(self, got, wanted, path=""):
         """Test that two JSON-data structures are the same.  We can't use
         simple assertEqual, because '23' and 23 should compare the same."""
-        if isinstance(got, basestring):
+        if isinstance(got, six.string_types):
             got = unicode(got)
-        if isinstance(wanted, basestring):
+        if isinstance(wanted, six.string_types):
             wanted = unicode(wanted)
 
         pdisp = path or "top level"

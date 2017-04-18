@@ -13,6 +13,7 @@
 # normalize.  If not, refer to the upstream repository at
 # http://github.com/hearsaycorp/normalize
 
+from __future__ import absolute_import
 import copy
 from datetime import datetime
 import types
@@ -28,11 +29,12 @@ from normalize.property.coll import ListProperty
 from normalize.property.types import DatetimeProperty
 from normalize.property.types import FloatProperty
 from normalize.property.types import StringProperty
+import six
 
 
 class LegalPerson(Record):
     id = Property(required=True, isa=int)
-    name = Property(isa=basestring, coerce=str)
+    name = Property(isa=six.string_types[0], coerce=str)
 
 
 class Person(LegalPerson):
@@ -144,7 +146,7 @@ wall_two = Wall(
 
 
 def fix_id(val):
-    if isinstance(val, basestring) and val.upper().startswith("HIP"):
+    if isinstance(val, six.string_types) and val.upper().startswith("HIP"):
         return int(val.upper().lstrip("HIP "))
     else:
         return int(val)
@@ -156,8 +158,8 @@ class Star(Record):
                       check=lambda i: 0 < i < 120000)
     name = Property(isa=str)
     spectral_type = Property(isa=str)
-    designations = DictProperty(of=basestring)
-    coordinates = DictProperty(of=list_of(basestring))
+    designations = DictProperty(of=six.string_types[0])
+    coordinates = DictProperty(of=list_of(six.string_types[0]))
 
 
 class Binary(Record):

@@ -19,6 +19,7 @@ from __future__ import absolute_import
 
 import normalize.exc as exc
 from normalize.property import Property
+import six
 
 
 class RecordMeta(type):
@@ -68,7 +69,7 @@ class RecordMeta(type):
             good_props = []
             if proplist:
                 for prop in proplist:
-                    if isinstance(prop, basestring):
+                    if isinstance(prop, six.string_types):
                         prop = properties[prop]
                     if not isinstance(prop, Property) or (
                         prop not in all_properties

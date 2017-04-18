@@ -17,12 +17,14 @@
 """``normalize.property.types`` provides an assortment of pre-generated
 types"""
 
+from __future__ import absolute_import
 import datetime
 import numbers
 from sys import maxint
 
 from . import make_property_type
 from ..subtype import subtype
+import six
 
 try:
     from dateutil.parser import parse as parse_datetime
@@ -80,7 +82,7 @@ NumberProperty = make_property_type(
     },
 )
 StringProperty = make_property_type(
-    "StringProperty", isa=basestring, trait_name="str",
+    "StringProperty", isa=six.string_types, trait_name="str",
     attrs={
         "__doc__": "A property which must be a ``basestring`` or "
                    "``unicode``, and if not, throws a coerce error",
@@ -108,7 +110,7 @@ def coerce_datetime(not_a_datetime):
     if isinstance(not_a_datetime, date):
         tt = not_a_datetime.timetuple()
         return datetime.datetime(*(tt[0:6]))
-    elif isinstance(not_a_datetime, basestring):
+    elif isinstance(not_a_datetime, six.string_types):
         return parse_datetime(not_a_datetime)
     else:
         raise ValueError(
@@ -126,7 +128,7 @@ def coerce_date(not_a_date):
 
 
 def coerce_number(not_a_number):
-    if isinstance(not_a_number, basestring):
+    if isinstance(not_a_number, six.string_types):
         try:
             return long(not_a_number)
         except ValueError:

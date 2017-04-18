@@ -35,6 +35,7 @@ from normalize.record import Record
 from normalize.record import record_id
 from normalize.selector import FieldSelector
 from normalize.selector import MultiFieldSelector
+import six
 
 
 class DiffTypes(OrderedRichEnum):
@@ -242,7 +243,7 @@ class DiffOptions(object):
         as not specified.  Called if ``ignore_empty_slots`` is true.  Checking
         the value for emptiness happens *after* all other normalization.
         """
-        return (not value and isinstance(value, (basestring, types.NoneType)))
+        return (not value and isinstance(value, (six.string_types, types.NoneType)))
 
     def normalize_text(self, value):
         """This hook is called by :py:meth:`DiffOptions.normalize_val` if the
@@ -262,7 +263,7 @@ class DiffOptions(object):
         return the scrubbed value or ``self._nothing`` to indicate that the
         value is not set.
         """
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             value = self.normalize_text(value)
         if self.ignore_empty_slots and self.value_is_empty(value):
             value = _nothing

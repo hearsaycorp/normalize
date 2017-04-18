@@ -28,6 +28,7 @@ from normalize import Record
 from normalize import V1Property
 import normalize.exc as exc
 from normalize.visitor import VisitorPattern
+import six
 
 
 class TestRecords(unittest2.TestCase):
@@ -41,7 +42,7 @@ class TestRecords(unittest2.TestCase):
             placeholder = Property()
             aux_placeholder = Property(default='')
             age = Property(default=0)
-            name = V1Property(isa=basestring)
+            name = V1Property(isa=six.string_types)
 
         sophie = SophiesRecord()
         with self.assertRaises(AttributeError):
@@ -206,7 +207,7 @@ class TestRecords(unittest2.TestCase):
 
         class SafeRecord(Record):
             maybe_int = V1Property(isa=int)
-            maybe_str = V1Property(isa=basestring, json_name="maybeStr")
+            maybe_str = V1Property(isa=six.string_types, json_name="maybeStr")
 
         self.assertEqual(type(SafeRecord.maybe_int).__name__, "V1Property")
         # FIXME: the name combination code should know that 'Safe' is
