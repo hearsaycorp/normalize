@@ -13,6 +13,8 @@
 # normalize.  If not, refer to the upstream repository at
 # http://github.com/hearsaycorp/normalize
 
+from past.builtins import basestring
+from builtins import object
 import copy
 from datetime import datetime
 import types
@@ -74,7 +76,7 @@ class Wall(Record):
 # for testing comparison with "alien" classes
 class Spartan(object):
     def __init__(self, data):
-        for k, v in data.iteritems():
+        for k, v in data.items():
             setattr(self, k, v)
 
 
@@ -234,4 +236,4 @@ acent = StarSystem(
 class PullRequest(Record):
     number = Property()
     created_at = DatetimeProperty(default=lambda: datetime.now())
-    merged_at = DatetimeProperty(isa=(datetime, types.NoneType))
+    merged_at = DatetimeProperty(isa=(datetime, type(None)))

@@ -14,6 +14,7 @@
 # http://github.com/hearsaycorp/normalize
 #
 
+from builtins import str
 import inspect
 import sys
 import unittest2

@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 
+from builtins import str
 import unittest
 
 from normalize.coll import list_of
@@ -27,7 +28,15 @@ from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.property.json import JsonProperty
 from normalize.property.json import JsonListProperty
-from testclasses import *
+
+from .testclasses import (
+    LegalPerson,
+    Person,
+    Circle,
+    Spartan,
+    wall_one,
+    wall_two
+)
 
 
 class TestRecordComparison(unittest.TestCase):
@@ -330,7 +339,7 @@ class TestRecordComparison(unittest.TestCase):
         )
 
         sparta = dict()
-        for relation, member in person_b.family.items():
+        for relation, member in list(person_b.family.items()):
             sparta[relation] = Spartan(member.__getstate__())
 
         self.assertDifferences(

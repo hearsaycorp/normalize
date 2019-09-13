@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+unittest2 = "*"
+pytest = "==4.6.5"
+more-itertools = "==5.0.0"
+pathlib2 = "*"
+configparser = "*"
+
+[packages]
+richenum = ">=1.0.4"
+six = "*"
+future = "*"
+
+[scripts]
+test = "pipenv run pytest"
+install = "pipenv install --dev"

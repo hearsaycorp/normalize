@@ -16,7 +16,9 @@
 
 from __future__ import absolute_import
 
+from builtins import str, zip
 from datetime import datetime
+import six
 import re
 import unittest
 
@@ -33,6 +35,8 @@ from normalize.coll import list_of
 from normalize.property.coll import DictProperty
 from normalize.property.coll import ListProperty
 from normalize.selector import MultiFieldSelector
+
+from .testclasses import Person, wall_one
 
 
 class MockChildRecord(JsonRecord):
@@ -94,7 +98,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             ValueError, "FieldSelectors can only contain ints/longs, "
             "strings, and None"
         ):
-            FieldSelector({"foo": "bar"}.iteritems())
+            FieldSelector(iter({"foo": "bar"}.items()))
         with self.assertRaisesRegexp(
             ValueError, "FieldSelectors can only contain ints/longs, "
             "strings, and None"
@@ -357,7 +361,6 @@ class TestStructableFieldSelector(unittest.TestCase):
 
     def test_dict(self):
         from normalize.coll import dict_of
-        from testclasses import Person
         Rolodeck = dict_of(Person)
 
         deck = Rolodeck({
@@ -529,7 +532,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             foo = Property(isa=Caret)
             baz = Property()
             quux = DictProperty(of=str)
-            frop = DictProperty(of=list_of(unicode))
+            frop = DictProperty(of=list_of(six.text_type))
 
         full = Pilcrow(
             bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],
@@ -682,7 +685,6 @@ class TestStructableFieldSelector(unittest.TestCase):
 
     def test_mfs_apply_ops(self):
         from copy import deepcopy
-        from testclasses import wall_one
         from normalize.diff import DiffTypes
 
         selectors = (

@@ -15,7 +15,11 @@
 #
 
 from __future__ import absolute_import
+from __future__ import print_function
+import six
 
+from builtins import str, zip, range
+from past.builtins import basestring
 import json
 from os import environ
 import pickle
@@ -55,14 +59,14 @@ class CheeseCupboardRecord(Record):
     favorites = DictProperty(of=CheeseRecord)
 
 
-json_data_number_types = (basestring, int, long, float)
+json_data_number_types = (basestring, float) + six.integer_types
 
 
 def decode_json_number(str_or_num):
     """Returns a precise number object from a string or number"""
     if isinstance(str_or_num, basestring):
         if re.match(r'-?\d+$', str_or_num):
-            return long(str_or_num)
+            return six.integer_types[-1](str_or_num)
         if not re.match(r'-?\d+(\.\d+)?([eE][\-+]?\d+)?$', str_or_num):
             raise ValueError("invalid json number: '%s'" % str_or_num)
         return float(str_or_num)
@@ -99,9 +103,9 @@ class TestRecordMarshaling(unittest2.TestCase):
         """Test that two JSON-data structures are the same.  We can't use
         simple assertEqual, because '23' and 23 should compare the same."""
         if isinstance(got, basestring):
-            got = unicode(got)
+            got = six.text_type(got)
         if isinstance(wanted, basestring):
-            wanted = unicode(wanted)
+            wanted = six.text_type(wanted)
 
         pdisp = path or "top level"
 
@@ -148,7 +152,7 @@ class TestRecordMarshaling(unittest2.TestCase):
                 )
             )
         elif "SHOW_JSON_TESTS" in environ:
-            print "%s: ok (%r)" % (pdisp, got)
+            print("%s: ok (%r)" % (pdisp, got))
 
     def test_assertJsonDataEqual(self):
         """Answering the koan, "Who will test the tests themselves?"

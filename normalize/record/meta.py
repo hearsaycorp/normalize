@@ -17,6 +17,7 @@
 
 from __future__ import absolute_import
 
+from past.builtins import basestring
 import normalize.exc as exc
 from normalize.property import Property
 
@@ -36,7 +37,7 @@ class RecordMeta(type):
 
         for base in bases:
             if hasattr(base, "properties"):
-                for propname, prop in base.properties.iteritems():
+                for propname, prop in base.properties.items():
                     if propname in properties:
                         raise exc.MultipleInheritanceClash(
                             prop=prop,
@@ -48,7 +49,7 @@ class RecordMeta(type):
         local_props = dict()
         aux_props = dict()
 
-        for attrname, attrval in attrs.items():
+        for attrname, attrval in list(attrs.items()):
             # don't allow clobbering of these meta-properties in class
             # definitions
             if attrname in frozenset(('properties', 'eager_properties')):
@@ -84,16 +85,16 @@ class RecordMeta(type):
         attrs['primary_key'] = coerce_prop_list('primary_key')
         attrs['properties'] = properties
         attrs['_sorted_properties'] = sorted(
-            list(x for x in properties.values() if not x.extraneous),
+            list(x for x in list(properties.values()) if not x.extraneous),
             key=lambda x: x.name,
         )
         attrs['eager_properties'] = frozenset(
-            k for k, v in properties.iteritems() if v.eager_init()
+            k for k, v in properties.items() if v.eager_init()
         )
 
         self = super(RecordMeta, mcs).__new__(mcs, name, bases, attrs)
 
-        for propname, prop in local_props.iteritems():
+        for propname, prop in local_props.items():
             prop.bind(self)
 
         return self
