@@ -15,6 +15,8 @@
 #
 
 
+import six
+from builtins import object
 from datetime import date
 from datetime import datetime
 import sys
@@ -26,6 +28,7 @@ from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.types import *
 from normalize.subtype import subtype
+from future.utils import with_metaclass
 
 
 class TestTypeLibrary(unittest2.TestCase):
@@ -55,7 +58,7 @@ class TestTypeLibrary(unittest2.TestCase):
         self.assertEqual(demo.seq, 0)
         demo.name = "Foo Bar"
         self.assertEqual(demo.fullname, "Foo Bar")
-        self.assertIsInstance(demo.fullname, unicode)
+        self.assertIsInstance(demo.fullname, six.text_type)
 
         # FIXME: the actual errors returned in this situation are obtuse
         with self.assertRaises(TypeError):
@@ -65,14 +68,14 @@ class TestTypeLibrary(unittest2.TestCase):
 
         # test upgrade
         demo.fullname = str("foo")
-        self.assertIsInstance(demo.fullname, unicode)
+        self.assertIsInstance(demo.fullname, six.text_type)
 
         # no downgrade is attempted (or desirable tbh)
         demo.name = u"Bob"
-        self.assertIsInstance(demo.name, unicode)
+        self.assertIsInstance(demo.name, six.text_type)
 
         demo.num = "123"
-        self.assertIsInstance(demo.num, long)
+        self.assertIsInstance(demo.num, six.integer_types)
         demo.num = "123.0"
         self.assertIsInstance(demo.num, float)
 
@@ -110,7 +113,7 @@ class TestTypeLibrary(unittest2.TestCase):
         with self.assertRaises(TypeError):
             p.integer = "foo"
         p.integer = 1e20
-        self.assertEqual(p.integer, 100000000000000000000L)
+        self.assertEqual(p.integer, 100000000000000000000)
 
         from normalize import from_json, to_json
         p2 = from_json(Props, to_json(p))
@@ -121,6 +124,7 @@ class TestSubTypes(unittest2.TestCase):
     """Proof of concept test for coercing between sub-types of real types.
     """
     def test_sub_types(self):
+        long_type = six.integer_types[-1]
         NaturalNumber = subtype(
             of=int,
             name="NaturalNumber",
@@ -133,7 +137,7 @@ class TestSubTypes(unittest2.TestCase):
         self.assertEqual(str(NaturalNumber), "<subtype NaturalNumber of int>")
 
         BigNaturalNumber = subtype(
-            of=long,
+            of=long_type,
             name="BigNaturalNumber",
             where=lambda i: i > 0,
         )
@@ -142,8 +146,8 @@ class TestSubTypes(unittest2.TestCase):
             count = Property(
                 isa=(NaturalNumber, BigNaturalNumber),
                 coerce=lambda x: (
-                    abs(int(x)) if abs(long(x)) < sys.maxint else
-                    abs(long(x))
+                    abs(int(x)) if abs(long_type(x)) < sys.maxsize else
+                    abs(long_type(x))
                 ),
                 check=lambda N: N > 0,
             )
@@ -153,7 +157,7 @@ class TestSubTypes(unittest2.TestCase):
         nbo.count = "256"
         self.assertEqual(nbo.count, 256)
         nbo.count = 1.832e19
-        self.assertEqual(nbo.count, 18320000000000000000L)
+        self.assertEqual(nbo.count, long_type(18320000000000000000))
         # type matches, but subtype doesn't
         nbo.count = -10
         self.assertEqual(nbo.count, 10)
@@ -205,9 +209,7 @@ class TestSubTypes(unittest2.TestCase):
     def test_subtype_abstract(self):
         import abc
 
-        class AbstractClass(object):
-            __metaclass__ = abc.ABCMeta
-
+        class AbstractClass(with_metaclass(abc.ABCMeta, object)):
             @abc.abstractmethod
             def define_me(self):
                 pass

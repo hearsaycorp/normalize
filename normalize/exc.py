@@ -41,11 +41,11 @@ class StringFormatException(NormalizeError):
                 typename=type(self).__name__,
                 received=repr(args),
             )
-        except KeyError, e:
+        except KeyError as e:
             raise KeywordExceptionFormatError(
                 typename=type(self).__name__,
-                missing=e[0],
-                passed=repr(kwargs.keys()),
+                missing=e.args[0],
+                passed=repr(list(kwargs.keys())),
             )
 
     def __str__(self):
@@ -69,7 +69,7 @@ class StringFormatException(NormalizeError):
             "exc." if self.__module__.endswith(".exc") else "",
             type(self).__name__, ", ".join(
                 tuple("%r" % x for x in self.args) +
-                tuple("%s=%r" % (k, v) for k, v in self.kwargs.iteritems())
+                tuple("%s=%r" % (k, v) for k, v in self.kwargs.items())
             )
         )
 

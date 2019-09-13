@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 
+from builtins import object
 from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.coll import DictProperty

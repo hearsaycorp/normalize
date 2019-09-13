@@ -16,7 +16,10 @@
 
 from __future__ import absolute_import
 
+from builtins import str, range
+from past.builtins import basestring
 from datetime import datetime
+import six
 import json
 from time import time
 import types
@@ -26,19 +29,21 @@ import normalize.exc as exc
 from normalize.coll import list_of
 from normalize.record import Record
 from normalize.visitor import VisitorPattern
-from testclasses import acent
-from testclasses import acent_attributes
-from testclasses import JsonStarList
-from testclasses import maia
-from testclasses import NamedStarList
-from testclasses import PullRequest
-from testclasses import StarList
-from testclasses import StarSystem
-from testclasses import Wall
-from testclasses import wall_one
 
+from .testclasses import (
+    acent,
+    acent_attributes,
+    JsonStarList,
+    maia,
+    NamedStarList,
+    PullRequest,
+    StarList,
+    StarSystem,
+    Wall,
+    wall_one
+)
 
-JSON_CAN_DUMP = (basestring, int, float, long, dict, list, types.NoneType)
+JSON_CAN_DUMP = (basestring, float, dict, list, type(None)) + six.integer_types
 
 
 class SimpleDumper(VisitorPattern):

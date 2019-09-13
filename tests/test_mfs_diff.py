@@ -16,6 +16,8 @@
 
 from __future__ import absolute_import
 
+from builtins import str, range
+from past.builtins import basestring
 from datetime import date
 import re
 import unittest2

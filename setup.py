@@ -18,6 +18,19 @@ get support for marshaling to and from JSON data.  You can also compare
 objects to see if they have changed in meaningful ways.
 """
 
+install_requires=[
+    'richenum>=1.0.0',
+    'six',
+    'future'
+]
+
+tests_require=[
+    'pytest>=4.6.5',
+    'more-itertools>=5.0.0',
+    'unittest2',
+    'pathlib2',
+    'configparser'
+]
 
 setup(
     author='Hearsay Social',
@@ -27,10 +40,10 @@ setup(
     long_description=long_description,
     name='normalize',
     packages=find_packages(),
-    install_requires=('richenum>=1.0.0',),
-    tests_require=('nose', 'unittest2'),
-    test_suite="run_tests",
-    version='1.0.4',
+    install_requires=install_requires,
+    tests_require=tests_require,
+    test_suite="tests",
+    version='2.0.0',
     url="http://hearsaycorp.github.io/normalize",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -38,6 +51,10 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
