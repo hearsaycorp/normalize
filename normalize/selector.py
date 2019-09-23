@@ -370,7 +370,7 @@ class FieldSelector(object):
         return self.selectors == other.selectors
 
     def __hash__(self):
-        return object.__hash__(self)
+        return super(FieldSelector, self).__hash__()
 
     def __ne__(self, other):
         """
