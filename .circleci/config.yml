@@ -4,7 +4,6 @@ workflows:
   test:
     jobs:
       - test-2.7
-      - test-3.5
       - test-3.6
       - test-3.7
 jobs:
@@ -27,13 +26,6 @@ jobs:
           name: run tests
           command: |
             python setup.py test
-
-  test-3.5:
-    <<: *test-template
-    docker:
-      - image: circleci/python:3.5
-    environment:
-      TRAVIS_PYTHON_VERSION: 3.5
 
   test-3.6:
     <<: *test-template
