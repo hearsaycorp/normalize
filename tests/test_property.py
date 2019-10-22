@@ -18,6 +18,8 @@
 
 from __future__ import absolute_import
 
+from builtins import zip, range
+import six
 import re
 import types
 import unittest2
@@ -164,7 +166,7 @@ class TestProperties(unittest2.TestCase):
             id = Property(required=True, isa=int)
             natural = SafeProperty(check=lambda i: i > 0)
             must = SafeProperty(required=True)
-            rbn = SafeProperty(required=True, isa=(str, types.NoneType))
+            rbn = SafeProperty(required=True, isa=(str, type(None)))
 
         with self.assertRaises(ValueError):
             fr = FussyRecord()
@@ -262,9 +264,9 @@ class TestProperties(unittest2.TestCase):
         class CustomColl(ListCollection):
             @classmethod
             def coll_to_tuples(cls, values):
-                if isinstance(values, types.StringType):
+                if isinstance(values, six.string_types):
                     values = values.split(',')
-                    for i, v in zip(xrange(0, len(values)), values):
+                    for i, v in zip(range(0, len(values)), values):
                         yield i, {'name': v}
                 else:
                     for x in super(CustomColl, cls).coll_to_tuples(values):

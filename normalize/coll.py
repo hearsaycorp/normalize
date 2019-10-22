@@ -20,6 +20,9 @@ from __future__ import absolute_import
 import collections
 import sys
 import types
+import six
+
+from builtins import range, object
 
 import normalize.exc as exc
 from normalize.record import Record
@@ -214,20 +217,21 @@ class DictCollection(KeyedCollection):
 
     @classmethod
     def coll_to_tuples(cls, coll):
-        if isinstance(coll, basestring):
+        if isinstance(coll, six.string_types):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
             )
         if isinstance(coll, collections.Mapping):
-            for k, v in coll.iteritems():
+            for k, v in coll.items():
                 yield k, v
         elif isinstance(coll, collections.Sequence):
             i = 0
             for v in coll:
                 yield (i, v)
                 i += 1
-        elif hasattr(coll, "next") and callable(coll.next):
+        elif ((hasattr(coll, "next") and callable(coll.next)) or
+              (hasattr(coll, "__next__") and callable(coll.__next__))):
             i = 0
             for v in coll:
                 if isinstance(v, tuple) and len(v) == 2:
@@ -237,7 +241,7 @@ class DictCollection(KeyedCollection):
                 i += 1
 
     def itertuples(self):
-        return self._values.iteritems()
+        return iter(self._values.items())
 
     def iteritems(self):
         return self.itertuples()
@@ -255,10 +259,10 @@ class DictCollection(KeyedCollection):
         return (v for k, v in self.itertuples())
 
     def keys(self):
-        return self._values.keys()
+        return list(self._values.keys())
 
     def values(self):
-        return self._values.values()
+        return list(self._values.values())
 
     def pop(self, k):
         return self._values.pop(k)
@@ -269,12 +273,12 @@ class DictCollection(KeyedCollection):
     def update(self, iterable=None, **kw):
         keys = getattr(iterable, "keys", None)
         if keys and callable(keys):
-            for k in iterable.keys():
+            for k in list(iterable.keys()):
                 self[k] = self.coerce_value(iterable[k])
         elif iterable is not None:
             for k, v in iterable:
                 self[k] = self.coerce_value(v)
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             self[k] = self.coerce_value(v)
 
     def __repr__(self):
@@ -310,7 +314,7 @@ class ListCollection(KeyedCollection):
         sequences and iterators.  Returns ``(*int*, Value)``.  Does not coerce
         items.
         """
-        if isinstance(coll, basestring):
+        if isinstance(coll, six.string_types):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
@@ -362,7 +366,7 @@ class ListCollection(KeyedCollection):
             j += len_
             if j < 0:
                 j = 0
-        for k in xrange(i, j):
+        for k in range(i, j):
             if self[k] == x:
                 return k
         raise ValueError("%r is not in list" % x)

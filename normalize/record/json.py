@@ -16,13 +16,15 @@
 
 
 from __future__ import absolute_import
+import six
 
+from builtins import str
+from past.builtins import basestring
 import collections
 from copy import deepcopy
 import inspect
 import json
 import re
-import types
 
 from normalize.coll import Collection
 from normalize.coll import DictCollection as RecordDict
@@ -83,7 +85,7 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
             recordtype=record_type,
         )
     unknown_keys = set(json_struct.keys())
-    for propname, prop in record_type.properties.iteritems():
+    for propname, prop in record_type.properties.items():
         # think "does" here rather than "is"; the slot does JSON
         if isinstance(prop, JsonProperty):
             json_name = prop.json_name
@@ -206,14 +208,14 @@ def to_json(record, extraneous=True, prop=None):
     elif isinstance(record, Collection):
         if isinstance(record, RecordDict):
             return dict(
-                (k, _json_data(v, extraneous)) for k, v in record.items()
+                (k, _json_data(v, extraneous)) for k, v in list(record.items())
             )
         else:
             return list(_json_data(x, extraneous) for x in record)
 
     elif isinstance(record, Record):
         rv_dict = {}
-        for propname, prop in type(record).properties.iteritems():
+        for propname, prop in type(record).properties.items():
             if not extraneous and prop.extraneous:
                 pass
             elif prop.slot_is_empty(record):
@@ -226,18 +228,18 @@ def to_json(record, extraneous=True, prop=None):
                     pass
         return rv_dict
 
-    elif isinstance(record, long):
+    elif isinstance(record, six.integer_types):
         return str(record) if abs(record) > 2**50 else record
 
     elif isinstance(record, dict):
         return dict(
-            (k, _json_data(v, extraneous)) for k, v in record.iteritems()
+            (k, _json_data(v, extraneous)) for k, v in record.items()
         )
 
     elif isinstance(record, (list, tuple, set, frozenset)):
         return list(_json_data(x, extraneous) for x in record)
 
-    elif isinstance(record, (basestring, int, float, types.NoneType)):
+    elif isinstance(record, (basestring, int, float, type(None))):
         return record
 
     else:
@@ -315,7 +317,7 @@ class JsonRecord(Record):
         if hasattr(self, "unknown_json_keys"):
             prop = type(self).properties['unknown_json_keys']
             if extraneous or not prop.extraneous:
-                for k, v in self.unknown_json_keys.iteritems():
+                for k, v in self.unknown_json_keys.items():
                     if k not in jd:
                         jd[k] = to_json(v, extraneous)
         return jd
@@ -554,7 +556,7 @@ class AutoJsonRecord(JsonRecord):
         if 'unknown_json_keys' in kwargs:
             kwargs['unknown_json_keys'] = {
                 cls.convert_json_key_in(k): cls.auto_upgrade_any(v) for
-                k, v in kwargs['unknown_json_keys'].items()
+                k, v in list(kwargs['unknown_json_keys'].items())
             }
         return kwargs
 
@@ -563,7 +565,7 @@ class AutoJsonRecord(JsonRecord):
         if hasattr(self, "unknown_json_keys"):
             prop = type(self).properties['unknown_json_keys']
             if extraneous or not prop.extraneous:
-                for k, v in self.unknown_json_keys.iteritems():
+                for k, v in self.unknown_json_keys.items():
                     k = type(self).convert_json_key_out(k)
                     if k not in jd:
                         jd[k] = to_json(v, extraneous)

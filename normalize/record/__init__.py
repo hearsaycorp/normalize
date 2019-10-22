@@ -16,19 +16,20 @@
 
 from __future__ import absolute_import
 
+from builtins import object
 import normalize.exc as exc
 from normalize.identity import record_id
 from normalize.record.meta import RecordMeta
+from future.utils import with_metaclass
 
 
 class _Unset(object):
     pass
 
 
-class Record(object):
+class Record(with_metaclass(RecordMeta, object)):
     """Base class for normalize instances and collections.
     """
-    __metaclass__ = RecordMeta
 
     def __init__(self, init_dict=None, **kwargs):
         """Instantiates a new ``Record`` type.
@@ -52,7 +53,7 @@ class Record(object):
             raise exc.AmbiguousConstruction()
         if not init_dict:
             init_dict = kwargs
-        for prop, val in init_dict.iteritems():
+        for prop, val in init_dict.items():
             meta_prop = type(self).properties.get(prop, None)
             if meta_prop is None:
                 raise exc.PropertyNotKnown(
@@ -124,7 +125,7 @@ class Record(object):
         fine-tuned."""
         if type(self) != type(other):
             return False
-        for propname, prop in type(self).properties.iteritems():
+        for propname, prop in type(self).properties.items():
             if not prop.extraneous:
                 if getattr(self, propname, _Unset) != getattr(
                     other, propname, _Unset

@@ -1,4 +1,5 @@
 
+from builtins import str, object
 import normalize
 
 
@@ -123,7 +124,7 @@ class EmptyVal(object):
                 self._member_type = placeholder(any)
         return self._member_type
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
 
     def _typelist(self):

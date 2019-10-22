@@ -16,8 +16,8 @@
 
 from __future__ import absolute_import
 
+from builtins import object
 import collections
-import types
 
 from normalize.coll import Collection
 import normalize.exc as exc
@@ -77,7 +77,7 @@ class Visitor(object):
 
         if visit_filter is None:
             visit_filter = filter
-        if isinstance(visit_filter, (MultiFieldSelector, types.NoneType)):
+        if isinstance(visit_filter, (MultiFieldSelector, type(None))):
             self.visit_filter = visit_filter
         else:
             self.visit_filter = MultiFieldSelector(*visit_filter)
@@ -344,7 +344,7 @@ class VisitorPattern(object):
 
         if issubclass(value_type, Collection) and aggregated is not None:
             if all(visitor.is_filtered(prop) for prop in
-                   value_type.properties.values()):
+                   list(value_type.properties.values())):
                 reduced = aggregated
             else:
                 if reduced.get("values", False):
@@ -409,7 +409,7 @@ class VisitorPattern(object):
         is_coll = issubclass(value_type, Collection)
         is_record = issubclass(value_type, Record) and any(
             not visitor.is_filtered(prop) for prop in
-            value_type.properties.values()
+            list(value_type.properties.values())
         )
 
         if is_record and not isinstance(value, cls.grok_mapping_types):
@@ -641,7 +641,7 @@ class VisitorPattern(object):
     @classmethod
     def map_record(cls, visitor, get_value, record_type):
         rv = visitor.copy()  # expensive?
-        for name, prop in record_type.properties.iteritems():
+        for name, prop in record_type.properties.items():
             if rv.is_filtered(prop):
                 continue
 

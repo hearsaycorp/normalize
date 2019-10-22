@@ -1,0 +1,42 @@
+version: 2
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-2.7
+      - test-3.6
+      - test-3.7
+jobs:
+  test-2.7: &test-template
+    filters:
+      branches:
+        ignore: master
+    environment:
+      TRAVIS_PYTHON_VERSION: 2.7
+    docker:
+      - image: circleci/python:2.7
+    steps:
+      - checkout
+      - run:
+          name: install dependencies
+          command: |
+            pip install --user pytest>=4.6.5 more-itertools>=5.0.0 unittest2 pathlib2 configparser
+            pip install --user -e .
+      - run:
+          name: run tests
+          command: |
+            python setup.py test
+
+  test-3.6:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.6
+    environment:
+      TRAVIS_PYTHON_VERSION: 3.6
+
+  test-3.7:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      TRAVIS_PYTHON_VERSION: 3.7

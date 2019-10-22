@@ -15,6 +15,7 @@
 #
 
 
+from past.builtins import basestring
 import unittest2
 
 from normalize import Property
@@ -168,14 +169,14 @@ class TestCollections(unittest2.TestCase):
         self.assertEqual(dp2, dp)
 
         self.assertEqual(
-            set(dp.iterkeys()),
+            set(dp.keys()),
             {"bob", "bert", "ernest", "leonard"},
         )
 
         del dp['bob']
 
         self.assertEqual(
-            set(dp.itervalues()),
+            set(dp.values()),
             {Item(name='Bert'),
              Item(name='Leonard'), Item(name='Ernest')}
         )
@@ -270,6 +271,6 @@ class TestCollections(unittest2.TestCase):
                    "int_map": {"one": 1, "two": 2, "three": 3}})
 
         jdr.item_map = {"bill": jlr.item_list[0]}
-        jlr.item_list = jdr.item_map.values()
+        jlr.item_list = list(jdr.item_map.values())
 
     # TODO type unions for item types

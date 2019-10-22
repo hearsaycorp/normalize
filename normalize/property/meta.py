@@ -143,12 +143,12 @@ def create_property_type_from_traits(trait_set):
     """
     wanted_traits = set(trait_set)
     stock_types = dict(
-        (k, v) for k, v in PROPERTY_TYPES.items() if
+        (k, v) for k, v in list(PROPERTY_TYPES.items()) if
         set(k).issubset(wanted_traits)
     )
 
     traits_available = set()
-    for key in stock_types.keys():
+    for key in list(stock_types.keys()):
         traits_available.update(key)
 
     missing_traits = wanted_traits - traits_available
@@ -165,7 +165,7 @@ def create_property_type_from_traits(trait_set):
         # be somewhat deterministic: always start with types which provide the
         # 'first' trait on the list
         start_with = set(
-            k for k in stock_types.keys() if k and k[0] == trait_set[0]
+            k for k in list(stock_types.keys()) if k and k[0] == trait_set[0]
         )
 
         # prefer extending already composed trait sets, by only adding to the
