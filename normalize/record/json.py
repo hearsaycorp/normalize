@@ -228,7 +228,7 @@ def to_json(record, extraneous=True, prop=None):
                     pass
         return rv_dict
 
-    elif isinstance(record, six.integer_types):
+    elif isinstance(record, six.integer_types[-1]):
         return str(record) if abs(record) > 2**50 else record
 
     elif isinstance(record, dict):
