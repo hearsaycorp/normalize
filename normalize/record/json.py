@@ -196,6 +196,8 @@ def to_json(record, extraneous=True, prop=None):
             ``to_json`` mapping defined on the property.  Does not catch the
             ``AttributeError`` that is raised by the property not being set.
     """
+    int_type = six.integer_types[-1] if six.PY2 else int
+
     if prop:
         if isinstance(prop, basestring):
             prop = type(record).properties[prop]
@@ -228,7 +230,7 @@ def to_json(record, extraneous=True, prop=None):
                     pass
         return rv_dict
 
-    elif isinstance(record, six.integer_types):
+    elif isinstance(record, int_type):
         return str(record) if abs(record) > 2**50 else record
 
     elif isinstance(record, dict):
