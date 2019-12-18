@@ -460,6 +460,8 @@ class _GenericPickler(object):
         self.typekey = typekey
 
     def __call__(self, values):
+        if (six.PY3) and (len(self.typekey) > 1) and (self.typekey[1].startswith('__builtin__')):
+            self.typekey = (self.typekey[0], self.typekey[1].replace('__builtin__', 'builtins'))
         return GENERIC_TYPES[self.typekey](values=values)
 
 
