@@ -25,6 +25,7 @@ from copy import deepcopy
 import inspect
 import json
 import re
+import decimal
 
 from normalize.coll import Collection
 from normalize.coll import DictCollection as RecordDict
@@ -239,7 +240,7 @@ def to_json(record, extraneous=True, prop=None):
     elif isinstance(record, (list, tuple, set, frozenset)):
         return list(_json_data(x, extraneous) for x in record)
 
-    elif isinstance(record, (basestring, int, float, type(None))):
+    elif isinstance(record, (basestring, int, float, type(None), decimal.Decimal)):
         return record
 
     else:
