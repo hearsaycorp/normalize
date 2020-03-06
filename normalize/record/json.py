@@ -17,6 +17,7 @@
 
 from __future__ import absolute_import
 import six
+import decimal
 
 from builtins import str
 from past.builtins import basestring
@@ -239,7 +240,7 @@ def to_json(record, extraneous=True, prop=None):
     elif isinstance(record, (list, tuple, set, frozenset)):
         return list(_json_data(x, extraneous) for x in record)
 
-    elif isinstance(record, (basestring, int, float, type(None))):
+    elif isinstance(record, (basestring, int, float, decimal.Decimal, type(None))):
         return record
 
     else:
