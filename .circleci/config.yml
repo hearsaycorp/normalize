@@ -6,6 +6,7 @@ workflows:
       - test-2.7
       - test-3.6
       - test-3.7
+      - test-3.8
 jobs:
   test-2.7: &test-template
     filters:
@@ -40,3 +41,10 @@ jobs:
       - image: circleci/python:3.7
     environment:
       TRAVIS_PYTHON_VERSION: 3.7
+
+  test-3.8:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.8
+    environment:
+      TRAVIS_PYTHON_VERSION: 3.8
