@@ -18,16 +18,15 @@ get support for marshaling to and from JSON data.  You can also compare
 objects to see if they have changed in meaningful ways.
 """
 
-install_requires=[
+install_requires = [
     'richenum>=1.0.0',
     'six',
     'future'
 ]
 
-tests_require=[
+tests_require = [
     'pytest>=4.6.5',
     'more-itertools>=5.0.0',
-    'unittest2',
     'pathlib2',
     'configparser'
 ]
