@@ -159,7 +159,7 @@ class Property(with_metaclass(MetaProperty, object)):
         self.extraneous = extraneous
 
     def func_info(self, func):
-        args = inspect.getargspec(func)
+        args = inspect.getfullargspec(func)
         is_method = False
         if not args.args:
             required_args = 0

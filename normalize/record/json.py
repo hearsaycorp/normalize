@@ -164,8 +164,8 @@ def _json_data(x, extraneous):
         htj = hasattr(x, "json_data") and callable(x.json_data)
         has_json_data[type(x)] = htj
         if htj:
-            argspec = inspect.getargspec(x.json_data)
-            tjte = 'extraneous' in argspec.args or argspec.keywords
+            argspec = inspect.getfullargspec(x.json_data)
+            tjte = 'extraneous' in argspec.args or argspec.kwonlyargs
             json_data_takes_extraneous[type(x)] = tjte
             if tjte:
                 return x.json_data(extraneous=extraneous)
@@ -453,7 +453,7 @@ class JsonRecordDict(RecordDict, JsonRecord):
             kwargs['values'] = values = {}
             if json_struct is None:
                 json_struct = {}
-            if not isinstance(json_struct, collections.Mapping):
+            if not isinstance(json_struct, collections.abc.Mapping):
                 raise exc.JsonCollectionCoerceError(
                     passed=json_struct,
                     colltype=cls,

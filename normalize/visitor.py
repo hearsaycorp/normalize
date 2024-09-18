@@ -389,8 +389,8 @@ class VisitorPattern(object):
     # note: Collection.coll_to_tuples will generally allow you to pass
     # collections as a list or a dict with the *values* being the members of
     # the set, so this code allows this.
-    grok_mapping_types = collections.Mapping
-    grok_coll_types = (collections.Sequence, collections.Mapping)
+    grok_mapping_types = collections.abc.Mapping
+    grok_coll_types = (collections.abc.Sequence, collections.abc.Mapping)
 
     @classmethod
     def grok(cls, value, value_type, visitor):
