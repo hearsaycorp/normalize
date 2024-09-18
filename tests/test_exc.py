@@ -17,12 +17,12 @@
 from builtins import str
 import inspect
 import sys
-import unittest2
+import unittest
 
 import normalize.exc as exc
 
 
-class TestExceptionSystem(unittest2.TestCase):
+class TestExceptionSystem(unittest.TestCase):
     def test_base_class(self):
         foo = exc.StringFormatException()
         self.assertEqual(str(foo), "(uncustomized exception!)")

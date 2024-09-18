@@ -16,7 +16,7 @@
 
 
 from past.builtins import basestring
-import unittest2
+import unittest
 
 from normalize import Property
 from normalize import Record
@@ -33,7 +33,7 @@ class Item(Record):
     name = Property()
 
 
-class TestCollections(unittest2.TestCase):
+class TestCollections(unittest.TestCase):
 
     def test_list_basics(self):
 
