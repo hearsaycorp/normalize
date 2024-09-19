@@ -20,7 +20,7 @@ from __future__ import absolute_import
 
 from past.builtins import basestring
 from datetime import datetime
-import unittest2
+import unittest
 import warnings
 
 from normalize import ListProperty
@@ -31,7 +31,7 @@ import normalize.exc as exc
 from normalize.visitor import VisitorPattern
 
 
-class TestRecords(unittest2.TestCase):
+class TestRecords(unittest.TestCase):
     """Test that the new data descriptor classes work"""
 
     def test_false_emptiness(self):

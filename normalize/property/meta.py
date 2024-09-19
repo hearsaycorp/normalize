@@ -234,7 +234,7 @@ class MetaProperty(type):
         attrs['__new__'] = _has
         duckwargs = set()
         if '__init__' in attrs:
-            new_kwargs = inspect.getargspec(attrs['__init__']).args
+            new_kwargs = inspect.getfullargspec(attrs['__init__']).args
             if new_kwargs:
                 duckwargs.update(new_kwargs)
         traits = set()

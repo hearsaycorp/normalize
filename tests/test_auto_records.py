@@ -20,7 +20,7 @@ from __future__ import absolute_import
 
 from datetime import datetime
 import os.path
-import unittest2
+import unittest
 import warnings
 
 from normalize import ListProperty
@@ -31,7 +31,7 @@ from normalize import NCAutoJsonRecord
 import normalize.exc as exc
 
 
-class TestAutoRecords(unittest2.TestCase):
+class TestAutoRecords(unittest.TestCase):
     """Test that the new data descriptor classes work"""
 
     def test_auto_json(self):

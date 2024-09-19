@@ -222,10 +222,10 @@ class DictCollection(KeyedCollection):
                 passed=coll,
                 colltype=cls,
             )
-        if isinstance(coll, collections.Mapping):
+        if isinstance(coll, collections.abc.Mapping):
             for k, v in coll.items():
                 yield k, v
-        elif isinstance(coll, collections.Sequence):
+        elif isinstance(coll, collections.abc.Sequence):
             i = 0
             for v in coll:
                 yield (i, v)
@@ -319,11 +319,11 @@ class ListCollection(KeyedCollection):
                 passed=coll,
                 colltype=cls,
             )
-        if isinstance(coll, collections.Mapping):
+        if isinstance(coll, collections.abc.Mapping):
             i = 0
             for k in sorted(coll.keys()):
                 yield (i, coll[k])
-        elif isinstance(coll, (collections.Sequence, types.GeneratorType)) or (
+        elif isinstance(coll, (collections.abc.Sequence, types.GeneratorType)) or (
             hasattr(coll, "next") and callable(coll.next)
         ) or (
             hasattr(coll, "__iter__") and callable(coll.__iter__)

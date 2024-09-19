@@ -24,7 +24,7 @@ import json
 from os import environ
 import pickle
 import re
-import unittest2
+import unittest
 
 from richenum import RichEnum
 from richenum import RichEnumValue
@@ -73,7 +73,7 @@ def decode_json_number(str_or_num):
     return str_or_num
 
 
-class TestRecordMarshaling(unittest2.TestCase):
+class TestRecordMarshaling(unittest.TestCase):
     def setUp(self):
         self.primitive = {
             "id": "123",

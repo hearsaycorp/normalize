@@ -431,7 +431,7 @@ class FieldSelector(object):
         """
         if isinstance(other, (six.string_types, six.integer_types)):
             return type(self)(self.selectors + [other])
-        elif isinstance(other, collections.Iterable):
+        elif isinstance(other, collections.abc.Iterable):
             return type(self)(self.selectors + list(other))
         elif isinstance(other, FieldSelector):
             return type(self)(self).extend(other)

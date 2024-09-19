@@ -677,8 +677,8 @@ def compare_collection_iter(propval_a, propval_b, fs_a=None, fs_b=None,
         removed = set_a - set_b
         added = set_b - set_a
         for key in shared_keys:
-            if (isinstance(propval_a, collections.Iterable) and
-               isinstance(propval_b, collections.Iterable)):
+            if (isinstance(propval_a, collections.abc.Iterable) and
+               isinstance(propval_b, collections.abc.Iterable)):
                 diffs = _diff_iter(propval_a[key], propval_b[key],
                                    fs_a + [key], fs_b + [key], options)
 

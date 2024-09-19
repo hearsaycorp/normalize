@@ -22,7 +22,7 @@ from builtins import zip, range
 import six
 import re
 import types
-import unittest2
+import unittest
 
 from normalize import RecordList
 from normalize.coll import ListCollection
@@ -41,7 +41,7 @@ from normalize.property.meta import _merge_camel_case_names
 from normalize.property.meta import MetaProperty
 
 
-class TestProperties(unittest2.TestCase):
+class TestProperties(unittest.TestCase):
     """Test that the new data descriptor classes work"""
     def test_0_property(self):
         """Test that unbound Property objects can be created successfully"""

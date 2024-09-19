@@ -20,7 +20,7 @@ from builtins import str, range
 from past.builtins import basestring
 from datetime import date
 import re
-import unittest2
+import unittest
 
 from normalize import Property
 from normalize import Record
@@ -100,7 +100,7 @@ def get_person(i, *friends, **kwargs):
         **kwargs)
 
 
-class TestDiffWithMultiFieldSelector(unittest2.TestCase):
+class TestDiffWithMultiFieldSelector(unittest.TestCase):
 
     def assertDifferences(self, iterator, expected):
         differences = set(str(x) for x in iterator)

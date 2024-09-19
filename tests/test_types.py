@@ -21,7 +21,7 @@ from builtins import object
 from datetime import date
 from datetime import datetime
 import sys
-import unittest2
+import unittest
 
 import normalize.exc as exc
 from normalize.record import Record
@@ -32,7 +32,7 @@ from normalize.subtype import subtype
 from future.utils import with_metaclass
 
 
-class TestTypeLibrary(unittest2.TestCase):
+class TestTypeLibrary(unittest.TestCase):
     def test_property_types(self):
         seqval = [0]
 
@@ -138,7 +138,7 @@ class TestTypeLibrary(unittest2.TestCase):
         self.assertEqual(p, p2)
 
 
-class TestSubTypes(unittest2.TestCase):
+class TestSubTypes(unittest.TestCase):
     """Proof of concept test for coercing between sub-types of real types.
     """
     def test_sub_types(self):
