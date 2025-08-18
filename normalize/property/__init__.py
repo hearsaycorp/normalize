@@ -26,7 +26,6 @@ documentation.
 
 from __future__ import absolute_import
 
-from builtins import str, object
 import inspect
 import warnings
 import weakref
@@ -35,7 +34,7 @@ import normalize.empty as empty
 import normalize.exc as exc
 from normalize.property.meta import looks_like_v1_none
 from normalize.property.meta import MetaProperty
-from future.utils import with_metaclass
+
 
 
 class _Default(object):
@@ -46,7 +45,7 @@ class _Default(object):
 _none = _Default()
 
 
-class Property(with_metaclass(MetaProperty, object)):
+class Property(metaclass=MetaProperty):
     """This is the base class for all property types.  It is a data descriptor,
     so care should be taken before adding any ``SPECIALMETHODS`` which might
     change the way it behaves.

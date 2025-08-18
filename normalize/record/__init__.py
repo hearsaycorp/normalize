@@ -16,18 +16,16 @@
 
 from __future__ import absolute_import
 
-from builtins import object
 import normalize.exc as exc
 from normalize.identity import record_id
 from normalize.record.meta import RecordMeta
-from future.utils import with_metaclass
 
 
-class _Unset(object):
+class _Unset:
     pass
 
 
-class Record(with_metaclass(RecordMeta, object)):
+class Record(metaclass=RecordMeta):
     """Base class for normalize instances and collections.
     """
 
