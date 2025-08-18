@@ -15,7 +15,6 @@
 #
 
 
-from past.builtins import basestring
 import unittest
 
 from normalize import Property
@@ -255,7 +254,7 @@ class TestCollections(unittest.TestCase):
     def test_json_coll(self):
         class JLR(Record):
             item_list = JsonListProperty(of=Item)
-            string_list = JsonListProperty(of=basestring)
+            string_list = JsonListProperty(of=str)
 
         class JDR(Record):
             item_map = JsonDictProperty(of=Item)

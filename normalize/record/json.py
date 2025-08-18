@@ -16,11 +16,8 @@
 
 
 from __future__ import absolute_import
-import six
 import decimal
 
-from builtins import str
-from past.builtins import basestring
 import collections
 from copy import deepcopy
 import inspect
@@ -198,7 +195,7 @@ def to_json(record, extraneous=True, prop=None):
             ``AttributeError`` that is raised by the property not being set.
     """
     if prop:
-        if isinstance(prop, basestring):
+        if isinstance(prop, str):
             prop = type(record).properties[prop]
         val = prop.__get__(record)
         if hasattr(prop, "to_json"):
@@ -229,7 +226,7 @@ def to_json(record, extraneous=True, prop=None):
                     pass
         return rv_dict
 
-    elif isinstance(record, six.integer_types[-1]):
+    elif isinstance(record, int):
         return str(record) if abs(record) > 2**50 else record
 
     elif isinstance(record, dict):
@@ -240,7 +237,7 @@ def to_json(record, extraneous=True, prop=None):
     elif isinstance(record, (list, tuple, set, frozenset)):
         return list(_json_data(x, extraneous) for x in record)
 
-    elif isinstance(record, (basestring, int, float, decimal.Decimal, type(None))):
+    elif isinstance(record, (str, int, float, decimal.Decimal, type(None))):
         return record
 
     else:
@@ -284,7 +281,7 @@ class JsonRecord(Record):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, str):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
@@ -294,7 +291,7 @@ class JsonRecord(Record):
     def json_to_initkwargs(self, json_data, kwargs):
         """Subclassing hook to specialize how JSON data is converted
         to keyword arguments"""
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, str):
             json_data = json.loads(json_data)
         return json_to_initkwargs(self, json_data, kwargs)
 
@@ -361,7 +358,7 @@ class JsonRecordList(RecordList, JsonRecord):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, str):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
@@ -435,7 +432,7 @@ class JsonRecordDict(RecordDict, JsonRecord):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, basestring):
+        if isinstance(json_data, str):
             json_data = json.loads(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)

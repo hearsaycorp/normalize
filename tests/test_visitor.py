@@ -17,9 +17,8 @@
 from __future__ import absolute_import
 
 from builtins import str, range
-from past.builtins import basestring
 from datetime import datetime
-import six
+from builtins import str as _str_type
 import json
 from time import time
 import types
@@ -43,7 +42,7 @@ from .testclasses import (
     wall_one
 )
 
-JSON_CAN_DUMP = (basestring, float, dict, list, type(None)) + six.integer_types
+JSON_CAN_DUMP = (_str_type, float, dict, list, type(None), int)
 
 
 class SimpleDumper(VisitorPattern):

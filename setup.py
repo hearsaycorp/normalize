@@ -19,8 +19,7 @@ objects to see if they have changed in meaningful ways.
 """
 
 install_requires = [
-    'richenum>=1.0.0',
-    'six'
+    'richenum>=1.0.0'
 ]
 
 tests_require = [

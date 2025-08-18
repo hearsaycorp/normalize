@@ -18,7 +18,6 @@ from __future__ import absolute_import
 
 from builtins import str, zip
 from datetime import datetime
-import six
 import re
 import unittest
 
@@ -532,7 +531,7 @@ class TestStructableFieldSelector(unittest.TestCase):
             foo = Property(isa=Caret)
             baz = Property()
             quux = DictProperty(of=str)
-            frop = DictProperty(of=list_of(six.text_type))
+            frop = DictProperty(of=list_of(str))
 
         full = Pilcrow(
             bar=[dict(name="Heffalump"), dict(name="Uncle Robert")],

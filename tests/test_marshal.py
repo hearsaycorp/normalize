@@ -16,10 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import six
 
-from builtins import str, zip, range
-from past.builtins import basestring
 import json
 from os import environ
 import pickle
@@ -59,14 +56,14 @@ class CheeseCupboardRecord(Record):
     favorites = DictProperty(of=CheeseRecord)
 
 
-json_data_number_types = (basestring, float) + six.integer_types
+json_data_number_types = (str, float, int)
 
 
 def decode_json_number(str_or_num):
     """Returns a precise number object from a string or number"""
-    if isinstance(str_or_num, basestring):
+    if isinstance(str_or_num, str):
         if re.match(r'-?\d+$', str_or_num):
-            return six.integer_types[-1](str_or_num)
+            return int(str_or_num)
         if not re.match(r'-?\d+(\.\d+)?([eE][\-+]?\d+)?$', str_or_num):
             raise ValueError("invalid json number: '%s'" % str_or_num)
         return float(str_or_num)
@@ -102,10 +99,10 @@ class TestRecordMarshaling(unittest.TestCase):
     def assertJsonDataEqual(self, got, wanted, path=""):
         """Test that two JSON-data structures are the same.  We can't use
         simple assertEqual, because '23' and 23 should compare the same."""
-        if isinstance(got, basestring):
-            got = six.text_type(got)
-        if isinstance(wanted, basestring):
-            wanted = six.text_type(wanted)
+        if isinstance(got, str):
+            got = str(got)
+        if isinstance(wanted, str):
+            wanted = str(wanted)
 
         pdisp = path or "top level"
 

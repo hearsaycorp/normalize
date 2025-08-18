@@ -15,8 +15,6 @@
 #
 
 from __future__ import absolute_import
-
-import six
 import collections
 import re
 import unicodedata
@@ -55,7 +53,7 @@ class DiffTypes(OrderedRichEnum):
 
 def _coerce_diff(dt):
     if not isinstance(dt, OrderedRichEnumValue):
-        if isinstance(dt, six.integer_types):
+        if isinstance(dt, int):
             dt = DiffTypes.from_index(dt)
         else:
             dt = DiffTypes.from_canonical(dt)
@@ -214,7 +212,7 @@ class DiffOptions(object):
 
     def normalize_whitespace(self, value):
         """Normalizes whitespace; called if ``ignore_ws`` is true."""
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             return u" ".join(
                 x for x in re.split(r'\s+', value, flags=re.UNICODE) if
                 len(x)
@@ -225,7 +223,7 @@ class DiffOptions(object):
     def normalize_unf(self, value):
         """Normalizes Unicode Normal Form (to NFC); called if
         ``unicode_normal`` is true."""
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             return unicodedata.normalize('NFC', value)
         else:
             return value
@@ -243,8 +241,7 @@ class DiffOptions(object):
         as not specified.  Called if ``ignore_empty_slots`` is true.  Checking
         the value for emptiness happens *after* all other normalization.
         """
-        return (not value and
-                isinstance(value, (six.string_types, type(None))))
+        return (not value and isinstance(value, (str, type(None))))
 
     def normalize_text(self, value):
         """This hook is called by :py:meth:`DiffOptions.normalize_val` if the
@@ -264,7 +261,7 @@ class DiffOptions(object):
         return the scrubbed value or ``self._nothing`` to indicate that the
         value is not set.
         """
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = self.normalize_text(value)
         if self.ignore_empty_slots and self.value_is_empty(value):
             value = _nothing
