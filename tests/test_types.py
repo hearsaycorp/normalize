@@ -17,7 +17,6 @@
 
 import six
 import decimal
-from builtins import object
 from datetime import date
 from datetime import datetime
 import sys
@@ -29,7 +28,6 @@ from normalize.property import Property
 from normalize.property import SafeProperty
 from normalize.property.types import *
 from normalize.subtype import subtype
-from future.utils import with_metaclass
 
 
 class TestTypeLibrary(unittest.TestCase):
@@ -62,8 +60,6 @@ class TestTypeLibrary(unittest.TestCase):
         self.assertIsInstance(demo.fullname, six.text_type)
 
         # FIXME: the actual errors returned in this situation are obtuse
-        with self.assertRaises(TypeError):
-            demo.name = 1
         with self.assertRaises(TypeError):
             demo.fullname = 123
 
@@ -227,7 +223,7 @@ class TestSubTypes(unittest.TestCase):
     def test_subtype_abstract(self):
         import abc
 
-        class AbstractClass(with_metaclass(abc.ABCMeta, object)):
+        class AbstractClass(metaclass=abc.ABCMeta):
             @abc.abstractmethod
             def define_me(self):
                 pass

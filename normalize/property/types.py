@@ -82,7 +82,7 @@ NumberProperty = make_property_type(
     },
 )
 StringProperty = make_property_type(
-    "StringProperty", isa=basestring, trait_name="str",
+    "StringProperty", isa=str, trait_name="str",
     attrs={
         "__doc__": "A property which must be a ``basestring`` or "
                    "``unicode``, and if not, throws a coerce error",
@@ -111,7 +111,7 @@ def coerce_datetime(not_a_datetime):
     if isinstance(not_a_datetime, date):
         tt = not_a_datetime.timetuple()
         return datetime.datetime(*(tt[0:6]))
-    elif isinstance(not_a_datetime, basestring):
+    elif isinstance(not_a_datetime, str):
         return parse_datetime(not_a_datetime)
     else:
         raise ValueError(
@@ -129,7 +129,7 @@ def coerce_date(not_a_date):
 
 
 def coerce_number(not_a_number):
-    if isinstance(not_a_number, basestring):
+    if isinstance(not_a_number, str):
         try:
             return six.integer_types[-1](not_a_number)
         except ValueError:

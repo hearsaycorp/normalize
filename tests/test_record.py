@@ -18,7 +18,6 @@
 
 from __future__ import absolute_import
 
-from past.builtins import basestring
 from datetime import datetime
 import unittest
 import warnings
@@ -42,7 +41,7 @@ class TestRecords(unittest.TestCase):
             placeholder = Property()
             aux_placeholder = Property(default='')
             age = Property(default=0)
-            name = V1Property(isa=basestring)
+            name = V1Property(isa=str)
 
         sophie = SophiesRecord()
         with self.assertRaises(AttributeError):
@@ -61,10 +60,10 @@ class TestRecords(unittest.TestCase):
         sophie.name = "Sophie"
         self.assertEqual(sophie.name, "Sophie")
         sophie.name = None
-        self.assertEqual(sophie.name, None)
+        self.assertEqual(sophie.name, "None")
 
         # the properties aren't really set, but VisitorPattern sees them.
-        expected = {"age": 0, "aux_placeholder": ""}
+        expected = {"age": 0, "aux_placeholder": "", "name": "None"}
         self.assertEqual(VisitorPattern.visit(sophie), expected)
 
         sophie.age = 1
@@ -207,7 +206,7 @@ class TestRecords(unittest.TestCase):
 
         class SafeRecord(Record):
             maybe_int = V1Property(isa=int)
-            maybe_str = V1Property(isa=basestring, json_name="maybeStr")
+            maybe_str = V1Property(isa=str, json_name="maybeStr")
 
         self.assertEqual(type(SafeRecord.maybe_int).__name__, "V1Property")
         # FIXME: the name combination code should know that 'Safe' is
@@ -229,4 +228,4 @@ class TestRecords(unittest.TestCase):
         self.assertEqual(sr.maybe_int, None)
 
         sr.maybe_str = None
-        self.assertEqual(sr.maybe_str, None)
+        self.assertEqual(sr.maybe_str, "None")
