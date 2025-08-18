@@ -15,7 +15,6 @@
 #
 
 from __future__ import absolute_import
-import six
 
 from builtins import range, object
 import collections
@@ -31,9 +30,9 @@ from normalize.exc import FieldSelectorKeyError
 
 
 def _try_index(instance, selector):
-    if isinstance(instance, six.string_types):
+    if isinstance(instance, str):
         return False
-    if isinstance(selector, six.integer_types):
+    if isinstance(selector, int):
         return True
     if getattr(instance, "__getitem__", False):
         return True
@@ -73,8 +72,7 @@ class FieldSelector(object):
             # Validate the selector
             if any(
                 e for e in expr_selectors if not (
-                    isinstance(e, six.string_types) or
-                    isinstance(e, six.integer_types) or e is None
+                    isinstance(e, str) or isinstance(e, int) or e is None
                 )
             ):
                 raise ValueError(
@@ -87,7 +85,7 @@ class FieldSelector(object):
     def add_property(self, prop):
         """Extends the selector, adding a new attribute property lookup at the
         end, specified by name."""
-        if not isinstance(prop, six.string_types):
+        if not isinstance(prop, str):
             raise ValueError(
                 "properties must be specified by their string name"
             )
@@ -96,7 +94,7 @@ class FieldSelector(object):
     def add_index(self, index):
         """Extends the selector, adding a new indexed collection lookup at the
         end."""
-        if not isinstance(index, six.integer_types):
+        if not isinstance(index, int):
             raise ValueError("index must be an int or a long")
         self.selectors.append(index)
 
@@ -269,7 +267,7 @@ class FieldSelector(object):
                 try:
                     record = record[selector]
                 except IndexError:
-                    if isinstance(selector, six.integer_types):
+                    if isinstance(selector, int):
                         if len(record) != selector:
                             raise ValueError(
                                 "FieldSelector set out of order: "
@@ -429,7 +427,7 @@ class FieldSelector(object):
             print fs + bar  # <FieldSelector: .foo.bar>
             print fs + [0]  # <FieldSelector: .foo[0]>
         """
-        if isinstance(other, (six.string_types, six.integer_types)):
+        if isinstance(other, (str, int)):
             return type(self)(self.selectors + [other])
         elif isinstance(other, collections.abc.Iterable):
             return type(self)(self.selectors + list(other))
@@ -502,7 +500,7 @@ class FieldSelector(object):
 
 
 def _fmt_selector_path(selector):
-    if isinstance(selector, six.integer_types):
+    if isinstance(selector, int):
         return "[%d]" % selector
     elif selector is None:
         return "[*]"
@@ -602,14 +600,8 @@ class MultiFieldSelector(object):
 
         # sanity assertions follow
         head_types = set(type(x) for x in self.heads)
-        self.has_int = any(
-            int_type in head_types
-            for int_type in six.integer_types
-        )
-        self.has_string = any(
-            issubclass(x, six.string_types)
-            for x in head_types
-        )
+        self.has_int = int in head_types
+        self.has_string = str in head_types
         self.has_none = type(None) in head_types
         self.complete = self.has_none and self.heads[None] is all
         if self.has_none and (self.has_int or self.has_string):
@@ -763,11 +755,7 @@ class MultiFieldSelector(object):
             False
             >>>
         """
-        if isinstance(index, (
-                six.string_types,
-                six.integer_types,
-                type(None)
-        )):
+        if isinstance(index, (str, int, type(None))):
             return self.has_none or index in self.heads
         elif index is any:
             return True if len(self.heads) else False

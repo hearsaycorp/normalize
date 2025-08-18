@@ -18,7 +18,6 @@ from __future__ import absolute_import
 
 from builtins import str, range
 from datetime import datetime
-import six
 import json
 from time import time
 import unittest

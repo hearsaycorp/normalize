@@ -16,7 +16,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import six
 
 import json
 from os import environ
@@ -64,7 +63,7 @@ def decode_json_number(str_or_num):
     """Returns a precise number object from a string or number"""
     if isinstance(str_or_num, str):
         if re.match(r'-?\d+$', str_or_num):
-            return six.integer_types[-1](str_or_num)
+            return int(str_or_num)
         if not re.match(r'-?\d+(\.\d+)?([eE][\-+]?\d+)?$', str_or_num):
             raise ValueError("invalid json number: '%s'" % str_or_num)
         return float(str_or_num)

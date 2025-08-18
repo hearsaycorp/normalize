@@ -14,8 +14,6 @@
 # http://github.com/hearsaycorp/normalize
 #
 
-
-import six
 import decimal
 from datetime import date
 from datetime import datetime
@@ -57,7 +55,7 @@ class TestTypeLibrary(unittest.TestCase):
         self.assertEqual(demo.seq, 0)
         demo.name = "Foo Bar"
         self.assertEqual(demo.fullname, "Foo Bar")
-        self.assertIsInstance(demo.fullname, six.text_type)
+        self.assertIsInstance(demo.fullname, str)
 
         # FIXME: the actual errors returned in this situation are obtuse
         with self.assertRaises(TypeError):
@@ -65,14 +63,14 @@ class TestTypeLibrary(unittest.TestCase):
 
         # test upgrade
         demo.fullname = str("foo")
-        self.assertIsInstance(demo.fullname, six.text_type)
+        self.assertIsInstance(demo.fullname, str)
 
         # no downgrade is attempted (or desirable tbh)
         demo.name = u"Bob"
-        self.assertIsInstance(demo.name, six.text_type)
+        self.assertIsInstance(demo.name, str)
 
         demo.num = "123"
-        self.assertIsInstance(demo.num, six.integer_types)
+        self.assertIsInstance(demo.num, int)
         demo.num = "123.0"
         self.assertIsInstance(demo.num, float)
         demo.num = "nan"
@@ -138,7 +136,6 @@ class TestSubTypes(unittest.TestCase):
     """Proof of concept test for coercing between sub-types of real types.
     """
     def test_sub_types(self):
-        long_type = six.integer_types[-1]
         NaturalNumber = subtype(
             of=int,
             name="NaturalNumber",
@@ -151,7 +148,7 @@ class TestSubTypes(unittest.TestCase):
         self.assertEqual(str(NaturalNumber), "<subtype NaturalNumber of int>")
 
         BigNaturalNumber = subtype(
-            of=long_type,
+            of=int,
             name="BigNaturalNumber",
             where=lambda i: i > 0,
         )
@@ -159,10 +156,7 @@ class TestSubTypes(unittest.TestCase):
         class NaturalBornObject(Record):
             count = Property(
                 isa=(NaturalNumber, BigNaturalNumber),
-                coerce=lambda x: (
-                    abs(int(x)) if abs(long_type(x)) < sys.maxsize else
-                    abs(long_type(x))
-                ),
+                coerce=lambda x: abs(int(x)),
                 check=lambda N: N > 0,
             )
 
@@ -171,7 +165,7 @@ class TestSubTypes(unittest.TestCase):
         nbo.count = "256"
         self.assertEqual(nbo.count, 256)
         nbo.count = 1.832e19
-        self.assertEqual(nbo.count, long_type(18320000000000000000))
+        self.assertEqual(nbo.count, int(18320000000000000000))
         # type matches, but subtype doesn't
         nbo.count = -10
         self.assertEqual(nbo.count, 10)
