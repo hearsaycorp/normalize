@@ -19,7 +19,6 @@
 from __future__ import absolute_import
 
 from builtins import zip, range
-import six
 import re
 import types
 import unittest
@@ -264,7 +263,7 @@ class TestProperties(unittest.TestCase):
         class CustomColl(ListCollection):
             @classmethod
             def coll_to_tuples(cls, values):
-                if isinstance(values, six.string_types):
+                if isinstance(values, str):
                     values = values.split(',')
                     for i, v in zip(range(0, len(values)), values):
                         yield i, {'name': v}

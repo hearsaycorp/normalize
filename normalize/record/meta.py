@@ -17,7 +17,6 @@
 
 from __future__ import absolute_import
 
-from past.builtins import basestring
 import normalize.exc as exc
 from normalize.property import Property
 
@@ -69,7 +68,7 @@ class RecordMeta(type):
             good_props = []
             if proplist:
                 for prop in proplist:
-                    if isinstance(prop, basestring):
+                    if isinstance(prop, str):
                         prop = properties[prop]
                     if not isinstance(prop, Property) or (
                         prop not in all_properties

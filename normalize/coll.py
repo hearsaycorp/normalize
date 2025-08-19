@@ -20,7 +20,6 @@ from __future__ import absolute_import
 import collections
 import sys
 import types
-import six
 
 from builtins import range, object
 
@@ -217,7 +216,7 @@ class DictCollection(KeyedCollection):
 
     @classmethod
     def coll_to_tuples(cls, coll):
-        if isinstance(coll, six.string_types):
+        if isinstance(coll, str):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
@@ -314,7 +313,7 @@ class ListCollection(KeyedCollection):
         sequences and iterators.  Returns ``(*int*, Value)``.  Does not coerce
         items.
         """
-        if isinstance(coll, six.string_types):
+        if isinstance(coll, str):
             raise exc.CollectionCoerceError(
                 passed=coll,
                 colltype=cls,
@@ -460,7 +459,7 @@ class _GenericPickler(object):
         self.typekey = typekey
 
     def __call__(self, values):
-        if (six.PY3) and (len(self.typekey) > 1) and (self.typekey[1].startswith('__builtin__')):
+        if (len(self.typekey) > 1) and (self.typekey[1].startswith('__builtin__')):
             self.typekey = (self.typekey[0], self.typekey[1].replace('__builtin__', 'builtins'))
         return GENERIC_TYPES[self.typekey](values=values)
 

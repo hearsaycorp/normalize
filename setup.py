@@ -19,9 +19,7 @@ objects to see if they have changed in meaningful ways.
 """
 
 install_requires = [
-    'richenum>=1.0.0',
-    'six',
-    'future'
+    'richenum>=1.0.0'
 ]
 
 tests_require = [
@@ -42,7 +40,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     test_suite="tests",
-    version='2.1.0',
+    version='3.0.0',
     url="http://hearsaycorp.github.io/normalize",
     classifiers=[
         'Development Status :: 5 - Production/Stable',

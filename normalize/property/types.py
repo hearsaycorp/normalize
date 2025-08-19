@@ -16,9 +16,6 @@
 
 """``normalize.property.types`` provides an assortment of pre-generated
 types"""
-
-import six
-from past.builtins import basestring
 import datetime
 import numbers
 from sys import maxsize
@@ -59,16 +56,14 @@ IntProperty = make_property_type(
     },
 )
 LongProperty = make_property_type(
-    "LongProperty", isa=six.integer_types[-1], trait_name="long",
+    "LongProperty", isa=int, trait_name="long",
     attrs={
         "__doc__": "A property which must be a ``long``",
     },
 )
 IntegerProperty = make_property_type(
     "IntegerProperty", isa=numbers.Integral, trait_name="integer",
-    coerce=lambda x: (
-        int(x) if abs(float(x)) < maxsize else six.integer_types[-1](x)
-    ),
+    coerce=lambda x: int(x),
     attrs={
         "__doc__": "A property which holds an integer, int or long",
     },
@@ -82,7 +77,7 @@ NumberProperty = make_property_type(
     },
 )
 StringProperty = make_property_type(
-    "StringProperty", isa=basestring, trait_name="str",
+    "StringProperty", isa=str, trait_name="str",
     attrs={
         "__doc__": "A property which must be a ``basestring`` or "
                    "``unicode``, and if not, throws a coerce error",
@@ -96,8 +91,7 @@ FloatProperty = make_property_type(
 )
 UnicodeProperty = make_property_type(
     "UnicodeProperty", base_type=StringProperty,
-    isa=six.text_type, coerce=(lambda s: six.text_type(s)
-                               if isinstance(s, str) else s),
+    isa=str, coerce=(lambda s: str(s) if isinstance(s, str) else s),
     trait_name="unicode",
     attrs={
         "__doc__": "A property which must be a ``unicode`` or ``str`` "
@@ -111,7 +105,7 @@ def coerce_datetime(not_a_datetime):
     if isinstance(not_a_datetime, date):
         tt = not_a_datetime.timetuple()
         return datetime.datetime(*(tt[0:6]))
-    elif isinstance(not_a_datetime, basestring):
+    elif isinstance(not_a_datetime, str):
         return parse_datetime(not_a_datetime)
     else:
         raise ValueError(
@@ -129,9 +123,9 @@ def coerce_date(not_a_date):
 
 
 def coerce_number(not_a_number):
-    if isinstance(not_a_number, basestring):
+    if isinstance(not_a_number, str):
         try:
-            return six.integer_types[-1](not_a_number)
+            return int(not_a_number)
         except ValueError:
             return float(not_a_number)
     else:

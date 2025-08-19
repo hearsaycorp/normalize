@@ -1,6 +1,12 @@
 Normalize changelog and errata
 ==============================
 
+3.0.0 18th August 2025
+------------------------
+* Fully dropped python 2 support
+* Breaking change with string types
+  * Types can be cast to string will be casted (None, int, float etc...)
+
 1.0.1 10th February 2016
 ------------------------
 * Added new base class for all exceptions to subclass. This will
@@ -374,13 +380,13 @@ Lots of long awaited and behavior-changing features:
       try:
           foo = FooJsonRecord(json_data)
       except:
-          foo = None 
+          foo = None
 
       if foo:
           #... doesn't imply an exception happened
 
 * The mechanism by which ``empty=`` delivers psuedo-attributes is
-  available via the ``aux_props`` sub-class API on Property. 
+  available via the ``aux_props`` sub-class API on Property.
 
 * Various ambiguities around the way MultiFieldSelectors and their ``__getattr__``
   and ``__contains__`` operators (ie, ``multi_field_selector[X]`` and ``X in

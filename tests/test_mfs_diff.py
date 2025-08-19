@@ -17,7 +17,6 @@
 from __future__ import absolute_import
 
 from builtins import str, range
-from past.builtins import basestring
 from datetime import date
 import re
 import unittest
@@ -227,7 +226,7 @@ class TestDiffWithMultiFieldSelector(unittest.TestCase):
 
         class MyDiffOptions(DiffOptions):
             def normalize_slot(self, val, prop):
-                if "phone" in prop.name and isinstance(val, basestring):
+                if "phone" in prop.name and isinstance(val, str):
                     val = normalize_phone(val)
                 return super(MyDiffOptions, self).normalize_slot(val, prop)
 
