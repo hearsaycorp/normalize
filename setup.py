@@ -40,7 +40,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     test_suite="tests",
-    version='3.0.0',
+    version='3.0.1',
     url="http://hearsaycorp.github.io/normalize",
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -1,6 +1,10 @@
 Normalize changelog and errata
 ==============================
 
+3.0.1 26th August 2025
+------------------------
+* Add support for binary JSON parsing to work as before 3.0.0
+
 3.0.0 18th August 2025
 ------------------------
 * Fully dropped python 2 support
