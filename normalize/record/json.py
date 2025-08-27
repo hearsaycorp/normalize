@@ -118,6 +118,22 @@ def json_to_initkwargs(record_type, json_struct, kwargs=None):
     return kwargs
 
 
+def _decode_and_parse_json(json_data):
+    """Internal helper to normalize incoming JSON input.
+
+    Accepts any of: dict/list (returned as-is), str containing JSON, or
+    bytes/bytearray containing UTF-8 JSON. Returns the loaded python
+    object (dict/list/primitive) or the original object if not a textual
+    JSON container.
+    """
+    if isinstance(json_data, (bytes, bytearray)):
+        return json.loads(json_data.decode('utf-8'))
+    if isinstance(json_data, str):
+        return json.loads(json_data)
+            
+    return json_data
+
+
 def from_json(record_type, json_struct):
     """JSON marshall in function: a 'visitor' function which looks for JSON
     types/hints on types being converted to, but does not require them.
@@ -130,6 +146,7 @@ def from_json(record_type, json_struct):
             a loaded (via ``json.loads``) data structure, normally a
             dict or a list.
     """
+    json_struct = _decode_and_parse_json(json_struct)
     if issubclass(record_type, JsonRecord):
         return record_type(json_struct)
 
@@ -281,8 +298,7 @@ class JsonRecord(Record):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, str):
-            json_data = json.loads(json_data)
+        json_data = _decode_and_parse_json(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
         super(JsonRecord, self).__init__(**kwargs)
@@ -291,8 +307,7 @@ class JsonRecord(Record):
     def json_to_initkwargs(self, json_data, kwargs):
         """Subclassing hook to specialize how JSON data is converted
         to keyword arguments"""
-        if isinstance(json_data, str):
-            json_data = json.loads(json_data)
+        json_data = _decode_and_parse_json(json_data)
         return json_to_initkwargs(self, json_data, kwargs)
 
     @classmethod
@@ -358,8 +373,7 @@ class JsonRecordList(RecordList, JsonRecord):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, str):
-            json_data = json.loads(json_data)
+        json_data = _decode_and_parse_json(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
         super(JsonRecordList, self).__init__(**kwargs)
@@ -432,8 +446,7 @@ class JsonRecordDict(RecordDict, JsonRecord):
         """
         if isinstance(json_data, OhPickle):
             return
-        if isinstance(json_data, str):
-            json_data = json.loads(json_data)
+        json_data = _decode_and_parse_json(json_data)
         if json_data is not None:
             kwargs = type(self).json_to_initkwargs(json_data, kwargs)
         super(JsonRecordDict, self).__init__(**kwargs)
