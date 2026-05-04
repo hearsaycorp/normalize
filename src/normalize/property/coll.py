@@ -34,14 +34,14 @@ class CollectionProperty(Property):
         """Create a new Collection property.
 
         Args:
-            ``of=``\ *TYPE*
+            ``of=`` *TYPE*
                 Specifies what type each member of the collection must be.
 
-            ``coll=``\ *<Abstract Collection type>*
+            ``coll=`` *<Abstract Collection type>*
                 Specify the container type for the collection.  Should be
                 a :py:mod:`normalize.coll.Collection` sub-class.
 
-            ``isa=``\ *<Concrete Collection type>*
+            ``isa=`` *<Concrete Collection type>*
                 Specify both ``of=`` and ``isa=`` by passing in a
                 'concrete' Collection type (this means it already has
                 ``itemtype`` set)

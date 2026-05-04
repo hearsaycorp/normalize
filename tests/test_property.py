@@ -20,7 +20,6 @@ from __future__ import absolute_import
 
 from builtins import zip, range
 import re
-import types
 import unittest
 
 from normalize import RecordList
@@ -48,7 +47,7 @@ class TestProperties(unittest.TestCase):
         self.assertIsNotNone(prop)
         self.assertIsInstance(prop, Property)
         self.assertIsInstance(type(prop), MetaProperty)
-        self.assertRegexpMatches(str(prop), r".*unbound.*", re.I)
+        self.assertRegex(str(prop), r".*unbound.*", re.I)
 
         roprop = Property(traits=['ro'])
         self.assertIsNotNone(roprop)
@@ -78,7 +77,7 @@ class TestProperties(unittest.TestCase):
             default_none = Property(default=None)
 
         # test Property.__repr__ includes class & attribute name
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(BasicRecord.__dict__['name']),
             r".*Property.*BasicRecord\.name.*", re.I,
         )
@@ -88,7 +87,7 @@ class TestProperties(unittest.TestCase):
         self.assertIsInstance(br.defaulted, list)
         br.defaulted.append("foo")
         self.assertEqual(br.defaulted[0], "foo")
-        with self.assertRaisesRegexp(AttributeError, r'BasicRecord.name'):
+        with self.assertRaisesRegex(AttributeError, r'BasicRecord.name'):
             br.name
         self.assertEqual(br.default_none, None)
 
@@ -101,14 +100,14 @@ class TestProperties(unittest.TestCase):
         class TrivialRecord(Record):
             id = ROProperty()
             name = Property()
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(TrivialRecord.__dict__['id']),
             r".*ROProperty.*TrivialRecord\.id.*", re.I
         )
 
         tr = TrivialRecord(id=123)
         self.assertEqual(tr.id, 123)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             AttributeError, r'TrivialRecord.id.*read-only',
         ):
             tr.id = 124
@@ -415,7 +414,7 @@ class TestProperties(unittest.TestCase):
             huh = Property(isa=int, required=True, lazy=True,
                            coerce=positive_int_or_none, default=get_huh)
 
-        with self.assertRaisesRegexp(exc.ValueCoercionError, r'Mixed.id'):
+        with self.assertRaisesRegex(exc.ValueCoercionError, r'Mixed.id'):
             mixer = Mixed(id="-1")
 
         mixer = Mixed(id="1", num="-6")
@@ -475,6 +474,6 @@ class TestProperties(unittest.TestCase):
         self.assertIsInstance(ListProperty(of=Record), SafeProperty)
 
     def test_unknown_kwarg(self):
-        with self.assertRaisesRegexp(TypeError, r"'yo_momma' of Property"):
+        with self.assertRaisesRegex(TypeError, r"'yo_momma' of Property"):
             Property(yo_momma="so fat, when she sits around the house, "
                               "she really SITS AROUND THE HOUSE")

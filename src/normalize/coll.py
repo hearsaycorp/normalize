@@ -48,16 +48,16 @@ class Collection(Record):
 
     The type of members in the collection is defined using a sub-class API:
 
-        *classproperty* **itemtype**\ =\ *Record sub-class*
+        *classproperty* **itemtype** = *Record sub-class*
             This property must be defined for instances to be instantiable.
             It declares the type of values.
 
-        *classproperty* **coerceitem**\ =\ *FUNC*
+        *classproperty* **coerceitem** = *FUNC*
             Defaults to *itemtype* and is the function or constructor which
             will accept items during construction of a collection which are not
             already of the correct type.
 
-        *classproperty* **colltype**\ =\ *collection type*
+        *classproperty* **colltype** = *collection type*
             This is the type of the underlying container.  ``list``, ``dict``,
             etc.
     """
@@ -89,12 +89,12 @@ class Collection(Record):
 
         args:
 
-            ``values=``\ *iterable*
+            ``values=`` *iterable*
                 Specify the initial contents of the collection.  It will be
                 converted to the correct type using :py:meth:`coll_to_tuples`
                 and :py:meth:`tuples_to_coll`
 
-            ``attribute=``\ *VALUE*
+            ``attribute=`` *VALUE*
                 It is possible to add extra properties to ``Collection``
                 objects; this is how you specify them on construction.
         """
@@ -479,14 +479,14 @@ def _make_generic(of, coll):
 
     args:
 
-        ``of=``\ *Record type*
+        ``of=`` *Record type*
             The type of values of the collection
 
-        ``coll=``\ *Collection sub-class*
+        ``coll=`` *Collection sub-class*
             The container class.
     """
 
-    assert(issubclass(coll, Collection))
+    assert (issubclass(coll, Collection))
     key = (coll.__name__, "%s.%s" % (of.__module__, of.__name__))
     if key in GENERIC_TYPES:
         if GENERIC_TYPES[key].itemtype != of:

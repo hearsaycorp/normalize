@@ -20,7 +20,7 @@ from builtins import str
 import unittest
 
 from normalize.coll import list_of
-from normalize.diff import *
+from normalize.diff import compare_list_iter, compare_dict_iter, compare_collection_iter, compare_record_iter, DiffOptions, DiffTypes, Collection, MultiFieldSelector  # noqa: E501
 from normalize.record import Record
 from normalize.record.json import JsonRecord
 from normalize.property import Property
@@ -521,7 +521,7 @@ class TestRecordComparison(unittest.TestCase):
         )
         difference = wall_one.diff(wall_two)
         self.assertEqual(len(difference), len(expected_differences))
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(difference), r'<Diff \[Wall\]; \d+ diff\(s\).*>',
         )
 

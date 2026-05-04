@@ -63,7 +63,7 @@ class Property(metaclass=MetaProperty):
         Because of this magic, all ``Property`` arguments *must* be passed in
         keyword argument form.  All arguments are optional.
 
-            ``isa=``\ *TYPE|TUPLE*
+            ``isa=`` *TYPE|TUPLE*
                 Any assigned property must be one of these types according to
                 ``isinstance()``.  Also used by visitor functions which are
                 missing an instance, such as marshal in.
@@ -71,32 +71,32 @@ class Property(metaclass=MetaProperty):
                 If ``isa`` is not set, then *any* value (including ``None``)
                 is acceptable.
 
-            ``coerce=``\ *FUNCTION*
+            ``coerce=`` *FUNCTION*
                 If the value fails the ``isa`` isinstance check, then this
                 function is called with the value, and should return a value of
                 a conformant type or throw an exception.
 
-            ``check=``\ *FUNCTION*
+            ``check=`` *FUNCTION*
                 Once the value is of the correct type, this function is called
                 and should return something true (according to ``bool()``) if
                 the value is acceptable.
 
-            ``required=``\ *BOOL*
+            ``required=`` *BOOL*
                 If ``True``, then the value must be passed during construction,
                 and may not be ``None`` (this is only meaningful if ``isa=`` is
                 not passed)
 
-            ``default=``\ *VALUE|FUNCTION*
+            ``default=`` *VALUE|FUNCTION*
                 If no value is passed during construction, then use this value
                 instead.  If the argument is a function, then the function is
                 called and the value it returns used as the default.
 
-            ``traits=``\ *LIST|SEQUENCE*
+            ``traits=`` *LIST|SEQUENCE*
                 Manually specify a list of named Property traits.  The default
                 is ``["safe"]``, and any unknown keyword arguments will add
                 extra traits on.
 
-            ``empty_attr=``\ *METHODNAME*
+            ``empty_attr=`` *METHODNAME*
                 (deprecated) Specify an auxiliary method name which
                 returns the value if the attribute is set, otherwise
                 an ``empty`` proxy value.  Defaults to the name of the
@@ -104,13 +104,13 @@ class Property(metaclass=MetaProperty):
                 attribute already ends with a number (disabling the
                 accessor)
 
-            ``extraneous=``\ *BOOL*
+            ``extraneous=`` *BOOL*
                 This Property is considered *denormalized* and does not affect
                 the ``Record`` equality operator.  Visitor functions typically
                 ignore extraneous properties or require an extra option to
                 process them.
 
-            ``doc=``\ *STR*
+            ``doc=`` *STR*
                 Specify a docstring for the property.
 
         """
@@ -304,9 +304,9 @@ class Property(metaclass=MetaProperty):
         the value to insert.
         """
         if self.empty_attr is not None:
-            return ((self.empty_attr, EmptyAuxProp(self)), )
+            return [(self.empty_attr, EmptyAuxProp(self))]
         else:
-            return ()
+            return []
 
 
 class EmptyAuxProp(object):
@@ -333,12 +333,12 @@ class LazyProperty(Property):
         """Creates a Lazy property.  In addition to the standard Property
         arguments, accepts:
 
-            ``lazy=``\ *BOOL*
+            ``lazy=`` *BOOL*
                 Must be ``True``. Used as a "distinguishing argument" to
                 request a lazy Property. Not required if you call
                 ``LazyProperty()`` directly.
 
-            ``default=``\ *FUNCTION|METHOD*
+            ``default=`` *FUNCTION|METHOD*
                 The default value for the property.  Unlike a standard
                 ``Property``, the value can also be set to a method, which can
                 reference other object properties.
@@ -509,16 +509,16 @@ def make_property_type(name, base_type=Property,
     of its Property subclasses.
 
     Args:
-        ``name=``\ *STR*
+        ``name=`` *STR*
             Specifies the name of the new property type.  This is entirely
             cosmetic, but it is probably a good idea to make this exactly
             the same as the symbol you are assigning the result to.
 
-        ``base_type=``\ *Property sub-class*
+        ``base_type=`` *Property sub-class*
             Specifies which property type you are adding defaults to.
             You can pass in a tuple of types here.
 
-        ``attrs=``\ *DICT*
+        ``attrs=`` *DICT*
             This lets you pass in a dictionary that will be used as
             the new Property type's class dictionary.  i.e., it gets
             passed as the third argument to ``type(NAME, BASES, ATTRS)``,
@@ -527,7 +527,7 @@ def make_property_type(name, base_type=Property,
             trivial, it may be simpler just to make a whole class
             definition.
 
-        ``trait_name=``\ *STR*
+        ``trait_name=`` *STR*
             Specify the unique identifier of the trait that is created.
             This probably doesn't matter, unless you want to use the
             ``traits=`` keyword to ``Property()``.  The default is to

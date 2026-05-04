@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "normalize"
+version = "3.1.0"
+description = "Declarative Python meta-model system and visitor utilities"
+authors = ["Hearsay Social <opensource@hearsaysocial.com>"]
+license = "MIT"
+readme = ["README.md", "CHANGELOG.md"]
+homepage = "https://github.com/hearsaycorp/normalize"
+repository = "https://github.com/hearsaycorp/normalize"
+keywords = ["python", "normalize"]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+]
+packages = [{ include = "normalize", from = "src" }]
+include = ["LICENSE.txt", "AUTHORS.md", "CHANGELOG.md"]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+richenum = ">=1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=4.6.5"
+pylint = "*"
+flake8 = "^7.0.0"
+more-itertools = ">=5.0.0"
+pathlib2 = "*"
+configparser = "*"
+
+[build-system]
+requires = ["poetry-core>=1.1.0"]
+build-backend = "poetry.core.masonry.api"

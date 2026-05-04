@@ -1,6 +1,13 @@
 Normalize changelog and errata
 ==============================
 
+3.1.0 4th May 2026
+------------------------
+* Added support for Python 3.12, 3.13, 3.14
+* Dropped support for Python < 3.10
+* Moved the CI from CircleCI to Github Actions
+* Migrate to Poetry for dependency management
+
 3.0.1 26th August 2025
 ------------------------
 * Add support for binary JSON parsing to work as before 3.0.0

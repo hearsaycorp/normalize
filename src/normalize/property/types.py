@@ -18,7 +18,6 @@
 types"""
 import datetime
 import numbers
-from sys import maxsize
 
 from . import make_property_type
 from ..subtype import subtype

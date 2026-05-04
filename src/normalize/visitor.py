@@ -42,24 +42,24 @@ class Visitor(object):
         functions to be used during the visit.  The important options from a
         user of a visitor are the keyword arguments:
 
-            ``apply_empty_slots=``\ *bool*
+            ``apply_empty_slots=`` *bool*
                 If set, then your ``apply`` method (or ``reverse``, etc) will
                 be called even if there is no corresponding value in the input.
                 Your method will receive the Exception as if it were the value.
 
-            ``extraneous=``\ *bool*
+            ``extraneous=`` *bool*
                 Also call the apply method on properties marked *extraneous*.
                 False by default.
 
-            ``ignore_empty_string=``\ *bool*
+            ``ignore_empty_string=`` *bool*
                 If the 'apply' function returns the empty string, treat it as
                 if the slot or object did not exist.  ``False`` by default.
 
-            ``ignore_none=``\ *bool*
+            ``ignore_none=`` *bool*
                 If the 'apply' function returns ``None``, treat it as if the
                 slot or object did not exist.  ``True`` by default.
 
-            ``visit_filter=``\ *MultiFieldSelector*
+            ``visit_filter=`` *MultiFieldSelector*
                 This supplies an instance of
                 :py:class:`normalize.selector.MultiFieldSelector`, and
                 restricts the operation to the matched object fields.  Can also
@@ -99,7 +99,7 @@ class Visitor(object):
 
     def pop(self, what=None):
         if what is not None:
-            assert(self.cue[-1] == what)
+            assert (self.cue[-1] == what)
         return self.cue.pop()
 
     def copy(self):
@@ -164,11 +164,11 @@ class VisitorPattern(object):
 
         This function also takes positional arguments:
 
-            ``value=``\ *object*
+            ``value=`` *object*
                 The value to visit.  Normally (but not always) a
                 :py:class:`normalize.record.Record` instance.
 
-            ``value_type=``\ *RecordType*
+            ``value_type=`` *RecordType*
                 This is the ``Record`` subclass to interpret ``value`` as.  The
                 default is ``type(value)``.  If you specify this, then the type
                 information on ``value`` is essentially ignored (with the
@@ -198,18 +198,18 @@ class VisitorPattern(object):
 
         args:
 
-            ``value=``\ *object*
+            ``value=`` *object*
                 The instance being visited
 
-            ``value_type=``\ *RecordType*
+            ``value_type=`` *RecordType*
                 The expected type of the instance
 
-            ``visitor=``\ *Visitor*
+            ``visitor=`` *Visitor*
                 The context/options
 
         returns a tuple with two items:
 
-            ``get_prop=``\ *function*
+            ``get_prop=`` *function*
                 This function should take a
                 :py:class:`normalize.property.Property` instance, and return
                 the slot from the value, or raise ``AttributeError`` or
@@ -217,7 +217,7 @@ class VisitorPattern(object):
                 that the item has no properties to unpack; ie, it's an opaque
                 type.
 
-            ``get_item=``\ *generator*
+            ``get_item=`` *generator*
                 This generator should return the tuple protocol used by
                 :py:class:`normalize.coll.Collection`: (K, V) where K can be an
                 ascending integer (for sequences), V (for sets), or something
@@ -257,7 +257,7 @@ class VisitorPattern(object):
 
         args:
 
-            ``value=``\ *value*\ \|\ *AttributeError*\ \|\ *KeyError*
+            ``value=`` *value* \\| *AttributeError* \\| *KeyError*
                 This is the value currently in the slot, or the Record itself
                 with the ``apply_records`` visitor option.  *AttributeError*
                 will only be received if you passed ``apply_empty_slots``, and
@@ -265,14 +265,14 @@ class VisitorPattern(object):
                 :py:meth:`Visitor.map_prop` for details about when this might
                 happen)
 
-            ``prop=``\ *Property*\ \|\ ``None``
+            ``prop=`` *Property* \\| ``None``
                 This is the :py:class:`normalize.Property` instance which
                 represents the field being traversed.
 
                 This can be ``None`` when being applied over Collection
                 instances, where the type of the contents is not a Record.
 
-            ``visitor=``\ *Visitor*
+            ``visitor=`` *Visitor*
                 This object can be used to inspect parameters of the current
                 run, such as options which control which kinds of values are
                 visited, which fields are being visited and where the function
@@ -299,11 +299,11 @@ class VisitorPattern(object):
                 Generator which returns (key, value) pairs (like
                 :py:meth:`normalize.coll.Collection.itertuples`)
 
-            ``coll_type=``\ *CollectionType*
+            ``coll_type=`` *CollectionType*
                 This is the :py:class:`normalize.coll.Collection`-derived
                 *class* which is currently being reduced.
 
-            ``visitor=``\ *Visitor*
+            ``visitor=`` *Visitor*
                 Context/options object
         """
         return coll_type.tuples_to_coll(mapped_coll_generator, coerce=False)
@@ -324,18 +324,18 @@ class VisitorPattern(object):
 
         args:
 
-            ``mapped_props=``\ *generator*
+            ``mapped_props=`` *generator*
                 Iterating over this generator will yield K, V pairs, where K is
                 **the Property object** and V is the mapped value.
 
-            ``aggregated=``\ *object*
+            ``aggregated=`` *object*
                 This contains whatever ``aggregate`` returned, normally a list.
 
-            ``value_type=``\ *RecordType*
+            ``value_type=`` *RecordType*
                 This is the type which is currently being reduced.
                 A :py:class:`normalize.record.Record` subclass
 
-            ``visitor=``\ *Visitor*
+            ``visitor=`` *Visitor*
                 Contenxt/options object.
         """
         reduced = None
@@ -367,12 +367,12 @@ class VisitorPattern(object):
 
         This function also takes positional arguments:
 
-            ``value_type=``\ *RecordType*
+            ``value_type=`` *RecordType*
                 The type to cast to.
 
-            ``value=``\ *object*
+            ``value=`` *object*
 
-            ``visitor=``\ *Visitor.Options*
+            ``visitor=`` *Visitor.Options*
                 Specifies the visitor options, which customizes the descent
                 and reduction.
         """
@@ -441,7 +441,7 @@ class VisitorPattern(object):
 
         propget = None
         if is_record:
-            def propget(prop):
+            def propget(prop):  # noqa: F811
                 return value[prop.name]
 
         return propget, generator
@@ -527,7 +527,7 @@ class VisitorPattern(object):
 
         propget = None
         if issubclass(value_type, Record):
-            def propget(prop):
+            def propget(prop):  # noqa: F811
                 return prop
 
         return propget, item_type_generator
@@ -593,15 +593,15 @@ class VisitorPattern(object):
 
         args:
 
-            ``visitor=``\ *Visitor*
+            ``visitor=`` *Visitor*
                 Visitor options instance: contains the callbacks to use to
                 implement the visiting, as well as traversal & filtering
                 options.
 
-            ``value=``\ *Object*
+            ``value=`` *Object*
                 Object being visited
 
-            ``value_type=``\ *RecordType*
+            ``value_type=`` *RecordType*
                 The type object controlling the visiting.
         """
         unpacked = visitor.unpack(value, value_type, visitor)

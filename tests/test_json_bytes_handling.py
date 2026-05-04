@@ -77,7 +77,7 @@ class TestBytesHandling(unittest.TestCase):
     def test_decode_and_parse_json_with_invalid_utf8(self):
         """Test _decode_and_parse_json with invalid UTF-8 bytes"""
         invalid_bytes = b'\xff{"u":1}'  # Invalid UTF-8
-        
+
         # Should raise UnicodeDecodeError when decode fails
         with self.assertRaises(UnicodeDecodeError):
             _decode_and_parse_json(invalid_bytes)
@@ -185,14 +185,14 @@ class TestBytesHandling(unittest.TestCase):
             ('true', bool, "JSON boolean"),
             ('null', type(None), "JSON null"),
         ]
-        
+
         for test_input, expected_type, description in test_cases:
             with self.subTest(case=description):
                 result = _decode_and_parse_json(test_input)
                 self.assertIsInstance(result, expected_type,
-                                    f"Failed for {description}: "
-                                    f"expected {expected_type.__name__}, "
-                                    f"got {type(result).__name__}")
+                                      f"Failed for {description}: "
+                                      f"expected {expected_type.__name__}, "
+                                      f"got {type(result).__name__}")
 
     def test_decode_and_parse_json_non_json_content_raises(self):
         """All clearly non-JSON strings should raise JSONDecodeError."""

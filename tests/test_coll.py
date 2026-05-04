@@ -17,15 +17,12 @@
 
 import unittest
 
-from normalize import Property
-from normalize import Record
-from normalize.coll import *
+from normalize import Property, Record
 from normalize.diff import DiffTypes
 import normalize.exc as exc
-from normalize.property.coll import DictProperty
-from normalize.property.coll import ListProperty
-from normalize.property.json import JsonDictProperty
-from normalize.property.json import JsonListProperty
+from normalize.property.coll import DictProperty, ListProperty
+from normalize.coll import list_of, dict_of
+from normalize.property.json import JsonDictProperty, JsonListProperty
 
 
 class Item(Record):
@@ -205,7 +202,7 @@ class TestCollections(unittest.TestCase):
         loi = list_of(int)()
         loi.append(1)
         loi += [2, 3]
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.CoercionError,
             r"coerce to int for insertion to intList failed",
         ):

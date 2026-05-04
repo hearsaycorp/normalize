@@ -133,39 +133,39 @@ class DiffOptions(object):
 
         args:
 
-            ``ignore_ws=``\ *BOOL*
+            ``ignore_ws=`` *BOOL*
                 Ignore whitespace in strings (beginning, end and middle).
                 True by default.
 
-            ``ignore_case=``\ *BOOL*
+            ``ignore_case=`` *BOOL*
                 Ignore case differences in strings.  False by default.
 
-            ``unicode_normal=``\ *BOOL*
+            ``unicode_normal=`` *BOOL*
                 Ignore unicode normal form differences in strings by
                 normalizing to NFC before comparison.  True by default.
 
-            ``unchanged=``\ *BOOL*
+            ``unchanged=`` *BOOL*
                 Yields ``DiffInfo`` objects for every comparison, not just
                 those which found a difference.  Defaults to False.  Useful for
                 testing.
 
-            ``moved=``\ *BOOL*
+            ``moved=`` *BOOL*
                 Yields ``DiffInfo`` objects for comparisons where the values
                 matched, but keys or indexes were different.  Defaults to
                 False.
 
-            ``ignore_empty_slots=``\ *BOOL*
+            ``ignore_empty_slots=`` *BOOL*
                 If true, slots containing typical 'empty' values (by default,
                 just ``''`` and ``None``) are treated as if they were not set.
                 False by default.
 
-            ``ignore_empty_items=``\ *BOOL*
+            ``ignore_empty_items=`` *BOOL*
                 If true, items are considered to be absent from collections if
                 they have all ``None``, not set, or ``''`` in their primary key
                 fields (all compared fields in the absence of a primary key
                 definition).  False by default.
 
-            ``duck_type=``\ *BOOL*
+            ``duck_type=`` *BOOL*
                 Normally, types must match or the result will always be
                 :py:attr:`normalize.diff.DiffTypes.MODIFIED` and the comparison
                 will not descend further.
@@ -175,16 +175,16 @@ class DiffOptions(object):
                 defined on the 'base' type.  This can be used to check progress
                 when porting from other object systems to normalize.
 
-            ``fuzzy_match=``\ *BOOL*
+            ``fuzzy_match=`` *BOOL*
                 Enable approximate matching of items in collections, so that
                 finer granularity of changes are available.
 
-            ``compare_filter=``\ *MULTIFIELDSELECTOR*\ \|\ *LIST_OF_LISTS*
+            ``compare_filter=`` *MULTIFIELDSELECTOR* \\| *LIST_OF_LISTS*
                 Restrict comparison to the fields described by the passed
                 :py:class:`MultiFieldSelector` (or list of FieldSelector
                 lists/objects)
 
-            ``recurse=``\ *BOOL* During diff operations, do a deeper
+            ``recurse=`` *BOOL* During diff operations, do a deeper
                 comparison via recursion. This may be potentially very
                 expensive computationally if your records are large or
                 very nested.
@@ -246,7 +246,7 @@ class DiffOptions(object):
     def normalize_text(self, value):
         """This hook is called by :py:meth:`DiffOptions.normalize_val` if the
         value (after slot/item normalization) is a string, and is responsible
-        for calling the various ``normalize_``\ foo methods which act on text.
+        for calling the various ``normalize_`` foo methods which act on text.
         """
         if self.ignore_ws:
             value = self.normalize_whitespace(value)
@@ -273,11 +273,11 @@ class DiffOptions(object):
 
         args:
 
-            ``value=``\ *nothing*\ \|\ *anything*
+            ``value=`` *nothing* \\| *anything*
                 The value in the slot.  *nothing* can be detected in sub-class
                 methods as ``self._nothing``.
 
-            ``prop=``\ *PROPERTY*
+            ``prop=`` *PROPERTY*
                 The slot's :py:class:`normalize.property.Property` instance.
                 If this instance has a ``compare_as`` method, then that method
                 is called to perform a clean-up before the value is passed to
@@ -306,17 +306,17 @@ class DiffOptions(object):
 
         args:
 
-            ``value=``\ *nothing*\ \|\ *anything*
+            ``value=`` *nothing* \\| *anything*
                 The value in the collection slot.  *nothing* can be detected in
                 sub-class methods as ``self._nothing``.
 
-            ``coll=``\ *COLLECTION*
+            ``coll=`` *COLLECTION*
                 The parent :py:class:`normalize.coll.Collection` instance.  If
                 this instance has a ``compare_item_as`` method, then that
                 method is called to perform a clean-up before the value is
                 passed to ``normalize_val``
 
-            ``index=``\ *HASHABLE*
+            ``index=`` *HASHABLE*
                 The key of the item in the collection.
         """
         if value is not _nothing and hasattr(coll, "compare_item_as"):
@@ -361,31 +361,31 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
 
     args:
 
-        ``a=``\ *Record*
+        ``a=`` *Record*
             The base object
 
-        ``b=``\ *Record*\ \|\ *object*
+        ``b=`` *Record* \\| *object*
             The 'other' object, which must be the same type as ``a``, unless
             ``options.duck_type`` is set.
 
-        ``fs_a=``\ *FieldSelector\*
+        ``fs_a=`` *FieldSelector\\*
             The current diff context, prefixed to any returned ``base`` field
             in yielded ``DiffInfo`` objects.  Defaults to an empty
             FieldSelector.
 
-        ``fs_b=``\ *FieldSelector\*
+        ``fs_b=`` *FieldSelector\\*
             The ``other`` object context.  This will differ from ``fs_a`` in
             the case of collections, where a value has moved slots.  Defaults
             to an empty FieldSelector.
 
-        ``options=``\ *DiffOptions\*
+        ``options=`` *DiffOptions\\*
             A constructed ``DiffOptions`` object; a default one is created if
             not passed in.
     """
     if not options:
         options = DiffOptions()
 
-    if not options.duck_type and type(a) != type(b) and not (
+    if not options.duck_type and type(a) != type(b) and not (  # noqa: E721
         a is _nothing or b is _nothing
     ):
         raise TypeError(
@@ -418,7 +418,7 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
             continue
 
         one_side_nothing = (propval_a is _nothing) != (propval_b is _nothing)
-        types_match = type(propval_a) == type(propval_b)
+        types_match = type(propval_a) == type(propval_b)  # noqa: E721
         comparable = (
             isinstance(propval_a, COMPARABLE) or
             isinstance(propval_b, COMPARABLE)
@@ -447,7 +447,7 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
             if one_side_nothing:
                 net_diff = None
                 if diff_types_found:
-                    assert(len(diff_types_found) == 1)
+                    assert (len(diff_types_found) == 1)
                     net_diff = tuple(diff_types_found)[0]
                 elif options.unchanged:
                     net_diff = DiffTypes.NO_CHANGE
@@ -793,7 +793,7 @@ def compare_list_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                       options=None):
     """Generator for comparing 'simple' lists when they are encountered.  This
     does not currently recurse further.  Arguments are as per other
-    ``compare_``\ *X* functions.
+    ``compare_`` *X* functions.
     """
     if fs_a is None:
         fs_a = FieldSelector(tuple())
@@ -878,7 +878,7 @@ def compare_dict_iter(propval_a, propval_b, fs_a=None, fs_b=None,
                       options=None):
     """Generator for comparing 'simple' dicts when they are encountered.  This
     does not currently recurse further.  Arguments are as per other
-    ``compare_``\ *X* functions.
+    ``compare_`` *X* functions.
     """
     if fs_a is None:
         fs_a = FieldSelector(tuple())
@@ -976,11 +976,11 @@ def diff_iter(base, other, options=None, **kwargs):
     type), and yield differences as :py:class:`DiffInfo` instances.
 
     args:
-        ``base=``\ *Record*
+        ``base=`` *Record*
             The 'base' object to compare against.  The enumeration in
             :py:class:`DiffTypes` is relative to this object.
 
-        ``other=``\ *Record*\ \|\ *<object>*
+        ``other=`` *Record* \\| *<object>*
             The 'other' object to compare against.  If ``duck_type`` is not
             true, then it must be of the same type as the ``base``.
 
@@ -989,7 +989,7 @@ def diff_iter(base, other, options=None, **kwargs):
             :py:meth:`normalize.diff.DiffOptions.__init__` for the complete
             list.
 
-        ``options=``\ *DiffOptions instance*
+        ``options=`` *DiffOptions instance*
             Pass in a pre-constructed :py:class:`DiffOptions` instance.  This
             may not be specified along with ``**kwargs``.
     """

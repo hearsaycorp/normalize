@@ -115,7 +115,7 @@ making new collection types and hooking them up correctly.
 Declaring JSON hints on Properties
 ----------------------------------
 
-The various ``json_``\ *X* parameters are *distinguishing options*
+The various ``json_`` *X* parameters are *distinguishing options*
 which will select the "``json``" trait.
 
 .. autoclass:: normalize.property.json.JsonProperty

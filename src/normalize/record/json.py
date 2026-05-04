@@ -130,7 +130,7 @@ def _decode_and_parse_json(json_data):
         return json.loads(json_data.decode('utf-8'))
     if isinstance(json_data, str):
         return json.loads(json_data)
-            
+
     return json_data
 
 
@@ -139,10 +139,10 @@ def from_json(record_type, json_struct):
     types/hints on types being converted to, but does not require them.
 
     Args:
-        ``record_type=``\ *TYPE*
+        ``record_type=`` *TYPE*
             Record type to convert data to
 
-        ``json_struct=``\ *DICT|LIST*
+        ``json_struct=`` *DICT|LIST*
             a loaded (via ``json.loads``) data structure, normally a
             dict or a list.
     """
@@ -196,17 +196,17 @@ def to_json(record, extraneous=True, prop=None):
     to ``json.dumps`` or a similar function.
 
     args:
-        ``record=``\ *anything*
+        ``record=`` *anything*
             This object can be of any type; a best-effort attempt is made to
             convert to a form which ``json.dumps`` can accept; this function
             will call itself recursively, respecting any types which define
             ``.json_data()`` as a method and calling that.
 
-        ``extraneous=``\ *BOOL*
+        ``extraneous=`` *BOOL*
             This parameter is passed through to any ``json_data()`` methods
             which support it.
 
-        ``prop=``\ *PROPNAME*\ |\ *PROPERTY*
+        ``prop=`` *PROPNAME* | *PROPERTY*
             Specifies to return the given property from an object, calling any
             ``to_json`` mapping defined on the property.  Does not catch the
             ``AttributeError`` that is raised by the property not being set.
@@ -283,7 +283,7 @@ class JsonRecord(Record):
         """Build a new JsonRecord sub-class.
 
         args:
-            ``json_data=``\ *DICT|other*
+            ``json_data=`` *DICT|other*
                 JSON data (string or already ``json.loads``'d).  If not
                 a JSON dictionary with keys corresponding to the
                 ``json_name`` or the properties within, then
@@ -364,7 +364,7 @@ class JsonRecordList(RecordList, JsonRecord):
         """Build a new JsonRecord sub-class.
 
         Args:
-            ``json_data=``\ *LIST|other*
+            ``json_data=`` *LIST|other*
                 JSON data (string or already ``json.loads``'d)
 
             ``**kwargs``
@@ -437,7 +437,7 @@ class JsonRecordDict(RecordDict, JsonRecord):
         """Build a new JsonRecord sub-class.
 
         Args:
-            ``json_data=``\ *DICT|other*
+            ``json_data=`` *DICT|other*
                 JSON data (string or already ``json.loads``'d)
 
             ``**kwargs``

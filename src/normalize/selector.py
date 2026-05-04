@@ -56,7 +56,7 @@ class FieldSelector(object):
 
         args:
 
-            ``expr=``\ *FieldSelector*\ \|\ *<iterable>*
+            ``expr=`` *FieldSelector* \\| *<iterable>*
                 Starting expression for the selector; can copy an existing
                 FieldSelector or instantiate one from an iterable list of
                 attribute names/indices
@@ -391,7 +391,7 @@ class FieldSelector(object):
             other_selector = other.selectors[i]
             if self_selector == other_selector:
                 continue
-            if type(self_selector) != type(other_selector):
+            if type(self_selector) != type(other_selector):  # noqa: E721
                 raise TypeError(
                     "Cannot compare incompatible FieldSelectors. "
                     "Incompatibility detected at index: %s for selectors: "
@@ -461,7 +461,7 @@ class FieldSelector(object):
 
         args:
 
-            ``key_or_fs=``\ *FieldSelector*\ \|\ *<attribute-or-index>*
+            ``key_or_fs=`` *FieldSelector* \\| *<attribute-or-index>*
 
                 If the argument is another FieldSelector (or a tuple/list), it
                 checks that the invocant's first selector expression components
@@ -568,7 +568,7 @@ class MultiFieldSelector(object):
 
         args:
 
-            ``*others=``\ *FieldSelector*\ \|\ *iterable*
+            ``*others=`` *FieldSelector* \\| *iterable*
 
                 Each argument is interpreted as either a FieldSelector, or a
                 FieldSelector constructor.
@@ -845,10 +845,10 @@ class MultiFieldSelector(object):
 
         args:
 
-            ``obj=``\ *OBJECT*
+            ``obj=`` *OBJECT*
                 the object to remove the fields from
 
-            ``force=``\ *BOOL*
+            ``force=`` *BOOL*
                 if True, missing attributes do not raise errors.  Otherwise,
                 the first failure raises an exception without making any
                 changes to ``obj``.
@@ -874,13 +874,13 @@ class MultiFieldSelector(object):
 
         args:
 
-            ``target=``\ *OBJECT*
+            ``target=`` *OBJECT*
                 the object to set the fields in
 
-            ``source=``\ *OBJECT*
+            ``source=`` *OBJECT*
                 the object to lift the fields from
 
-            ``copy=``\ *BOOL*\ \|\ *FUNCTION*
+            ``copy=`` *BOOL* \\| *FUNCTION*
                 deep copy the values set, using copy.deepcopy (or the passed
                 function).  False by default.
         """

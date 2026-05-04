@@ -17,14 +17,13 @@
 import decimal
 from datetime import date
 from datetime import datetime
-import sys
 import unittest
 
 import normalize.exc as exc
 from normalize.record import Record
 from normalize.property import Property
 from normalize.property import SafeProperty
-from normalize.property.types import *
+from normalize.property.types import IntProperty, StringProperty, NumberProperty, UnicodeProperty, DateProperty, DatetimeProperty, IntegerProperty  # noqa: E501
 from normalize.subtype import subtype
 
 

@@ -29,7 +29,7 @@ class subtype(type):
             ok = isinstance(instance, cls.of) and (
                 all(where(instance) for where in cls.where_funcs)
             )
-        except:
+        except Exception:
             ok = False
         return ok
 

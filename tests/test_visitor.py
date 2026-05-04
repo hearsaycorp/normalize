@@ -185,13 +185,13 @@ class TestTypeUnionCases(AssertDiffTest):
     def test_type_union_dump(self):
         dumped = SimpleDumper.visit(self.open_pr, ignore_none=False)
         self.assertIn("created_at", dumped)
-        self.assertRegexpMatches(
+        self.assertRegex(
             dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*',
         )
         self.assertEqual(dumped['merged_at'], None)
 
         dumped = SimpleDumper.visit(self.closed_pr)
-        self.assertRegexpMatches(
+        self.assertRegex(
             dumped['created_at'], r'^\d{4}-\d{2}-\d{2}T.*',
         )
         self.assertIn("created_at", dumped)

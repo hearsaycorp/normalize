@@ -96,15 +96,15 @@ class TestRecords(unittest.TestCase):
         self.assertFalse(lambda_.objective0.blah0,
                          "empty values don't persist")
 
-        with self.assertRaisesRegexp(AttributeError, r'BlahRecord.*blha0'):
+        with self.assertRaisesRegex(AttributeError, r'BlahRecord.*blha0'):
             lambda_.objective0.blha0
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.EmptyAttributeError, r"Can't assign.*BlahRecord"
         ):
             lambda_.objective0.blah = 42
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.EmptyAttributeError, r"Can't assign.*BlahRecord"
         ):
             lambda_.objective0[0] = 42
@@ -136,13 +136,13 @@ class TestRecords(unittest.TestCase):
 
         nr = NumsRecord()
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.EmptyAttributeError, r"NumRecordList.*attribute 'which'",
         ):
             nr.nums0.which
         self.assertFalse(nr.nums0[1].which)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.EmptyAttributeError, r"NumRecord\b.*attribute 'blah'",
         ):
             nr.nums0[0].blah
@@ -157,13 +157,13 @@ class TestRecords(unittest.TestCase):
         # array slicing
         self.assertFalse(nr.nums0[3:-1][0].which0.foo0)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.NotSubscriptable, r"OneRecord,TwoRecord"
         ):
             nr.nums0[1].which[1]
 
         # test invoking
-        with self.assertRaisesRegexp(exc.NotCallable, r"NumRecord"):
+        with self.assertRaisesRegex(exc.NotCallable, r"NumRecord"):
             nr.nums0[1]()
 
         self.assertFalse(nr.nums0[4].which())
@@ -185,21 +185,21 @@ class TestRecords(unittest.TestCase):
 
         self.assertFalse(lr.this0.date)
         self.assertFalse(lr.this0.foo.real)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.NoSuchAttribute, r"TwoRecord,datetime",
         ):
             lr.this0.dote
-        with self.assertRaisesRegexp(exc.NoSuchAttribute, r"None"):
+        with self.assertRaisesRegex(exc.NoSuchAttribute, r"None"):
             self.assertFalse(lr.this0.bar.real)
 
         self.assertFalse(lr.that0.date)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.NotSubscriptable, r"MagicRecord",
         ):
             lr.that0[7]
 
         self.assertFalse(lr.other0[0].foo.bar())
-        with self.assertRaisesRegexp(exc.NoSuchAttribute, r"MagicList"):
+        with self.assertRaisesRegex(exc.NoSuchAttribute, r"MagicList"):
             lr.other0.anything
 
     def test_v1_none(self):

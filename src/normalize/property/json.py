@@ -39,15 +39,15 @@ class JsonProperty(Property):
                  **kwargs):
         """Create a new property with JSON mapping overrides.  You
         generally don't need to use this directly; simply specifying the
-        options using ``json_``\ *X* to a superclass like ``Property()``
+        options using ``json_`` *X* to a superclass like ``Property()``
         is sufficient.
 
         Arguments:
-            ``json_name=``\ *STR*
+            ``json_name=`` *STR*
                 Specify the key in the input/output dictionary to use
                 for this property when marshalling to/from JSON.
 
-            ``json_in=``\ *FUNCTION*
+            ``json_in=`` *FUNCTION*
                 Specify a function which converts the JSON form of this
                 property to the python form.  This is called *before* the
                 ``isa=`` check and ``coerce=`` function, and is always
@@ -55,7 +55,7 @@ class JsonProperty(Property):
                 This function can recurse into
                 :py:func:`normalize.record.from_json` if required.
 
-            ``json_out=``\ *FUNCTION*
+            ``json_out=`` *FUNCTION*
                 Specify a function which converts a property from the
                 python form to a form which your JSON library can handle.
                 You'll probably want to convert native python objects to

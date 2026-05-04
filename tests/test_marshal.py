@@ -102,7 +102,7 @@ class TestRecordMarshaling(unittest.TestCase):
 
         pdisp = path or "top level"
 
-        if type(got) != type(wanted):
+        if type(got) != type(wanted):  # noqa: E721
             if isinstance(got, json_data_number_types) and \
                     isinstance(wanted, json_data_number_types):
                 got = decode_json_number(got)
@@ -113,7 +113,7 @@ class TestRecordMarshaling(unittest.TestCase):
                         pdisp, type(wanted).__name__, type(got).__name__
                     )
                 )
-        if type(got) == dict:
+        if type(got) == dict:  # noqa: E721
             all_keys = sorted(set(got) | set(wanted))
             for key in all_keys:
                 if (key in got) != (key in wanted):
@@ -127,7 +127,7 @@ class TestRecordMarshaling(unittest.TestCase):
                     self.assertJsonDataEqual(
                         got[key], wanted[key], path + ("[%r]" % key)
                     )
-        elif type(got) == list:
+        elif type(got) == list:  # noqa: E721
             for i in range(0, max((len(got), len(wanted)))):
                 if i >= len(got) or i >= len(wanted):
                     raise AssertionError(
@@ -411,7 +411,7 @@ class TestRecordMarshaling(unittest.TestCase):
         class SomeRecordList(JsonRecordList):
             itemtype = CheeseRecord
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 exc.JsonCollectionCoerceError, r'array expected',
         ):
             SomeRecordList({"foo": "bar"})
@@ -419,7 +419,7 @@ class TestRecordMarshaling(unittest.TestCase):
         class SomeRecordMap(JsonRecordDict):
             itemtype = CheeseRecord
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 exc.JsonCollectionCoerceError, r'object expected',
         ):
             SomeRecordMap([1, 2, 3])
@@ -428,12 +428,12 @@ class TestRecordMarshaling(unittest.TestCase):
             some_list = JsonListProperty(of=CheeseRecord)
             some_map = JsonDictProperty(of=CheeseRecord)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 exc.JsonConversionError, r'\.some_list\b.*array expected',
         ):
             SomeRecord({"some_list": {"foo": "bar"}})
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 exc.JsonConversionError, r'\.some_map\b.*object expected',
         ):
             SomeRecord({"some_map": [1, 2, 3]})
@@ -441,7 +441,7 @@ class TestRecordMarshaling(unittest.TestCase):
         class SomeOtherRecord(JsonRecord):
             foo_bar = Property(isa=SomeRecord, json_name="fooBar")
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             exc.JsonConversionError, r'\.fooBar\.some_list\b.*array expected',
         ):
             SomeOtherRecord({"fooBar": {"some_list": {"foo": "bar"}}})
